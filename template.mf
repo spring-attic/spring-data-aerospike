@@ -1,0 +1,8 @@
+Bundle-SymbolicName: org.springframework.data.aerospike
+Bundle-Name: ${project.name}
+Bundle-Vendor: Aerospike, Inc., Pivotal Software, Inc.
+Bundle-Version: ${project.version}
+Bundle-ManifestVersion: 2
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Template:
+ com.aerospike.client.*;version="${aerospike:[=.=.=,+1.0.0)}"
