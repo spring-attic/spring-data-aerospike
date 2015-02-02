@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.springframework.data</groupId>
+	<artifactId>spring-data-aerospike</artifactId>
+	<version>1.0.0.BUILD-SNAPSHOT</version>
+
+	<name>Spring Data Aerospike</name>
+
+	<parent>
+		<groupId>org.springframework.data.build</groupId>
+		<artifactId>spring-data-parent</artifactId>
+		<version>1.6.0.BUILD-SNAPSHOT</version>
+		<relativePath>../spring-data-build/parent/pom.xml</relativePath>
+	</parent>
+
+	<properties>
+		<aerospike>3.0.33</aerospike>
+		<springdata.commons>1.10.0.BUILD-SNAPSHOT</springdata.commons>
+		<dist.key>DATAAERO</dist.key>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-commons</artifactId>
+			<version>${springdata.commons}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.aerospike</groupId>
+			<artifactId>aerospike-client</artifactId>
+			<version>3.0.33</version>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>wagon-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.asciidoctor</groupId>
+				<artifactId>asciidoctor-maven-plugin</artifactId>
+			</plugin>
+
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>spring-libs-snapshot</id>
+			<url>https://repo.spring.io/libs-snapshot</url>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-plugins-release</id>
+			<url>https://repo.spring.io/plugins-release</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>
