@@ -13,31 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.aerospike.core;
+package org.springframework.data.aerospike.sample;
 
-import com.aerospike.client.query.Filter;
+import java.util.UUID;
+
+import org.springframework.data.annotation.Id;
 
 /**
- * Aerospike specific data access operations.
- * 
  * @author Oliver Gierke
  */
-public interface AerospikeOperations {
+public class Customer {
+
+	private final @Id UUID id;
+	private final String firstname, lastname;
 
 	/**
-	 * Executes the given {@link AerospikeClientCallback} and applies exception translation if necessary.
-	 * 
-	 * @param callback must not be {@literal null}.
-	 * @return
+	 * @param id
+	 * @param firstname
+	 * @param lastname
 	 */
-	<T> T execute(AerospikeClientCallback<T> callback);
+	public Customer(String firstname, String lastname) {
+
+		this.id = UUID.randomUUID();
+		this.firstname = firstname;
+		this.lastname = lastname;
+	}
 
 	/**
-	 * Returns all entities of the given type matching the fiven {@link Filter}.
-	 * 
-	 * @param filter must not be {@literal null}.
-	 * @param type must not be {@literal null}.
-	 * @return
+	 * @return the id
 	 */
-	<T> Iterable<T> findAll(Filter filter, Class<T> type);
+	public UUID getId() {
+		return id;
+	}
+
+	/**
+	 * @return the firstname
+	 */
+	public String getFirstname() {
+		return firstname;
+	}
+
+	/**
+	 * @return the lastname
+	 */
+	public String getLastname() {
+		return lastname;
+	}
 }

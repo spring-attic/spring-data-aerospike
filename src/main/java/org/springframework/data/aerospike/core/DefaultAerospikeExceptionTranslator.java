@@ -15,29 +15,22 @@
  */
 package org.springframework.data.aerospike.core;
 
-import com.aerospike.client.query.Filter;
+import org.springframework.dao.DataAccessException;
 
 /**
- * Aerospike specific data access operations.
- * 
  * @author Oliver Gierke
  */
-public interface AerospikeOperations {
+class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTranslator {
 
-	/**
-	 * Executes the given {@link AerospikeClientCallback} and applies exception translation if necessary.
-	 * 
-	 * @param callback must not be {@literal null}.
-	 * @return
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.dao.support.PersistenceExceptionTranslator#translateExceptionIfPossible(java.lang.RuntimeException)
 	 */
-	<T> T execute(AerospikeClientCallback<T> callback);
+	@Override
+	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
-	/**
-	 * Returns all entities of the given type matching the fiven {@link Filter}.
-	 * 
-	 * @param filter must not be {@literal null}.
-	 * @param type must not be {@literal null}.
-	 * @return
-	 */
-	<T> Iterable<T> findAll(Filter filter, Class<T> type);
+		// TODO - Translate exceptions here
+
+		return null;
+	}
 }
