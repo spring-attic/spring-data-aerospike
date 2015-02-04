@@ -15,29 +15,22 @@
  */
 package org.springframework.data.aerospike.core;
 
-import com.aerospike.client.query.Filter;
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.AerospikeException;
 
 /**
- * Aerospike specific data access operations.
+ * Callback to interact with the {@link AerospikeClient}.
  * 
  * @author Oliver Gierke
  */
-public interface AerospikeOperations {
+public interface AerospikeClientCallback<T> {
 
 	/**
-	 * Executes the given {@link AerospikeClientCallback} and applies exception translation if necessary.
+	 * Interact with the native {@link AerospikeClient} and produce a result from it.
 	 * 
-	 * @param callback must not be {@literal null}.
+	 * @param client will never be {@literal null}.
 	 * @return
+	 * @throws AerospikeException
 	 */
-	<T> T execute(AerospikeClientCallback<T> callback);
-
-	/**
-	 * Returns all entities of the given type matching the fiven {@link Filter}.
-	 * 
-	 * @param filter must not be {@literal null}.
-	 * @param type must not be {@literal null}.
-	 * @return
-	 */
-	<T> Iterable<T> findAll(Filter filter, Class<T> type);
+	T doWith(AerospikeClient client) throws AerospikeException;
 }

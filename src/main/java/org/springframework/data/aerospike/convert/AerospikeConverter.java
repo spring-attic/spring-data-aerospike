@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.aerospike.core;
+package org.springframework.data.aerospike.convert;
 
-import org.junit.Test;
+import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
+import org.springframework.data.convert.EntityConverter;
+import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
 
 /**
+ * Interface of an Aerospike-specific {@link EntityConverter}.
+ * 
  * @author Oliver Gierke
  */
-public class DummyTests {
+public interface AerospikeConverter extends
+		EntityConverter<AerospikePersistentEntity<?>, KeyValuePersistentProperty, Object, AerospikeData> {
 
-	@Test
-	public void dummyTestMethod() {
-
-	}
 }

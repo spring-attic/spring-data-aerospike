@@ -13,31 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.aerospike.core;
+package org.springframework.data.aerospike.config;
 
-import com.aerospike.client.query.Filter;
+import org.springframework.beans.factory.xml.NamespaceHandler;
+import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
 /**
- * Aerospike specific data access operations.
+ * {@link NamespaceHandler} for the Aerospike namespace.
  * 
  * @author Oliver Gierke
  */
-public interface AerospikeOperations {
+public class AerospikeNamespaceHandler extends NamespaceHandlerSupport {
 
-	/**
-	 * Executes the given {@link AerospikeClientCallback} and applies exception translation if necessary.
-	 * 
-	 * @param callback must not be {@literal null}.
-	 * @return
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.xml.NamespaceHandler#init()
 	 */
-	<T> T execute(AerospikeClientCallback<T> callback);
+	@Override
+	public void init() {
 
-	/**
-	 * Returns all entities of the given type matching the fiven {@link Filter}.
-	 * 
-	 * @param filter must not be {@literal null}.
-	 * @param type must not be {@literal null}.
-	 * @return
-	 */
-	<T> Iterable<T> findAll(Filter filter, Class<T> type);
+		// TODO: add declarations and namespaces for other top-level configuration elements
+
+		registerBeanDefinitionParser("client", new AerospikeClientBeanDefinitionParser());
+	}
 }

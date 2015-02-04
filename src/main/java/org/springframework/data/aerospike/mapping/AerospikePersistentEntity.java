@@ -13,31 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.aerospike.core;
+package org.springframework.data.aerospike.mapping;
 
-import com.aerospike.client.query.Filter;
+import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
+import org.springframework.data.mapping.PersistentEntity;
 
 /**
- * Aerospike specific data access operations.
+ * Aerospike-specific extensions of {@link PersistentEntity}.
  * 
  * @author Oliver Gierke
  */
-public interface AerospikeOperations {
+public interface AerospikePersistentEntity<T> extends PersistentEntity<T, KeyValuePersistentProperty> {
 
 	/**
-	 * Executes the given {@link AerospikeClientCallback} and applies exception translation if necessary.
+	 * Returns the name of the set the {@link PersistentEntity} shall be stored in.
 	 * 
-	 * @param callback must not be {@literal null}.
 	 * @return
 	 */
-	<T> T execute(AerospikeClientCallback<T> callback);
-
-	/**
-	 * Returns all entities of the given type matching the fiven {@link Filter}.
-	 * 
-	 * @param filter must not be {@literal null}.
-	 * @param type must not be {@literal null}.
-	 * @return
-	 */
-	<T> Iterable<T> findAll(Filter filter, Class<T> type);
+	String getSetName();
 }
