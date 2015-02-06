@@ -17,18 +17,16 @@ package org.springframework.data.aerospike.config;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.data.config.ParsingUtils;
 import org.w3c.dom.Element;
 
 /**
- * {@link BeanDefinitionParser} to create a {@link BeanDefinition} for a {@link ClientPolicyFactoryBean}.
+ * {@link BeanDefinitionParser} to create a {@link BeanDefinition} for a {@link WritePolicyFactoryBean}.
  * 
- * @author Oliver Gierke
  * @author Peter Milne
-*/
-public class ClientPolicyBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
+ */
+public class WritePolicyBeanDefinitionParser extends ReadPolicyBeanDefinitionParser {
 
 	/* 
 	 * (non-Javadoc)
@@ -36,7 +34,7 @@ public class ClientPolicyBeanDefinitionParser extends AbstractSingleBeanDefiniti
 	 */
 	@Override
 	protected Class<?> getBeanClass(Element element) {
-		return ClientPolicyFactoryBean.class;
+		return WritePolicyFactoryBean.class;
 	}
 
 	/* 
@@ -46,8 +44,7 @@ public class ClientPolicyBeanDefinitionParser extends AbstractSingleBeanDefiniti
 	@Override
 	protected void doParse(Element element, BeanDefinitionBuilder builder) {
 
-		ParsingUtils.setPropertyValue(builder, element, "maxThreads");
-		ParsingUtils.setPropertyValue(builder, element, "timeOut");
+		ParsingUtils.setPropertyValue(builder, element, "max-concurrent-threads");
 		// TODO: set all properties of the XML element on the builder
 	}
 }

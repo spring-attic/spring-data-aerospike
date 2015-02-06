@@ -22,6 +22,7 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
  * {@link NamespaceHandler} for the Aerospike namespace.
  * 
  * @author Oliver Gierke
+ * @author Peter Milne
  */
 public class AerospikeNamespaceHandler extends NamespaceHandlerSupport {
 
@@ -35,5 +36,11 @@ public class AerospikeNamespaceHandler extends NamespaceHandlerSupport {
 		// TODO: add declarations and namespaces for other top-level configuration elements
 
 		registerBeanDefinitionParser("client", new AerospikeClientBeanDefinitionParser());
+		registerBeanDefinitionParser("clientPolicy", new ClientPolicyBeanDefinitionParser());
+		registerBeanDefinitionParser("readPolicy", new ReadPolicyBeanDefinitionParser());
+		registerBeanDefinitionParser("writePolicy", new WritePolicyBeanDefinitionParser());
+		registerBeanDefinitionParser("queryPolicy", new QueryPolicyBeanDefinitionParser());
+		registerBeanDefinitionParser("scanPolicy", new ScanPolicyBeanDefinitionParser());
+		registerBeanDefinitionParser("batchPolicy", new BatchPolicyBeanDefinitionParser());
 	}
 }

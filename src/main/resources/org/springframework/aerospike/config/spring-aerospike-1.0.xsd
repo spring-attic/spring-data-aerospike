@@ -27,5 +27,17 @@
 			<xsd:element name="client-policy" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
+
+	<xsd:complexType name="client-policy">
+		<xsd:sequence>
+			<xsd:element name="read-policy-default" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="write-policy-default" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="batch-policy-default" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="query-policy-default" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="scan-policy-default" minOccurs="0" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	
 	
 </xsd:schema>

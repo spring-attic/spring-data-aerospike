@@ -37,7 +37,7 @@ public class MappingAerospikeConverterIntegrationTests {
 	public void convertsIdAndSimpleProperties() {
 
 		Customer customer = new Customer("Dave", "Matthews");
-		AerospikeData data = AerospikeData.forWrite("namespace");
+		AerospikeData data = AerospikeData.forWrite("test");
 
 		converter.write(customer, data);
 
