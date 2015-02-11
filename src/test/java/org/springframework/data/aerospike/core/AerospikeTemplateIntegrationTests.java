@@ -32,7 +32,7 @@ import com.aerospike.client.AerospikeException;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-@Ignore
+//Ignore
 // Ignored until we have the infrastructure set up to actually run the tests
 public class AerospikeTemplateIntegrationTests {
 

@@ -22,14 +22,20 @@ import java.util.List;
 
 import org.springframework.data.aerospike.convert.AerospikeConverter;
 import org.springframework.data.aerospike.convert.AerospikeData;
+import org.springframework.data.aerospike.utility.Utils;
 import org.springframework.data.keyvalue.core.AbstractKeyValueAdapter;
 import org.springframework.data.keyvalue.core.KeyValueAdapter;
 import org.springframework.data.keyvalue.core.KeyValueTemplate;
+import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
+import com.aerospike.client.Info;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
+import com.aerospike.client.ScanCallback;
+import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.Statement;
@@ -55,10 +61,11 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 	 * @param client must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 */
-	public AerospikeKeyValueAdapter(AerospikeClient client, AerospikeConverter converter) {
+	public AerospikeKeyValueAdapter(AerospikeClient client, AerospikeConverter converter, String namespace) {
 
 		this.client = client;
 		this.converter = converter;
+		this.namespace = namespace;
 		this.writePolicy = new WritePolicy();
 	}
 
@@ -117,7 +124,9 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 		Object object = get(id, keyspace);
 
 		if (object != null) {
-			client.delete(writePolicy, key);
+			WritePolicy wp = new WritePolicy();
+			wp.recordExistsAction = RecordExistsAction.UPDATE_ONLY;
+			client.delete(wp, key);
 		}
 
 		return object;
@@ -129,21 +138,33 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 	 */
 	@Override
 	public Collection<?> getAllOf(Serializable keyspace) {
-
+		
 		Statement statement = new Statement();
 		statement.setNamespace(namespace);
 		statement.setSetName(keyspace.toString());
 
+		
 		List<Object> result = new ArrayList<Object>();
 		RecordSet recordSet = client.query(null, statement);
-
+		
 		while (recordSet.next()) {
 
 			AerospikeData data = AerospikeData.forRead(recordSet.getKey(), recordSet.getRecord());
 			result.add(converter.read(Object.class, data));
 		}
 
-		throw new UnsupportedOperationException();
+//		final List<Object> result = new ArrayList<Object>();
+//		String set = keyspace.toString();
+//		client.scanAll(null, namespace, set, new ScanCallback() {
+//			
+//			@Override
+//			public void scanCallback(Key key, Record record) throws AerospikeException {
+//				AerospikeData data = AerospikeData.forRead(key, record);
+//				Object converted = converter.read(Object.class, data);
+//				result.add(converted);
+//			}
+//		});
+		return result;
 	}
 
 	/* 
@@ -152,7 +173,8 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 	 */
 	@Override
 	public void deleteAllOf(Serializable keyspace) {
-		throw new UnsupportedOperationException();
+		//"set-config:context=namespace;id=namespace_name;set=set_name;set-delete=true;"
+		Utils.infoAll(client, "set-config:context=namespace;id=" + this.namespace + ";set=" + keyspace.toString() + ";set-delete=true;");
 	}
 
 	/* 

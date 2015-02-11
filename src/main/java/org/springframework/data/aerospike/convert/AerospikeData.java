@@ -18,10 +18,12 @@ package org.springframework.data.aerospike.convert;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
+import com.aerospike.client.Value;
 
 /**
  * Value object to carry data to be read and to written in object conversion.
@@ -45,7 +47,7 @@ public class AerospikeData {
 	}
 
 	public static AerospikeData forRead(Key key, Record record) {
-		return new AerospikeData(key, record, null, Collections.<Bin> emptyList());
+		return new AerospikeData(key, record, key.namespace, Collections.<Bin> emptyList());
 	}
 
 	public static AerospikeData forWrite(String namespace) {
@@ -84,9 +86,25 @@ public class AerospikeData {
 	 * @return the bins
 	 */
 	public List<Bin> getBins() {
-		return bins;
+		// TODO Need to find a way to NOT make bins on a read.
+		if (record != null && record.bins.size() > 0) {
+			List<Bin> readBins = new ArrayList<Bin>();
+			for (Map.Entry<String, Object> entry : record.bins.entrySet()) {
+				String key = entry.getKey();
+				Object value = entry.getValue();
+				Bin newBin;
+				if (value instanceof Map)
+					newBin = new Bin(key, Value.getAsMap((Map<?, ?>)value));
+				else if (value instanceof List)
+					newBin = new Bin(key, Value.getAsList((List<?>)value));
+				else
+					newBin = new Bin(key, Value.get(value));
+				readBins.add(newBin);
+			}
+			return readBins;
+		} else 
+			return bins;
 	}
-
 	public void add(List<Bin> bins) {
 		this.bins.addAll(bins);
 	}

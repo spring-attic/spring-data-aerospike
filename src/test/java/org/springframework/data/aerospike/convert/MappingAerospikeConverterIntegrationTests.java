@@ -45,6 +45,6 @@ public class MappingAerospikeConverterIntegrationTests {
 
 		tester.assertBinHasValue("firstname", "Dave");
 		tester.assertBinHasValue("lastname", "Matthews");
-		tester.assertHasKey(new Key("namespace", Customer.class.getSimpleName(), customer.getId().toString()));
+		tester.assertHasKey(new Key("test", Customer.class.getSimpleName(), customer.getId().toString()));
 	}
 }

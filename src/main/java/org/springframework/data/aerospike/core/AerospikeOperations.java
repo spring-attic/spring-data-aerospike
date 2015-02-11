@@ -33,7 +33,7 @@ public interface AerospikeOperations {
 	<T> T execute(AerospikeClientCallback<T> callback);
 
 	/**
-	 * Returns all entities of the given type matching the fiven {@link Filter}.
+	 * Returns all entities of the given type matching the filter given {@link Filter}.
 	 * 
 	 * @param filter must not be {@literal null}.
 	 * @param type must not be {@literal null}.

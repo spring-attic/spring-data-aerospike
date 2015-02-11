@@ -27,12 +27,12 @@ public class TestConfiguration {
 	public @Bean(destroyMethod = "close") AerospikeClient aerospikeClient() {
 
 		ClientPolicy policy = new ClientPolicy();
-		policy.failIfNotConnected = false;
+		policy.failIfNotConnected = true;
 
 		return new AerospikeClient(policy, "localhost", 3000);
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {
-		return new AerospikeTemplate(aerospikeClient());
+		return new AerospikeTemplate(aerospikeClient(), "test"); // TODO verify correct place for namespace
 	}
 }

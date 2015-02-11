@@ -52,9 +52,9 @@ public class AerospikeTemplate extends KeyValueTemplate implements AerospikeOper
 	 * 
 	 * @param client must not be {@literal null}.
 	 */
-	public AerospikeTemplate(AerospikeClient client) {
+	public AerospikeTemplate(AerospikeClient client, String namespace) {
 
-		super(new AerospikeKeyValueAdapter(client, DEFAULT_CONVERTER));
+		super(new AerospikeKeyValueAdapter(client, DEFAULT_CONVERTER, namespace));
 
 		Assert.notNull(client, "Aerospike client must not be null!");
 
