@@ -37,7 +37,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-@Ignore
+
 // Ignored until we have the infrastructure set up to actually run the tests
 public class CustomerRepositoriesIntegrationTests {
 

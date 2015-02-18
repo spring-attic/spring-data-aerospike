@@ -47,7 +47,25 @@ public class AerospikeData {
 	}
 
 	public static AerospikeData forRead(Key key, Record record) {
-		return new AerospikeData(key, record, key.namespace, Collections.<Bin> emptyList());
+		// TODO Need to find a way to NOT make bins on a read.
+		if (record != null && record.bins.size() > 0) {
+			ArrayList<Bin> bins = new ArrayList<Bin>();
+			for (Map.Entry<String, Object> entry : record.bins.entrySet()) {
+				String keyString = entry.getKey();
+				Object value = entry.getValue();
+				Bin newBin;
+				if (value instanceof Map)
+					newBin = new Bin(keyString, Value.getAsMap((Map<?, ?>)value));
+				else if (value instanceof List)
+					newBin = new Bin(keyString, Value.getAsList((List<?>)value));
+				else
+					newBin = new Bin(keyString, Value.get(value));
+				bins.add(newBin);
+			}
+			return new AerospikeData(key, record, key.namespace, bins);
+		} else {
+			return new AerospikeData(key, record, key.namespace, Collections.<Bin> emptyList());
+		}
 	}
 
 	public static AerospikeData forWrite(String namespace) {
@@ -86,25 +104,9 @@ public class AerospikeData {
 	 * @return the bins
 	 */
 	public List<Bin> getBins() {
-		// TODO Need to find a way to NOT make bins on a read.
-		if (record != null && record.bins.size() > 0) {
-			List<Bin> readBins = new ArrayList<Bin>();
-			for (Map.Entry<String, Object> entry : record.bins.entrySet()) {
-				String key = entry.getKey();
-				Object value = entry.getValue();
-				Bin newBin;
-				if (value instanceof Map)
-					newBin = new Bin(key, Value.getAsMap((Map<?, ?>)value));
-				else if (value instanceof List)
-					newBin = new Bin(key, Value.getAsList((List<?>)value));
-				else
-					newBin = new Bin(key, Value.get(value));
-				readBins.add(newBin);
-			}
-			return readBins;
-		} else 
-			return bins;
+		return bins;
 	}
+	
 	public void add(List<Bin> bins) {
 		this.bins.addAll(bins);
 	}
