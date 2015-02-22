@@ -29,10 +29,12 @@ public class TestConfiguration {
 		ClientPolicy policy = new ClientPolicy();
 		policy.failIfNotConnected = true;
 
+//		return new AerospikeClient(policy, "127.0.0.1", 3000);
 		return new AerospikeClient(policy, "ec2-52-0-250-147.compute-1.amazonaws.com", 3000);
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {
 		return new AerospikeTemplate(aerospikeClient(), "test"); // TODO verify correct place for namespace
 	}
+	
 }

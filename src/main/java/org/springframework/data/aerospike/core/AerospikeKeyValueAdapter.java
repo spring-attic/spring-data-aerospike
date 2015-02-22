@@ -29,12 +29,9 @@ import org.springframework.data.keyvalue.core.KeyValueTemplate;
 import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 
 import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.AerospikeException;
-import com.aerospike.client.Bin;
-import com.aerospike.client.Info;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
-import com.aerospike.client.ScanCallback;
+import com.aerospike.client.Value;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.RecordSet;
@@ -52,7 +49,8 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 	private final AerospikeClient client;
 
 	private String namespace;
-	private final WritePolicy writePolicy;
+	private final WritePolicy insertPolicy;
+	private final WritePolicy updatePolicy;
 
 	/**
 	 * Creates a new {@link AerospikeKeyValueAdapter} using the given {@link AerospikeClient} and
@@ -66,9 +64,13 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 		this.client = client;
 		this.converter = converter;
 		this.namespace = namespace;
-		this.writePolicy = new WritePolicy();
+		this.insertPolicy = new WritePolicy(this.client.writePolicyDefault);
+		this.updatePolicy = new WritePolicy(this.client.writePolicyDefault);
+		this.insertPolicy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
+		this.updatePolicy.recordExistsAction = RecordExistsAction.UPDATE_ONLY;
 	}
 
+	
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.keyvalue.core.KeyValueAdapter#put(java.io.Serializable, java.lang.Object, java.io.Serializable)
@@ -79,9 +81,7 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 		AerospikeData data = AerospikeData.forWrite(namespace);
 		converter.write(item, data);
 
-		List<Bin> bins = data.getBins();
-
-		client.put(writePolicy, data.getKey(), bins.toArray(new Bin[bins.size()]));
+		client.put(null, data.getKey(), data.getBinsAsArray());
 
 		return item;
 	}
@@ -93,9 +93,7 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 	@Override
 	public boolean contains(Serializable id, Serializable keyspace) {
 
-		Key key = new Key(namespace, keyspace.toString(), id.toString());
-
-		return client.exists(null, key);
+		return client.exists(null, makeKey(keyspace.toString(), id.toString()));
 	}
 
 	/* 
@@ -105,11 +103,11 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 	@Override
 	public Object get(Serializable id, Serializable keyspace) {
 
-		Key key = new Key(namespace, keyspace.toString(), id.toString());
-
+		Key key = makeKey(keyspace.toString(), id.toString());
 		Record record = client.get(null, key);
-
-		return converter.read(Object.class, AerospikeData.forRead(key, record));
+		AerospikeData data = AerospikeData.forRead(key, null);
+		data.setRecord(record);
+		return converter.read(Object.class,  data);
 	}
 
 	/* 
@@ -149,8 +147,8 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 		
 		while (recordSet.next()) {
 
-			AerospikeData data = AerospikeData.forRead(recordSet.getKey(), recordSet.getRecord());
-			result.add(converter.read(Object.class, data));
+			//AerospikeData data = AerospikeData.forRead(recordSet.getKey(), recordSet.getRecord());
+			//result.add(converter.read(Object.class, data));
 		}
 
 //		final List<Object> result = new ArrayList<Object>();
@@ -190,5 +188,16 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 	 */
 	@Override
 	public void destroy() throws Exception {}
+	
+	private Key makeKey(String set, Object keyValue){
+		return new Key(this.namespace, set, Value.get(keyValue));
+	}
+	
+	@Override
+	public Collection<?> find(KeyValueQuery<?> query, Serializable keyspace) {
+		// TODO Auto-generated method stub
+		return super.find(query, keyspace);
+	}
+	
 
 }

@@ -15,15 +15,15 @@
  */
 package org.springframework.data.aerospike.core;
 
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
+import org.springframework.data.aerospike.sample.Customer;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.AerospikeException;
 
 /**
  * Integration tests for {@link AerospikeTemplate}.
@@ -33,22 +33,53 @@ import com.aerospike.client.AerospikeException;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 
-// Ignored until we have the infrastructure set up to actually run the tests
 public class AerospikeTemplateIntegrationTests {
 
-	@Autowired AerospikeOperations operations;
+	@Configuration
+	@EnableAerospikeRepositories(basePackageClasses = AerospikeTemplate.class)
+	static class Config extends TestConfiguration {
 
-	@Test
-	public void testname() {
-
-		operations.execute(new AerospikeClientCallback<Object>() {
-
-			@Override
-			public Object doWith(AerospikeClient client) throws AerospikeException {
-
-				// all Aerospike exceptions thrown from here will get translated to Spring's DataAccessException now
-				return null;
-			}
-		});
 	}
+	//@Autowired AerospikeOperations operations;
+
+	@Autowired AerospikeTemplate template;
+	
+	@Before
+	public void cleanUp(){
+		template.delete("dave-001", Customer.class);
+		template.delete("dave-002", Customer.class);
+		template.delete("dave-003", Customer.class);
+	}
+	
+	@Test
+	public void testInsertWithKey(){
+		Customer customer = new Customer("dave-001", "Dave", "Matthews");
+		template.insert("dave-001", customer);
+	}
+	@Test
+	public void testInsert(){
+		Customer customer = new Customer("dave-002", "Dave", "Matthews");
+		template.insert(customer);
+	}
+	@Test
+	public void testFindById(){
+		Customer customer = new Customer("dave-003", "Dave", "Matthews");
+		template.insert("dave-003", customer);
+		template.findById("dave-003", Customer.class);
+	}
+//	@Test
+//	public void testname() {
+//
+//		operations.execute(new AerospikeClientCallback<Object>() {
+//
+//			@Override
+//			public Object doWith(AerospikeClient client) throws AerospikeException {
+//
+//				// all Aerospike exceptions thrown from here will get translated to Spring's DataAccessException now
+//				return null;
+//			}
+//		});
+//	}
 }
+
+

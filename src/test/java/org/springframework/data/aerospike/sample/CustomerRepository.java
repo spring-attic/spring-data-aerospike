@@ -15,17 +15,11 @@
  */
 package org.springframework.data.aerospike.sample;
 
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.CrudRepository;
 
 /**
  * @author Oliver Gierke
  */
-public interface CustomerRepository extends Repository<Customer, UUID> {
+public interface CustomerRepository extends CrudRepository<Customer, String> {
 
-	List<Customer> findByLastname(String lastname);
-
-	Customer save(Customer customer);
 }

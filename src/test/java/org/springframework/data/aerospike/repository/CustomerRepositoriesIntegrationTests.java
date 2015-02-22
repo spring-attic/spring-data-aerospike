@@ -49,14 +49,43 @@ public class CustomerRepositoriesIntegrationTests {
 
 	@Autowired CustomerRepository repository;
 
+//	@Test
+//	public void testname() {
+//
+//		Customer customer = repository.save(new Customer("Dave", "Matthews"));
+//		List<Customer> findByLastname = repository.findByLastname("Matthews");
+//
+//		assertThat(findByLastname, hasSize(1));
+//		assertThat(findByLastname, hasItem(customer));
+//	}
 	@Test
-	public void testname() {
+	public void testCreate() {
 
-		Customer customer = repository.save(new Customer("Dave", "Matthews"));
-		List<Customer> findByLastname = repository.findByLastname("Matthews");
+		repository.save(new Customer("dave-001", "Dave", "Matthews"));
+		
+	}
+	@Test
+	public void testExists() {
 
-		assertThat(findByLastname, hasSize(1));
-		assertThat(findByLastname, hasItem(customer));
+		repository.save(new Customer("dave-001", "Dave", "Matthews"));
+		boolean exists = repository.exists("dave-001");
+		assertTrue(exists);
+	}
+	@Test
+	public void testDelete() {
+
+		repository.delete(new Customer("dave-001", "Dave", "Matthews"));
+		
+	}
+	@Test
+	public void testReadById() {
+
+		Customer customer = repository.save(new Customer("dave-001", "Dave", "Matthews"));
+		Customer findById = repository.findOne("dave-001");
+
+		assertNotNull(findById);
+		assertEquals(customer.getLastname(), findById.getLastname());
+		assertEquals(customer.getFirstname(), findById.getFirstname());
 	}
 
 }

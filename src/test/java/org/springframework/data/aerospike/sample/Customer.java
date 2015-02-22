@@ -24,7 +24,7 @@ import org.springframework.data.annotation.Id;
  */
 public class Customer {
 
-	private final @Id UUID id;
+	private final @Id String id;
 	private final String firstname, lastname;
 
 	/**
@@ -34,7 +34,12 @@ public class Customer {
 	 */
 	public Customer(String firstname, String lastname) {
 
-		this.id = UUID.randomUUID();
+		this(UUID.randomUUID().toString(), firstname, lastname);
+	}
+
+	public Customer(String id, String firstname, String lastname) {
+
+		this.id = id;
 		this.firstname = firstname;
 		this.lastname = lastname;
 	}
@@ -42,7 +47,7 @@ public class Customer {
 	/**
 	 * @return the id
 	 */
-	public UUID getId() {
+	public String getId() {
 		return id;
 	}
 

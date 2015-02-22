@@ -15,6 +15,7 @@
  */
 package org.springframework.data.aerospike.core;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,11 +24,19 @@ import org.springframework.data.aerospike.convert.AerospikeConverter;
 import org.springframework.data.aerospike.convert.AerospikeData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
+import org.springframework.data.aerospike.utility.Utils;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.keyvalue.core.KeyValueTemplate;
+import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 import org.springframework.util.Assert;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
+import com.aerospike.client.Bin;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.policy.RecordExistsAction;
+import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.Statement;
@@ -44,8 +53,13 @@ public class AerospikeTemplate extends KeyValueTemplate implements AerospikeOper
 
 	private final AerospikeClient client;
 	private final MappingAerospikeConverter converter;
+	private final String namespace;
+
+
 
 	private AerospikeExceptionTranslator exceptionTranslator;
+	private WritePolicy insertPolicy;
+	private WritePolicy updatePolicy;
 
 	/**
 	 * Creates a new {@link AerospikeTemplate} for the given {@link AerospikeClient}.
@@ -61,8 +75,146 @@ public class AerospikeTemplate extends KeyValueTemplate implements AerospikeOper
 		this.client = client;
 		this.converter = DEFAULT_CONVERTER;
 		this.exceptionTranslator = DEFAULT_EXCEPTION_TRANSLATOR;
+		this.namespace = namespace;
+		this.insertPolicy = new WritePolicy(this.client.writePolicyDefault);
+		this.updatePolicy = new WritePolicy(this.client.writePolicyDefault);
+		this.insertPolicy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
+		this.updatePolicy.recordExistsAction = RecordExistsAction.UPDATE_ONLY;
+
 	}
 
+
+	@Override
+	public void insert(Serializable id, Object objectToInsert) {
+		try {
+			//TODO use passed in ID
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToInsert, data);
+			Key key = data.getKey();
+			Bin[] bins = data.getBinsAsArray();
+			client.put(this.insertPolicy, key, bins);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+	}
+
+	@Override
+	public <T> T insert(T objectToInsert) {
+		try{
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToInsert, data);
+			Key key = data.getKey();
+			Bin[] bins = data.getBinsAsArray();  //TODO the alias in the mapper is null
+			client.put(this.insertPolicy, key, bins);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return null;
+	}
+
+	@Override
+	public void update(Object objectToUpdate) {
+		try {
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToUpdate, data);
+			Key key = data.getKey();
+			Bin[] bins = data.getBinsAsArray();
+			client.put(this.updatePolicy, key, bins);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+	}
+
+	@Override
+	public void update(Serializable id, Object objectToUpdate) {
+		try {
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToUpdate, data);
+			client.put(this.updatePolicy, data.getKey(), data.getBinsAsArray());
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+	}
+
+	@Override
+	public void delete(Class<?> type) {
+		try {
+			//"set-config:context=namespace;id=namespace_name;set=set_name;set-delete=true;"
+			Utils.infoAll(client, "set-config:context=namespace;id=" + this.namespace + ";set=" + type.getSimpleName() + ";set-delete=true;");
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+	}
+
+	@Override
+	public <T> T delete(Serializable id, Class<T> type) {
+		try {
+			this.client.delete(null, new Key(this.namespace, type.getSimpleName(), id.toString()));
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return null;
+	}
+
+	@Override
+	public <T> T delete(T objectToDelete) {
+		try {
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToDelete, data);
+			this.client.delete(null, data.getKey());
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return null;
+	}
+
+	@Override
+	public long count(Class<?> type) {
+		// TODO Auto-generated method stub
+		return super.count(type);
+	}
+
+	@Override
+	public long count(KeyValueQuery<?> query, Class<?> type) {
+		// TODO Auto-generated method stub
+		return super.count(query, type);
+	}
+
+	@Override
+	public <T> List<T> find(KeyValueQuery<?> query, Class<T> type) {
+		// TODO Auto-generated method stub
+		return super.find(query, type);
+	}
+	@Override
+	public <T> List<T> findAll(Class<T> type) {
+		// TODO Auto-generated method stub
+		return super.findAll(type);
+	}
+	@Override
+	public <T> List<T> findAll(Sort sort, Class<T> type) {
+		// TODO Auto-generated method stub
+		return super.findAll(sort, type);
+	}
+	@Override
+	public <T> T findById(Serializable id, Class<T> type) {
+		try {
+			Key key = new Key(this.namespace, type.getSimpleName(), id.toString());
+			AerospikeData data = AerospikeData.forRead(key, null);
+			Record record = this.client.get(null, data.getKey(), data.getBinNames());
+			data.setRecord(record);
+			return converter.read(type, data);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+	}
 	/**
 	 * Configures the {@link AerospikeExceptionTranslator} to be used.
 	 * 
@@ -119,6 +271,7 @@ public class AerospikeTemplate extends KeyValueTemplate implements AerospikeOper
 		return entity.getSetName();
 	}
 
+
 	/**
 	 * {@link AerospikeClientCallback} to execute a query to return an {@link Iterable} of objects.
 	 * 
@@ -155,7 +308,7 @@ public class AerospikeTemplate extends KeyValueTemplate implements AerospikeOper
 			List<T> result = new ArrayList<T>();
 
 			while (recordSet.next()) {
-				result.add(converter.read(type, AerospikeData.forRead(recordSet.getKey(), recordSet.getRecord())));
+				//result.add(converter.read(type, AerospikeData.forRead(recordSet.getKey(), recordSet.getRecord())));
 			}
 
 			return result;

@@ -20,8 +20,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.dao.DataRetrievalFailureException;
+import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.convert.DefaultTypeMapper;
@@ -39,6 +42,8 @@ import org.springframework.data.mapping.model.PersistentEntityParameterValueProv
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.jca.cci.RecordTypeNotSupportedException;
 
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
@@ -57,17 +62,21 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	private final EntityInstantiators entityInstantiators;
 	private final TypeMapper<AerospikeData> typeMapper;
 
+	protected ApplicationContext applicationContext;
+	protected final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
+
 	/**
 	 * Creates a new {@link MappingAerospikeConverter}.
 	 */
 	public MappingAerospikeConverter() {
-
 		this.mappingContext = new AerospikeMappingContext();
 		this.conversionService = new DefaultConversionService();
 		this.entityInstantiators = new EntityInstantiators();
 
 		this.typeMapper = new DefaultTypeMapper<AerospikeData>(AerospikeTypeAliasAccessor.INSTANCE, mappingContext,
 				Collections.<TypeInformationMapper> emptyList());
+		
+
 	}
 
 	/* 
@@ -95,8 +104,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <R> R read(Class<R> type, AerospikeData data) {
-		//TypeInformation<?> readType = typeMapper.readType(data, type);
-		TypeInformation<?> readType = typeMapper.readType(data);
+		TypeInformation<?> readType = typeMapper.readType(data, ClassTypeInformation.from(type));
 		TypeInformation<?> typeToUse = type.isAssignableFrom(readType.getType()) ? readType : ClassTypeInformation
 				.from(type);
 
@@ -155,7 +163,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 				bins.add(new Bin(property.getName(), accessor.getProperty(property)));
 			}
 		});
-
+		typeMapper.writeType(source.getClass(), data);
 		data.add(bins);
 	}
 
@@ -209,7 +217,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		 */
 		@Override
 		public void writeTypeTo(AerospikeData sink, Object alias) {
-			sink.add(Arrays.asList(new Bin(TYPE_BIN_NAME, alias)));
+			sink.add(new Bin(TYPE_BIN_NAME, alias.getClass().getName()));
 		}
 	}
 }

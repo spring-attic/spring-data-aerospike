@@ -33,43 +33,28 @@ import com.aerospike.client.Value;
 public class AerospikeData {
 
 	private Key key;
-	private final Record record;
-
+	private Record record;
 	private final String namespace;
 	private final List<Bin> bins;
+	private String[] binNames;
 
-	private AerospikeData(Key key, Record record, String namespace, List<Bin> bins) {
+	private AerospikeData(Key key, Record record, String namespace, List<Bin> bins, String[] binNames) {
 
 		this.key = key;
 		this.record = record;
 		this.namespace = namespace;
 		this.bins = bins;
+		
 	}
 
-	public static AerospikeData forRead(Key key, Record record) {
-		// TODO Need to find a way to NOT make bins on a read.
-		if (record != null && record.bins.size() > 0) {
-			ArrayList<Bin> bins = new ArrayList<Bin>();
-			for (Map.Entry<String, Object> entry : record.bins.entrySet()) {
-				String keyString = entry.getKey();
-				Object value = entry.getValue();
-				Bin newBin;
-				if (value instanceof Map)
-					newBin = new Bin(keyString, Value.getAsMap((Map<?, ?>)value));
-				else if (value instanceof List)
-					newBin = new Bin(keyString, Value.getAsList((List<?>)value));
-				else
-					newBin = new Bin(keyString, Value.get(value));
-				bins.add(newBin);
-			}
-			return new AerospikeData(key, record, key.namespace, bins);
-		} else {
-			return new AerospikeData(key, record, key.namespace, Collections.<Bin> emptyList());
-		}
+
+	public static AerospikeData forRead(Key key, String[] binNames) {
+		return new AerospikeData(key, null, key.namespace, Collections.<Bin>emptyList(), binNames);
 	}
+
 
 	public static AerospikeData forWrite(String namespace) {
-		return new AerospikeData(null, null, namespace, new ArrayList<Bin>());
+		return new AerospikeData(null, null, namespace, new ArrayList<Bin>(), null);
 	}
 
 	/**
@@ -99,6 +84,12 @@ public class AerospikeData {
 	public String getNamespace() {
 		return namespace;
 	}
+	/**
+	 * @return the set name
+	 */
+	public String getSetName(){
+		return (key != null) ? key.setName : null;
+	}
 
 	/**
 	 * @return the bins
@@ -106,8 +97,23 @@ public class AerospikeData {
 	public List<Bin> getBins() {
 		return bins;
 	}
-	
+
+	public Bin[] getBinsAsArray() {
+		return getBins().toArray(new Bin[bins.size()]);
+	}
+
 	public void add(List<Bin> bins) {
 		this.bins.addAll(bins);
+	}
+	public void add(Bin bin) {
+		this.bins.add(bin);
+	}
+
+	public String[] getBinNames() {
+		return this.binNames;
+	}
+
+	public void setRecord(Record record) {
+		this.record = record;
 	}
 }
