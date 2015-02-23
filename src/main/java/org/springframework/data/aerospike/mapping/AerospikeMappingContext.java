@@ -50,4 +50,6 @@ public class AerospikeMappingContext extends
 			BasicAerospikePersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
 		return new KeyValuePersistentProperty(field, descriptor, owner, simpleTypeHolder);
 	}
+	
+
 }

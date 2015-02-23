@@ -30,6 +30,7 @@ import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.convert.DefaultTypeMapper;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.EntityInstantiators;
+import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.convert.TypeAliasAccessor;
 import org.springframework.data.convert.TypeInformationMapper;
 import org.springframework.data.convert.TypeMapper;
@@ -74,9 +75,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		this.entityInstantiators = new EntityInstantiators();
 
 		this.typeMapper = new DefaultTypeMapper<AerospikeData>(AerospikeTypeAliasAccessor.INSTANCE, mappingContext,
-				Collections.<TypeInformationMapper> emptyList());
-		
-
+				Arrays.asList(SimpleTypeInformationMapper.INSTANCE));
 	}
 
 	/* 
@@ -163,7 +162,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 				bins.add(new Bin(property.getName(), accessor.getProperty(property)));
 			}
 		});
-		typeMapper.writeType(source.getClass(), data);
+		typeMapper.writeType(entity.getTypeInformation(), data);
 		data.add(bins);
 	}
 
@@ -200,7 +199,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 		INSTANCE;
 
-		private static final String TYPE_BIN_NAME = "_class";
+		private static final String TYPE_BIN_NAME = "spring_class";
 
 		/* 
 		 * (non-Javadoc)
@@ -217,7 +216,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		 */
 		@Override
 		public void writeTypeTo(AerospikeData sink, Object alias) {
-			sink.add(new Bin(TYPE_BIN_NAME, alias.getClass().getName()));
+			sink.add(new Bin(TYPE_BIN_NAME, alias.toString()));
 		}
 	}
 }
