@@ -105,7 +105,7 @@ public class AerospikeTemplate extends KeyValueTemplate implements AerospikeOper
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToInsert, data);
 			Key key = data.getKey();
-			Bin[] bins = data.getBinsAsArray();  //TODO the alias in the mapper is null
+			Bin[] bins = data.getBinsAsArray();  
 			client.put(this.insertPolicy, key, bins);
 		} catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);

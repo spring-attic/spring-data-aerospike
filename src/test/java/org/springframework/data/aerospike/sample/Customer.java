@@ -24,9 +24,12 @@ import org.springframework.data.annotation.Id;
  */
 public class Customer {
 
-	private final @Id String id;
-	private final String firstname, lastname;
+	private  @Id String id;
+	private  String firstname, lastname;
 
+	public Customer(){
+		super();
+	}
 	/**
 	 * @param id
 	 * @param firstname
@@ -38,7 +41,7 @@ public class Customer {
 	}
 
 	public Customer(String id, String firstname, String lastname) {
-
+		this();
 		this.id = id;
 		this.firstname = firstname;
 		this.lastname = lastname;

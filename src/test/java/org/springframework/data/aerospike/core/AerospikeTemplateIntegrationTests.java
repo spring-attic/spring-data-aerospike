@@ -15,6 +15,8 @@
  */
 package org.springframework.data.aerospike.core;
 
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -65,7 +67,8 @@ public class AerospikeTemplateIntegrationTests {
 	public void testFindById(){
 		Customer customer = new Customer("dave-003", "Dave", "Matthews");
 		template.insert("dave-003", customer);
-		template.findById("dave-003", Customer.class);
+		Customer result = template.findById("dave-003", Customer.class);
+		
 	}
 //	@Test
 //	public void testname() {

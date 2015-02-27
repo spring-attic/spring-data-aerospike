@@ -18,6 +18,8 @@ package org.springframework.data.aerospike.mapping;
 import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
 import org.springframework.data.mapping.PersistentEntity;
 
+import com.aerospike.client.Key;
+
 /**
  * Aerospike-specific extensions of {@link PersistentEntity}.
  * 
@@ -31,4 +33,10 @@ public interface AerospikePersistentEntity<T> extends PersistentEntity<T, KeyVal
 	 * @return
 	 */
 	String getSetName();
+	
+//	Key getKey();
+//	
+//	long getGeneration();
+//	
+//	int getTTL();
 }

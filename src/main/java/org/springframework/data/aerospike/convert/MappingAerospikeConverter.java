@@ -17,14 +17,11 @@ package org.springframework.data.aerospike.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.convert.DefaultTypeMapper;
@@ -32,7 +29,6 @@ import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.convert.TypeAliasAccessor;
-import org.springframework.data.convert.TypeInformationMapper;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
@@ -44,7 +40,6 @@ import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.jca.cci.RecordTypeNotSupportedException;
 
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
