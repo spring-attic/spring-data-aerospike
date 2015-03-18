@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.aerospike.sample;
+package org.springframework.data.aerospike.log4j;
 
-import org.springframework.data.aerospike.repository.AerospikeRepository;
+import org.junit.Test;
 
 /**
- * @author Oliver Gierke
+ * Unit tests for {@link AerospikeLog4jAppender}.
+ * 
+ * @author Peter Milne
  */
-public interface CustomerRepository extends AerospikeRepository<Customer, String> {
+public class AerospikeLog4jAppenderUnitTests {
 
+	@Test
+	public void closesWithoutAerospikeInstancePresent() {
+		new AerospikeLog4jAppender().close();
+	}
 }

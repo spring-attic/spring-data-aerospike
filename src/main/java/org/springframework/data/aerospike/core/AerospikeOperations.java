@@ -40,4 +40,5 @@ public interface AerospikeOperations {
 	 * @return
 	 */
 	<T> Iterable<T> findAll(Filter filter, Class<T> type);
+	
 }
