@@ -19,12 +19,14 @@ import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 
+import com.aerospike.client.Key;
+
 /**
  * Default implementation of {@link AerospikePersistentEntity}.
  * 
  * @author Oliver Gierke
  */
-public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, KeyValuePersistentProperty> implements
+public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, AerospikePersistentProperty> implements
 		AerospikePersistentEntity<T> {
 
 	private final TypeInformation<?> typeInformation;
@@ -47,5 +49,23 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 	@Override
 	public String getSetName() {
 		return typeInformation.getType().getSimpleName();
+	}
+
+	@Override
+	public Key getKey() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public long getGeneration() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getTTL() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

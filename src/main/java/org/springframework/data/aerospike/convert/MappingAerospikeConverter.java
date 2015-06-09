@@ -24,13 +24,13 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.convert.DefaultTypeMapper;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.convert.TypeAliasAccessor;
 import org.springframework.data.convert.TypeMapper;
-import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PropertyHandler;
@@ -78,7 +78,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	 * @see org.springframework.data.convert.EntityConverter#getMappingContext()
 	 */
 	@Override
-	public MappingContext<? extends AerospikePersistentEntity<?>, KeyValuePersistentProperty> getMappingContext() {
+	public MappingContext<? extends AerospikePersistentEntity<?>, AerospikePersistentProperty> getMappingContext() {
 		return mappingContext;
 	}
 
@@ -108,17 +108,18 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 		EntityInstantiator instantiator = entityInstantiators.getInstantiatorFor(entity);
 		Object instance = instantiator.createInstance(entity,
-				new PersistentEntityParameterValueProvider<KeyValuePersistentProperty>(entity,
+				new PersistentEntityParameterValueProvider<AerospikePersistentProperty>(entity,
 						recordReadingPropertyValueProvider, null));
 
 		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(instance);
 
-		entity.doWithProperties(new PropertyHandler<KeyValuePersistentProperty>() {
+		entity.doWithProperties(new PropertyHandler<AerospikePersistentProperty>() {
+
 
 			@Override
-			public void doWithPersistentProperty(KeyValuePersistentProperty persistentProperty) {
-
-				PreferredConstructor<?, KeyValuePersistentProperty> constructor = entity.getPersistenceConstructor();
+			public void doWithPersistentProperty(
+					AerospikePersistentProperty persistentProperty) {
+				PreferredConstructor<?, AerospikePersistentProperty> constructor = entity.getPersistenceConstructor();
 
 				if (constructor.isConstructorParameter(persistentProperty)) {
 					return;
@@ -126,6 +127,8 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 				accessor.setProperty(persistentProperty,
 						recordReadingPropertyValueProvider.getPropertyValue(persistentProperty));
+				// TODO Auto-generated method stub
+				
 			}
 		});
 
@@ -143,10 +146,10 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(source);
 		final List<Bin> bins = new ArrayList<Bin>();
 
-		entity.doWithProperties(new PropertyHandler<KeyValuePersistentProperty>() {
+		entity.doWithProperties(new PropertyHandler<AerospikePersistentProperty>() {
 
 			@Override
-			public void doWithPersistentProperty(KeyValuePersistentProperty property) {
+			public void doWithPersistentProperty(AerospikePersistentProperty property) {
 
 				if (property.isIdProperty()) {
 
@@ -166,7 +169,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	 *
 	 * @author Oliver Gierke
 	 */
-	private static class RecordReadingPropertyValueProvider implements PropertyValueProvider<KeyValuePersistentProperty> {
+	private static class RecordReadingPropertyValueProvider implements PropertyValueProvider<AerospikePersistentProperty> {
 
 		private final Record record;
 
@@ -185,7 +188,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		 */
 		@Override
 		@SuppressWarnings("unchecked")
-		public <T> T getPropertyValue(KeyValuePersistentProperty property) {
+		public <T> T getPropertyValue(AerospikePersistentProperty property) {
 			return (T) record.getValue(property.getName());
 		}
 	}

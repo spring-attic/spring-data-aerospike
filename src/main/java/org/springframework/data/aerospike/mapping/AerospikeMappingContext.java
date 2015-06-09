@@ -18,9 +18,13 @@ package org.springframework.data.aerospike.mapping;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 
-import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.FieldNamingStrategy;
+import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 
@@ -28,10 +32,26 @@ import org.springframework.data.util.TypeInformation;
  * An Aerospike-specific implementation of {@link MappingContext}.
  * 
  * @author Oliver Gierke
+ * @author Peter Milne
  */
 public class AerospikeMappingContext extends
-		AbstractMappingContext<BasicAerospikePersistentEntity<?>, KeyValuePersistentProperty> {
+		AbstractMappingContext<BasicAerospikePersistentEntity<?>, AerospikePersistentProperty> implements ApplicationContextAware{
 
+	private static final FieldNamingStrategy DEFAULT_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
+
+	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
+	private ApplicationContext context;
+
+	/**
+	 * Configures the {@link FieldNamingStrategy} to be used to determine the field name if no manual mapping is applied.
+	 * Defaults to a strategy using the plain property name.
+	 * 
+	 * @param fieldNamingStrategy the {@link FieldNamingStrategy} to be used to determine the field name if no manual
+	 *          mapping is applied.
+	 */
+	public void setFieldNamingStrategy(FieldNamingStrategy fieldNamingStrategy) {
+		this.fieldNamingStrategy = fieldNamingStrategy == null ? DEFAULT_NAMING_STRATEGY : fieldNamingStrategy;
+	}
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.context.AbstractMappingContext#createPersistentEntity(org.springframework.data.util.TypeInformation)
@@ -46,9 +66,18 @@ public class AerospikeMappingContext extends
 	 * @see org.springframework.data.mapping.context.AbstractMappingContext#createPersistentProperty(java.lang.reflect.Field, java.beans.PropertyDescriptor, org.springframework.data.mapping.model.MutablePersistentEntity, org.springframework.data.mapping.model.SimpleTypeHolder)
 	 */
 	@Override
-	protected KeyValuePersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
+	protected AerospikePersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
 			BasicAerospikePersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
-		return new KeyValuePersistentProperty(field, descriptor, owner, simpleTypeHolder);
+		return new CachingAerospikePersistentProperty(field, descriptor, owner, simpleTypeHolder, fieldNamingStrategy);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+	 */
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.context = applicationContext;
 	}
 	
 

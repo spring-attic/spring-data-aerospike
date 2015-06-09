@@ -15,22 +15,60 @@
  */
 package org.springframework.data.aerospike.core;
 
+import java.io.Serializable;
+import java.util.List;
+
+import javax.management.Query;
+
+import org.springframework.data.aerospike.core.aggregation.AggregationResults;
+
 import com.aerospike.client.query.Filter;
 
 /**
  * Aerospike specific data access operations.
  * 
  * @author Oliver Gierke
+ * @author Peter Milne
  */
 public interface AerospikeOperations {
 
 	/**
-	 * Executes the given {@link AerospikeClientCallback} and applies exception translation if necessary.
+	 * The Set name used for the specified class by this template.
 	 * 
-	 * @param callback must not be {@literal null}.
+	 * @param entityClass must not be {@literal null}.
 	 * @return
 	 */
-	<T> T execute(AerospikeClientCallback<T> callback);
+	String getSetName(Class<?> entityClass);
+	
+	/**
+	 * Insert operation using the WritePolicy.recordExisits policy of CREATE_ONLY 
+	 * @param objectToInsert
+	 * @return
+	 */
+	public <T> T insert(T objectToInsert);
+	/**
+	 * Insert operation using the WritePolicy.recordExisits policy of CREATE_ONLY 
+	 * @param id
+	 * @param objectToInsert
+	 */
+	void insert(Serializable id, Object objectToInsert);
+	
+	
+	void update(Object objectToUpdate);
+	void update(Serializable id, Object objectToUpdate);
+	
+	void delete(Class<?> type);
+	
+	<T> T delete(Serializable id, Class<T> type);
+	<T> T delete(T objectToDelete);
+	
+	<T> Iterable<T> find(Filter filter, Class<T> entityClass);
+	<T> List<T> findAll(Class<T> type);
+	<T> T findById(Serializable id, Class<T> type);
+	
+	
+	<T> Iterable<T> aggregate(Filter filter, Class<?> type, Class<T> outputType, String module, String function, List<?> arguments);
+	
 
 	/**
 	 * Returns all entities of the given type matching the filter given {@link Filter}.

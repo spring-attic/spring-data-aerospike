@@ -22,6 +22,7 @@ import com.aerospike.client.AerospikeException;
  * Callback to interact with the {@link AerospikeClient}.
  * 
  * @author Oliver Gierke
+ * @author Peter Milne
  */
 public interface AerospikeClientCallback<T> {
 
@@ -32,5 +33,7 @@ public interface AerospikeClientCallback<T> {
 	 * @return
 	 * @throws AerospikeException
 	 */
-	T doWith(AerospikeClient client) throws AerospikeException;
+	T recordIterator(AerospikeClient client) throws AerospikeException;
+	
+	T resultIterator(AerospikeClient client) throws AerospikeException;
 }

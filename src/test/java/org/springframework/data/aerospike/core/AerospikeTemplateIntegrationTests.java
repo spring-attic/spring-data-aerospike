@@ -17,6 +17,7 @@ package org.springframework.data.aerospike.core;
 
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,6 +60,15 @@ public class AerospikeTemplateIntegrationTests {
 		template.insert("dave-001", customer);
 	}
 	@Test
+	public void testUpdateWithKey(){
+		Customer customer = new Customer("dave-001", "Dave", "Matthews");
+		template.insert("dave-001", customer);
+		customer.setLastName(customer.getLastname() + "xx");
+		template.update("dave-001", customer);
+		customer = template.findById("dave-001", Customer.class);
+		Assert.assertEquals("Matthewsxx", customer.getLastname());
+	}
+	@Test
 	public void testInsert(){
 		Customer customer = new Customer("dave-002", "Dave", "Matthews");
 		template.insert(customer);
@@ -68,21 +78,10 @@ public class AerospikeTemplateIntegrationTests {
 		Customer customer = new Customer("dave-003", "Dave", "Matthews");
 		template.insert("dave-003", customer);
 		Customer result = template.findById("dave-003", Customer.class);
+		Assert.assertEquals("Matthews", result.getLastname());
+		Assert.assertEquals("Dave", result.getFirstname());
 		
 	}
-//	@Test
-//	public void testname() {
-//
-//		operations.execute(new AerospikeClientCallback<Object>() {
-//
-//			@Override
-//			public Object doWith(AerospikeClient client) throws AerospikeException {
-//
-//				// all Aerospike exceptions thrown from here will get translated to Spring's DataAccessException now
-//				return null;
-//			}
-//		});
-//	}
 }
 
 

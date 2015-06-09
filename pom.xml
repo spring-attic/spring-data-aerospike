@@ -17,7 +17,7 @@
 	</parent>
 
 	<properties>
-		<aerospike>3.0.34</aerospike>
+		<aerospike>3.1.2</aerospike>
 		<springdata.commons>1.10.0.BUILD-SNAPSHOT</springdata.commons>
 		<springdata.keyvalue>0.1.0.BUILD-SNAPSHOT</springdata.keyvalue>
 		<dist.key>DATAAERO</dist.key>
@@ -50,7 +50,7 @@
 		<dependency>
 			<groupId>com.aerospike</groupId>
 			<artifactId>aerospike-client</artifactId>
-			<version>3.0.35</version>
+			<version>${aerospike}</version>
 		</dependency>
 
 		<!-- Logging -->
