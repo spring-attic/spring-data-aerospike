@@ -17,6 +17,7 @@ package org.springframework.data.aerospike.core;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 import javax.management.Query;
 
@@ -66,6 +67,11 @@ public interface AerospikeOperations {
 	<T> List<T> findAll(Class<T> type);
 	<T> T findById(Serializable id, Class<T> type);
 	
+	<T> T add(T objectToAddTo, Map<String, Long> values);
+	<T> T add(T objectToAddTo, String binName, int value);
+
+	<T> T append(T objectToAppenTo, Map<String, String> values);
+	<T> T append(T objectToAppenTo, String binName, String value);
 	
 	<T> Iterable<T> aggregate(Filter filter, Class<?> type, Class<T> outputType, String module, String function, List<?> arguments);
 	

@@ -82,6 +82,12 @@ public class AerospikeTemplateIntegrationTests {
 		Assert.assertEquals("Dave", result.getFirstname());
 		
 	}
+	@Test
+	public void testIncrement(){
+		Customer customer = new Customer("dave-002", "Dave", "Matthews");
+		template.insert(customer);
+		template.add(customer, "age", 1);
+	}
 }
 
 

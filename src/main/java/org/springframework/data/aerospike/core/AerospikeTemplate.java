@@ -18,13 +18,13 @@ package org.springframework.data.aerospike.core;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.aerospike.convert.AerospikeConverter;
 import org.springframework.data.aerospike.convert.AerospikeData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
-import org.springframework.data.aerospike.sample.Customer;
 import org.springframework.data.aerospike.utility.Utils;
 import org.springframework.util.Assert;
 
@@ -177,14 +177,19 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return null;
 	}
 
-	
-	public <T> T add(T objectToAddTo, String string, int i) {
+	public <T> T add(T objectToAddTo, Map<String, Long> values) {
 		try {
 			
-			//TODO
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToAddTo, data);
-			this.client.delete(null, data.getKey());
+			Bin[] bins = new Bin[values.size()];
+			int x = 0;
+			for(Map.Entry<String, Long> entry : values.entrySet()){
+				Bin newBin = new Bin(entry.getKey(), entry.getValue());
+				bins[x] = newBin;
+				x++;
+			}
+			this.client.add(null, data.getKey(), bins);
 			
 		} catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
@@ -192,6 +197,59 @@ public class AerospikeTemplate implements AerospikeOperations {
 		}
 		return null;
 	}
+
+	public <T> T add(T objectToAddTo, String binName, int value) {
+		try {
+			
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToAddTo, data);
+			this.client.add(null, data.getKey(), new Bin(binName, value));
+			
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return null;
+	}
+
+	@Override
+	public <T> T append(T objectToAppenTo, Map<String, String> values) {
+		try {
+			
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToAppenTo, data);
+			Bin[] bins = new Bin[values.size()];
+			int x = 0;
+			for(Map.Entry<String, String> entry : values.entrySet()){
+				Bin newBin = new Bin(entry.getKey(), entry.getValue());
+				bins[x] = newBin;
+				x++;
+			}
+			this.client.add(null, data.getKey(), bins);
+			
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return null;
+	}
+
+
+	@Override
+	public <T> T append(T objectToAppenTo, String binName, String value) {
+		try {
+			
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToAppenTo, data);
+			this.client.add(null, data.getKey(), new Bin(binName, value));
+			
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return null;
+	}
+
 
 	@Override
 	public <T> List<T> findAll(final Class<T> type) {
