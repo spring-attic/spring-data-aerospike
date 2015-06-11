@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Assert;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -127,7 +128,6 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 				accessor.setProperty(persistentProperty,
 						recordReadingPropertyValueProvider.getPropertyValue(persistentProperty));
-				// TODO Auto-generated method stub
 				
 			}
 		});
@@ -153,7 +153,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 				if (property.isIdProperty()) {
 
-					data.setKey(new Key(data.getNamespace(), entity.getSetName(), accessor.getProperty(property).toString()));
+					data.setID(accessor.getProperty(property).toString());
 					return;
 				}
 
@@ -189,6 +189,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		@Override
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(AerospikePersistentProperty property) {
+			if (record == null) return null;
 			return (T) record.getValue(property.getName());
 		}
 	}
@@ -205,6 +206,8 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		 */
 		@Override
 		public Object readAliasFrom(AerospikeData source) {
+			Assert.assertNotNull(source);
+			if (source.getRecord() == null) return null;
 			return source.getRecord().getValue(TYPE_BIN_NAME);
 		}
 

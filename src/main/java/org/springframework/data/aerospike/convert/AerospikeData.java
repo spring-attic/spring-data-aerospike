@@ -15,6 +15,7 @@
  */
 package org.springframework.data.aerospike.convert;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,11 +65,24 @@ public class AerospikeData {
 		return key;
 	}
 
-	/**
-	 * @param key the key to set
-	 */
-	public void setKey(Key key) {
-		this.key = key;
+	
+	public void setID(byte[] ID){
+		this.key = new Key(this.getNamespace(), this.getSetName(), ID);
+	}
+	public void setID(String ID){
+		this.key = new Key(this.getNamespace(), this.getSetName(), ID);
+	}
+	public void setID(long ID){
+		this.key = new Key(this.getNamespace(), this.getSetName(), ID);
+	}
+	public void setID(int ID){
+		this.key = new Key(this.getNamespace(), this.getSetName(), ID);
+	}
+	public void setID(Value ID){
+		this.key = new Key(this.getNamespace(), this.getSetName(), ID);
+	}
+	public void setID(Serializable id) {
+		setID(id.toString());
 	}
 
 	/**
@@ -110,10 +124,14 @@ public class AerospikeData {
 	}
 
 	public String[] getBinNames() {
+		if (this.binNames != null && this.binNames.length  == 0)
+			return null;
 		return this.binNames;
 	}
 
 	public void setRecord(Record record) {
 		this.record = record;
 	}
+
+
 }

@@ -72,6 +72,8 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 		
 		Assert.notNull(client, "Aerospike client must not be null!");
+		Assert.notNull(namespace, "Namespace cannot be null");
+		Assert.hasLength(namespace);
 
 		this.client = client;
 		this.converter = DEFAULT_CONVERTER;
@@ -88,9 +90,9 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public void insert(Serializable id, Object objectToInsert) {
 		try {
-			//TODO use passed in ID
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToInsert, data);
+			data.setID(id);
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
 			client.put(this.insertPolicy, key, bins);
@@ -134,6 +136,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToUpdate, data);
+			data.setID(id);
 			client.put(this.updatePolicy, data.getKey(), data.getBinsAsArray());
 		} catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
@@ -156,7 +159,8 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> T delete(Serializable id, Class<T> type) {
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
-			this.client.delete(null, new Key(this.namespace, this.getSetName(type), id.toString()));
+			data.setID(id);
+			this.client.delete(null, data.getKey());
 		} catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
@@ -212,6 +216,9 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return null;
 	}
 
+
+
+	
 	@Override
 	public <T> T append(T objectToAppenTo, Map<String, String> values) {
 		try {

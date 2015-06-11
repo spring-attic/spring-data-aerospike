@@ -19,10 +19,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import javax.management.Query;
-
-import org.springframework.data.aerospike.core.aggregation.AggregationResults;
-
 import com.aerospike.client.query.Filter;
 
 /**

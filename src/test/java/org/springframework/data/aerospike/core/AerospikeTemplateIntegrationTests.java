@@ -87,6 +87,9 @@ public class AerospikeTemplateIntegrationTests {
 		Customer customer = new Customer("dave-002", "Dave", "Matthews");
 		template.insert(customer);
 		template.add(customer, "age", 1);
+		customer = template.findById("dave-002", Customer.class);
+		long age = customer.getAge();
+		Assert.assertEquals(1, age);
 	}
 }
 

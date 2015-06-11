@@ -3,6 +3,8 @@ package org.springframework.data.aerospike.mapping;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -32,9 +34,12 @@ AerospikePersistentProperty{
 		SUPPORTED_ID_TYPES.add(String.class);
 		SUPPORTED_ID_TYPES.add(Integer.class);
 		SUPPORTED_ID_TYPES.add(Long.class);
+		SUPPORTED_ID_TYPES.add(Map.class);
+		SUPPORTED_ID_TYPES.add(List.class);
 
 		SUPPORTED_ID_PROPERTY_NAMES.add("id");
 		SUPPORTED_ID_PROPERTY_NAMES.add("_id");
+		SUPPORTED_ID_PROPERTY_NAMES.add("bin");
 	}
 
 	private final FieldNamingStrategy fieldNamingStrategy;

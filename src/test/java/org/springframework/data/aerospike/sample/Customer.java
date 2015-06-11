@@ -26,6 +26,7 @@ public class Customer {
 
 	private  @Id String id;
 	private  String firstname, lastname;
+	private  long age = 0;
 
 	public Customer(){
 		super();
@@ -69,5 +70,8 @@ public class Customer {
 	}
 	public void setLastName(String lastname) {
 		this.lastname = lastname;
+	}
+	public long getAge() {
+		return this.age;
 	}
 }
