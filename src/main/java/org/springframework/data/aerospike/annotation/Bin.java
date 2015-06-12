@@ -1,4 +1,4 @@
-package org.springframework.data.aerospike.mapping;
+package org.springframework.data.aerospike.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -12,10 +12,10 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Field {
+public @interface Bin {
 
 	/**
-	 * The key to be used to store the field inside the document.
+	 * The bin name to store the field inside the record.
 	 * 
 	 * @return
 	 */

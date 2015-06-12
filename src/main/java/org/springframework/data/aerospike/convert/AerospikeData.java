@@ -134,4 +134,10 @@ public class AerospikeData {
 	}
 
 
+	public void setSetName(String setName) {
+		this.key = new Key(this.getNamespace(), setName, this.key.userKey);
+		
+	}
+
+
 }

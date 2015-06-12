@@ -159,6 +159,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> T delete(Serializable id, Class<T> type) {
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(type, data);
 			data.setID(id);
 			this.client.delete(null, data.getKey());
 		} catch (AerospikeException o_O) {
@@ -279,9 +280,10 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public <T> T findById(Serializable id, Class<T> type) {
 		try {
-			Key key = new Key(this.namespace, type.getSimpleName(), id.toString());
+			AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
+			Key key = new Key(this.namespace, entity.getSetName(), id.toString());
 			AerospikeData data = AerospikeData.forRead(key, null);
-			Record record = this.client.get(null, data.getKey(), data.getBinNames());
+			Record record = this.client.get(null, key);
 			data.setRecord(record);
 			return converter.read(type, data);
 		} catch (AerospikeException o_O) {
@@ -411,9 +413,4 @@ public class AerospikeTemplate implements AerospikeOperations {
 		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(entityClass);
 		return entity.getSetName();
 	}
-
-
-
-
-
 }

@@ -26,5 +26,4 @@ import org.springframework.data.convert.EntityConverter;
  */
 public interface AerospikeConverter extends
 		EntityConverter<AerospikePersistentEntity<?>, AerospikePersistentProperty, Object, AerospikeData> {
-
 }

@@ -17,7 +17,9 @@ package org.springframework.data.aerospike.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.springframework.context.ApplicationContext;
@@ -43,7 +45,6 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import com.aerospike.client.Bin;
-import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 
 /**
@@ -126,15 +127,18 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 					return;
 				}
 
-				accessor.setProperty(persistentProperty,
-						recordReadingPropertyValueProvider.getPropertyValue(persistentProperty));
-				
+				Object value = recordReadingPropertyValueProvider.getPropertyValue(persistentProperty);
+				if (value != null){
+					accessor.setProperty(persistentProperty,
+							recordReadingPropertyValueProvider.getPropertyValue(persistentProperty));
+				}
 			}
 		});
 
 		return (R) instance;
 	}
 
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.convert.EntityWriter#write(java.lang.Object, java.lang.Object)
@@ -161,6 +165,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			}
 		});
 		typeMapper.writeType(entity.getTypeInformation(), data);
+		data.setSetName(entity.getSetName());
 		data.add(bins);
 	}
 
@@ -190,7 +195,8 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(AerospikePersistentProperty property) {
 			if (record == null) return null;
-			return (T) record.getValue(property.getName());
+			T value = (T) record.getValue(property.getName());
+			return value;
 		}
 	}
 

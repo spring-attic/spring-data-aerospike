@@ -25,7 +25,6 @@ AerospikePersistentProperty{
 	private static final Logger LOG = LoggerFactory.getLogger(BasicAerospikePersistentProperty.class);
 
 	private static final String ID_FIELD_NAME = "_id";
-	private static final String LANGUAGE_FIELD_NAME = "language";
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
 
@@ -34,12 +33,12 @@ AerospikePersistentProperty{
 		SUPPORTED_ID_TYPES.add(String.class);
 		SUPPORTED_ID_TYPES.add(Integer.class);
 		SUPPORTED_ID_TYPES.add(Long.class);
+		SUPPORTED_ID_TYPES.add(byte[].class);
 		SUPPORTED_ID_TYPES.add(Map.class);
 		SUPPORTED_ID_TYPES.add(List.class);
 
 		SUPPORTED_ID_PROPERTY_NAMES.add("id");
-		SUPPORTED_ID_PROPERTY_NAMES.add("_id");
-		SUPPORTED_ID_PROPERTY_NAMES.add("bin");
+		SUPPORTED_ID_PROPERTY_NAMES.add(ID_FIELD_NAME);
 	}
 
 	private final FieldNamingStrategy fieldNamingStrategy;
@@ -49,6 +48,7 @@ AerospikePersistentProperty{
 			PersistentEntity<?, AerospikePersistentProperty> owner,
 			SimpleTypeHolder simpleTypeHolder, FieldNamingStrategy fieldNamingStrategy) {
 		super(field, propertyDescriptor, owner, simpleTypeHolder);
+		
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
 
@@ -76,7 +76,7 @@ AerospikePersistentProperty{
 		return isAnnotationPresent(Id.class);
 	}
 	/**
-	 * Returns the key to be used to store the value of the property inside a Mongo {@link DBObject}.
+	 * Returns the key to be used to store the value of the property {@link DBObject}.
 	 * 
 	 * @return
 	 */
@@ -117,7 +117,7 @@ AerospikePersistentProperty{
 
 	private String getAnnotatedFieldName() {
 
-		org.springframework.data.aerospike.mapping.Field annotation = findAnnotation(org.springframework.data.aerospike.mapping.Field.class);
+		org.springframework.data.aerospike.annotation.Bin annotation = findAnnotation(org.springframework.data.aerospike.annotation.Bin.class);
 
 		if (annotation != null && StringUtils.hasText(annotation.value())) {
 			return annotation.value();
@@ -125,11 +125,7 @@ AerospikePersistentProperty{
 
 		return null;
 	}
-	@Override
-	public String getBinName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 	@Override
 	protected Association<AerospikePersistentProperty> createAssociation() {
 		return new Association<AerospikePersistentProperty>(this, null);

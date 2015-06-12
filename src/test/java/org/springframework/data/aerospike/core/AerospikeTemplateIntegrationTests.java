@@ -15,7 +15,8 @@
  */
 package org.springframework.data.aerospike.core;
 
-import static org.junit.Assert.assertTrue;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,10 +29,16 @@ import org.springframework.data.aerospike.sample.Customer;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Bin;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+
 /**
  * Integration tests for {@link AerospikeTemplate}.
  * 
  * @author Oliver Gierke
+ * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -46,18 +53,23 @@ public class AerospikeTemplateIntegrationTests {
 	//@Autowired AerospikeOperations operations;
 
 	@Autowired AerospikeTemplate template;
+	@Autowired AerospikeClient client;
 	
 	@Before
 	public void cleanUp(){
-		template.delete("dave-001", Customer.class);
-		template.delete("dave-002", Customer.class);
-		template.delete("dave-003", Customer.class);
+		
+		client.delete(null, new Key("test", "Customer", "dave-001"));
+		client.delete(null, new Key("test", "Customer", "dave-002"));
+		client.delete(null, new Key("test", "Customer", "dave-003"));
 	}
 	
 	@Test
 	public void testInsertWithKey(){
 		Customer customer = new Customer("dave-001", "Dave", "Matthews");
 		template.insert("dave-001", customer);
+		Record result = client.get(null, new Key("test", "Customer", "dave-001"));
+		Assert.assertEquals("Dave", result.getString("firstname"));
+		Assert.assertEquals("Matthews", result.getString("lastname"));
 	}
 	@Test
 	public void testUpdateWithKey(){
@@ -72,25 +84,50 @@ public class AerospikeTemplateIntegrationTests {
 	public void testInsert(){
 		Customer customer = new Customer("dave-002", "Dave", "Matthews");
 		template.insert(customer);
+		Record result = client.get(null, new Key("test", "Customer", "dave-002"));
+		Assert.assertEquals("Dave", result.getString("firstname"));
+		Assert.assertEquals("Matthews", result.getString("lastname"));
 	}
 	@Test
-	public void testFindById(){
-		Customer customer = new Customer("dave-003", "Dave", "Matthews");
-		template.insert("dave-003", customer);
+	public void testFindByKey(){
+		client.put(null, new Key("test", "Customer", "dave-003"), new Bin("firstname", "Dave"), 
+				new Bin ("lastname", "Matthews"));
 		Customer result = template.findById("dave-003", Customer.class);
 		Assert.assertEquals("Matthews", result.getLastname());
 		Assert.assertEquals("Dave", result.getFirstname());
 		
 	}
 	@Test
-	public void testIncrement(){
+	public void testSingleIncrement(){
 		Customer customer = new Customer("dave-002", "Dave", "Matthews");
 		template.insert(customer);
 		template.add(customer, "age", 1);
-		customer = template.findById("dave-002", Customer.class);
-		long age = customer.getAge();
-		Assert.assertEquals(1, age);
+		Record result = client.get(null, new Key("test", "Customer", "dave-002"), "age");
+		Assert.assertEquals(1, result.getInt("age"));
 	}
+	@Test
+	public void testMultipleIncrement(){
+		Customer customer = new Customer("dave-002", "Dave", "Matthews");
+		template.insert(customer);
+		Map<String, Long> values = new HashMap<String, Long>();
+		values.put("age", 1L);
+		values.put("waist", 32L);
+		
+		template.add(customer, values);
+		Record result = client.get(null, new Key("test", "Customer", "dave-002"), "age", "waist");
+		Assert.assertEquals(1, result.getInt("age"));
+		Assert.assertEquals(32, result.getInt("waist"));
+	}
+	@Test
+	public void testDelete(){
+		client.put(null, new Key("test", "Customer", "dave-001"), new Bin("firstname", "Dave"), 
+				new Bin ("lastname", "Matthews"));
+		Customer customer = new Customer("dave-001", "Dave", "Matthews");
+		template.delete(customer);
+		if ( client.exists(null, new Key("test", "Customer", "dave-001")))
+		Assert.fail("dave-001 was not deleted");
+	}
+
 }
 
 
