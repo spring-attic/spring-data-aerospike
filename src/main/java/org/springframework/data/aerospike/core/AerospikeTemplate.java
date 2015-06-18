@@ -335,6 +335,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 		Statement statement = new Statement();
 		statement.setFilters(filter);
+		statement.setNamespace(this.namespace);
 		statement.setSetName(entity.getSetName());
 		
 		FindAllCallback<T> callBack = new FindAllCallback<T>(type, statement, DEFAULT_CONVERTER);
@@ -393,7 +394,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 			final RecordSet recordSet = client.query(null, statement);
 
-			return (Iterable<T>) recordSet.iterator();
+			return (Iterable<T>) recordSet;
 		}
 
 		@Override
@@ -403,7 +404,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 					(arguments==null || arguments.size() == 0)? null: arguments.toArray(new Value[arguments.size()]));
 
 			
-			return (Iterable<T>) resultSet.iterator();
+			return (Iterable<T>) resultSet;
 		}
 	}
 
