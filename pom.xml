@@ -12,13 +12,13 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>1.6.0.BUILD-SNAPSHOT</version>
+		<version>1.7.0.BUILD-SNAPSHOT</version>
 		<relativePath>../spring-data-build/parent/pom.xml</relativePath>
 	</parent>
 
 	<properties>
 		<aerospike>3.1.2</aerospike>
-		<springdata.commons>1.10.0.BUILD-SNAPSHOT</springdata.commons>
+		<springdata.commons>1.11.0.BUILD-SNAPSHOT</springdata.commons>
 		<springdata.keyvalue>0.1.0.BUILD-SNAPSHOT</springdata.keyvalue>
 		<dist.key>DATAAERO</dist.key>
 	</properties>
@@ -76,7 +76,15 @@
 				<groupId>org.asciidoctor</groupId>
 				<artifactId>asciidoctor-maven-plugin</artifactId>
 			</plugin>
-
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

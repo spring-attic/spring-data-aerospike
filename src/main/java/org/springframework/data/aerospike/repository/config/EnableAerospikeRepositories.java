@@ -25,10 +25,12 @@ import java.lang.annotation.Target;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.aerospike.repository.support.SimpleAerospikeRepository;
 import org.springframework.data.keyvalue.core.KeyValueOperations;
 import org.springframework.data.keyvalue.repository.config.QueryCreatorType;
 import org.springframework.data.keyvalue.repository.query.SpelQueryCreator;
 import org.springframework.data.keyvalue.repository.support.KeyValueRepositoryFactoryBean;
+import org.springframework.data.repository.config.DefaultRepositoryBaseClass;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 
@@ -107,6 +109,15 @@ public @interface EnableAerospikeRepositories {
 	 * @return
 	 */
 	Class<?> repositoryFactoryBeanClass() default KeyValueRepositoryFactoryBean.class;
+	
+	/**
+	 * Configure the repository base class to be used to create repository proxies for this particular configuration.
+	 * 
+	 * @return
+	 * @since 1.8
+	 */
+//	Class<?> repositoryBaseClass() default DefaultRepositoryBaseClass.class;
+	Class<?> repositoryBaseClass() default SimpleAerospikeRepository.class;
 
 	/**
 	 * Configures the name of the {@link KeyValueOperations} bean to be used with the repositories detected.

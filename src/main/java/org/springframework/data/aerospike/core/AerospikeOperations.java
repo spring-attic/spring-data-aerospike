@@ -19,6 +19,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.keyvalue.core.KeyValueOperations;
+
 import com.aerospike.client.query.Filter;
 
 /**
@@ -27,7 +29,7 @@ import com.aerospike.client.query.Filter;
  * @author Oliver Gierke
  * @author Peter Milne
  */
-public interface AerospikeOperations {
+public interface AerospikeOperations extends KeyValueOperations {
 
 	/**
 	 * The Set name used for the specified class by this template.
@@ -50,7 +52,7 @@ public interface AerospikeOperations {
 	 */
 	void insert(Serializable id, Object objectToInsert);
 	
-	
+	void save(Serializable id, Object objectToInsert);
 	void update(Object objectToUpdate);
 	void update(Serializable id, Object objectToUpdate);
 	

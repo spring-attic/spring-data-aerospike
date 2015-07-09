@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.springframework.data.aerospike.convert.AerospikeConverter;
 import org.springframework.data.aerospike.convert.AerospikeData;
@@ -27,6 +28,7 @@ import org.springframework.data.keyvalue.core.AbstractKeyValueAdapter;
 import org.springframework.data.keyvalue.core.KeyValueAdapter;
 import org.springframework.data.keyvalue.core.KeyValueTemplate;
 import org.springframework.data.keyvalue.core.query.KeyValueQuery;
+import org.springframework.data.util.CloseableIterator;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Key;
@@ -197,6 +199,21 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 	public Collection<?> find(KeyValueQuery<?> query, Serializable keyspace) {
 		// TODO Auto-generated method stub
 		return super.find(query, keyspace);
+	}
+
+
+	@Override
+	public CloseableIterator<Entry<Serializable, Object>> entries(
+			Serializable keyspace) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public long count(Serializable keyspace) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 	
 

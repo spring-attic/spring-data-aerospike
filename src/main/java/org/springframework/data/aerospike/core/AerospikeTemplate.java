@@ -24,8 +24,16 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.aerospike.convert.AerospikeConverter;
 import org.springframework.data.aerospike.convert.AerospikeData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
+import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
 import org.springframework.data.aerospike.utility.Utils;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.keyvalue.core.KeyValueCallback;
+import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
+import org.springframework.data.keyvalue.core.query.KeyValueQuery;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
 
 import com.aerospike.client.AerospikeClient;
@@ -52,6 +60,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	private static final MappingAerospikeConverter DEFAULT_CONVERTER = new MappingAerospikeConverter();
 	private static final AerospikeExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new DefaultAerospikeExceptionTranslator();
+	private final MappingContext<BasicAerospikePersistentEntity<?>, AerospikePersistentProperty> mappingContext;
 
 	private final AerospikeClient client;
 	private final MappingAerospikeConverter converter;
@@ -79,6 +88,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		this.converter = DEFAULT_CONVERTER;
 		this.exceptionTranslator = DEFAULT_EXCEPTION_TRANSLATOR;
 		this.namespace = namespace;
+		this.mappingContext = new  AerospikeMappingContext();
 		this.insertPolicy = new WritePolicy(this.client.writePolicyDefault);
 		this.updatePolicy = new WritePolicy(this.client.writePolicyDefault);
 		this.insertPolicy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
@@ -101,7 +111,19 @@ public class AerospikeTemplate implements AerospikeOperations {
 			throw translatedException == null ? o_O : translatedException;
 		}
 	}
-
+	public void save(Serializable id, Object objectToInsert) {
+		try {
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToInsert, data);
+			data.setID(id);
+			Key key = data.getKey();
+			Bin[] bins = data.getBinsAsArray();
+			client.put(null, key, bins);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+	}
 	@Override
 	public <T> T insert(T objectToInsert) {
 		try{
@@ -335,7 +357,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 		Statement statement = new Statement();
 		statement.setFilters(filter);
-		statement.setNamespace(this.namespace);
 		statement.setSetName(entity.getSetName());
 		
 		FindAllCallback<T> callBack = new FindAllCallback<T>(type, statement, DEFAULT_CONVERTER);
@@ -394,7 +415,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 			final RecordSet recordSet = client.query(null, statement);
 
-			return (Iterable<T>) recordSet;
+			return (Iterable<T>) recordSet.iterator();
 		}
 
 		@Override
@@ -404,7 +425,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 					(arguments==null || arguments.size() == 0)? null: arguments.toArray(new Value[arguments.size()]));
 
 			
-			return (Iterable<T>) resultSet;
+			return (Iterable<T>) resultSet.iterator();
 		}
 	}
 
@@ -413,5 +434,69 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public String getSetName(Class<?> entityClass) {
 		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(entityClass);
 		return entity.getSetName();
+	}
+
+
+	@Override
+	public <T> Iterable<T> findAll(Sort sort, Class<T> type) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public <T> T execute(KeyValueCallback<T> action) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public <T> Iterable<T> find(KeyValueQuery<?> query, Class<T> type) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public <T> Iterable<T> findInRange(int offset, int rows, Class<T> type) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public <T> Iterable<T> findInRange(int offset, int rows, Sort sort,
+			Class<T> type) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public long count(Class<?> type) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	@Override
+	public long count(KeyValueQuery<?> query, Class<?> type) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	@Override
+	public MappingContext<?, ?> getMappingContext() {
+		// TODO Auto-generated method stub
+		return mappingContext;
+	}
+
+
+	@Override
+	public void destroy() throws Exception {
+		// TODO Auto-generated method stub
+		
 	}
 }
