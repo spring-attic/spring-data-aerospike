@@ -19,8 +19,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.aerospike.core.TestConfiguration;
@@ -46,6 +50,8 @@ public class CustomerRepositoriesIntegrationTests {
 	}
 
 	@Autowired CustomerRepository repository;
+	@Mock
+	private Customer customerMock;
 
 //	@Test
 //	public void testname() {
@@ -56,6 +62,10 @@ public class CustomerRepositoriesIntegrationTests {
 //		assertThat(findByLastname, hasSize(1));
 //		assertThat(findByLastname, hasItem(customer));
 //	}
+	   @Before
+	    public void setUp() {
+	        MockitoAnnotations.initMocks(this);
+	    }
 	@Test
 	public void testCreate() {
 
