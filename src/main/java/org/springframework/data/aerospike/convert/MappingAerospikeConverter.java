@@ -28,6 +28,7 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.mapping.CachingAerospikePersistentProperty;
 import org.springframework.data.convert.DefaultTypeMapper;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.EntityInstantiators;
@@ -160,12 +161,13 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 					data.setID(accessor.getProperty(property).toString());
 					return;
 				}
-
-				bins.add(new Bin(property.getName(), accessor.getProperty(property)));
+//				CachingAerospikePersistentProperty cachingAerospikePersistentProperty = (CachingAerospikePersistentProperty) property;
+//				String fieldName = cachingAerospikePersistentProperty.getFieldName();
+				bins.add(new Bin(((CachingAerospikePersistentProperty) property).getFieldName(), accessor.getProperty(property)));
 			}
 		});
 		typeMapper.writeType(entity.getTypeInformation(), data);
-		data.setSetName(entity.getSetName());
+		//data.setSetName(entity.getSetName());
 		data.add(bins);
 	}
 
