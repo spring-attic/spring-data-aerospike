@@ -111,6 +111,40 @@ public class AerospikeTemplate implements AerospikeOperations {
 			throw translatedException == null ? o_O : translatedException;
 		}
 	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.aerospike.core.AerospikeOperations#save(java.io.Serializable, java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	public <T> void save(Serializable id, Object objectToInsert, Class<T> domainType) {
+		try {
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToInsert, data);
+			data.setID(id);
+			data.setSetName(domainType.getSimpleName());
+			Key key = data.getKey();
+			Bin[] bins = data.getBinsAsArray();
+			client.put(null, key, bins);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		
+	}
+	@Override
+	public <T> T findById(Serializable id, Class<T> type, Class<T> domainType) {
+		try {
+			//AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
+			Key key = new Key(this.namespace, domainType.getSimpleName(), id.toString());
+			AerospikeData data = AerospikeData.forRead(key, null);
+			Record record = this.client.get(null, key);
+			data.setRecord(record);
+			return converter.read(type, data);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+	}
 	public void save(Serializable id, Object objectToInsert) {
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
@@ -299,6 +333,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		});
 		return scanList;
 	}
+
 	@Override
 	public <T> T findById(Serializable id, Class<T> type) {
 		try {
@@ -313,7 +348,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 			throw translatedException == null ? o_O : translatedException;
 		}
 	}
-
 	@Override
 	public <T> Iterable<T> aggregate(Filter filter, Class<?> type,
 			Class<T> outputType, String module, String function, List<?> arguments) {
@@ -499,4 +533,5 @@ public class AerospikeTemplate implements AerospikeOperations {
 		// TODO Auto-generated method stub
 		
 	}
+
 }

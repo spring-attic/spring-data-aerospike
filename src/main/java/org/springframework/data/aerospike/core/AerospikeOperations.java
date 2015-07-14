@@ -53,6 +53,7 @@ public interface AerospikeOperations extends KeyValueOperations {
 	void insert(Serializable id, Object objectToInsert);
 	
 	void save(Serializable id, Object objectToInsert);
+	<T> void save(Serializable id, Object objectToInsert, Class<T> domainType);
 	void update(Object objectToUpdate);
 	void update(Serializable id, Object objectToUpdate);
 	
@@ -64,7 +65,8 @@ public interface AerospikeOperations extends KeyValueOperations {
 	<T> Iterable<T> find(Filter filter, Class<T> entityClass);
 	<T> List<T> findAll(Class<T> type);
 	<T> T findById(Serializable id, Class<T> type);
-	
+	<T> T findById(Serializable id, Class<T> type, Class<T> domainType);
+
 	<T> T add(T objectToAddTo, Map<String, Long> values);
 	<T> T add(T objectToAddTo, String binName, int value);
 
@@ -82,5 +84,10 @@ public interface AerospikeOperations extends KeyValueOperations {
 	 * @return
 	 */
 	<T> Iterable<T> findAll(Filter filter, Class<T> type);
+
+	
+
+
+
 	
 }
