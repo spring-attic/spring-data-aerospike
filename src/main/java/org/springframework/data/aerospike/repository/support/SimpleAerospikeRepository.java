@@ -6,6 +6,8 @@ import org.springframework.data.aerospike.core.AerospikeOperations;
 import org.springframework.data.keyvalue.core.KeyValueOperations;
 import org.springframework.data.keyvalue.repository.support.SimpleKeyValueRepository;
 import org.springframework.data.repository.core.EntityInformation;
+import org.springframework.data.repository.core.support.PersistentEntityInformation;
+import org.springframework.util.Assert;
 
 public class SimpleAerospikeRepository<T, ID extends Serializable> extends
 		SimpleKeyValueRepository<T, ID> {
@@ -19,10 +21,20 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> extends
 		this.entityInformation = metadata;
 		this.operations = (AerospikeOperations) operations;
 	}
-
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.CrudRepository#findOne(java.io.Serializable)
+	 */
+	@Override
+	public T findOne(ID id) {
+		return operations.findById(id, entityInformation.getJavaType(), getDomainClass());
+	}
 	@Override
 	public <S extends T> S save(S entity) {
-		operations.save(entityInformation.getId(entity), entity);
+		Assert.notNull(entity);
+		operations.save(entityInformation.getId(entity), entity, getDomainClass());
+		
+		//operations.save(entityInformation.getId(entity), entity,entityInformation.get);
 		return entity;
 	}
 	
@@ -30,4 +42,13 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> extends
 	public void delete(T entity) {
 		operations.delete(entity);
 	}
+
+	/**
+	 * @return the entityInformation
+	 */
+	public Class<T> getDomainClass() {
+		return  this.entityInformation.getJavaType();
+	}
+	
+	
 }
