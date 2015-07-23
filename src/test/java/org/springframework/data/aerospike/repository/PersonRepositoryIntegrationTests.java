@@ -13,5 +13,5 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Jean Mercier
  *
  */
-@ContextConfiguration(classes = TestConfig.class)
+@ContextConfiguration(classes = TestConfigPerson.class)
 public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {}

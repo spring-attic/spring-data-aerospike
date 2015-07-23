@@ -17,6 +17,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import com.aerospike.client.query.IndexType;
+
 public class SimpleAerospikeRepository<T, ID extends Serializable> implements AerospikeRepository<T, ID> {
 
 	private final AerospikeOperations operations;
@@ -184,5 +186,12 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	public void deleteAll() {
 		operations.delete(entityInformation.getJavaType());
 		
+	}
+	/* (non-Javadoc)
+	 * @see org.springframework.data.aerospike.repository.AerospikeRepository#createIndex(java.lang.Class, java.lang.String, java.lang.String, com.aerospike.client.query.IndexType)
+	 */
+	@Override
+	public <T> void createIndex(Class<T> domainType, String indexName,String binName, IndexType indexType) {
+		operations.createIndex(domainType, indexName, binName, indexType);
 	}
 }

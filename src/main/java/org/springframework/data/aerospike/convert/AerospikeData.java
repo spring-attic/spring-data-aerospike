@@ -35,6 +35,10 @@ import com.aerospike.client.Value;
  */
 public class AerospikeData {
 
+	/**
+	 * 
+	 */
+	private static final String SPRING_ID_BIN = "SpringID";
 	private Key key;
 	private Record record;
 	private final String namespace;
@@ -147,6 +151,14 @@ public class AerospikeData {
 	public void setSetName(String setName) {
 		this.key = new Key(this.getNamespace(), setName, this.key.userKey);
 		
+	}
+
+
+	/**
+	 * @return
+	 */
+	public Object getSringId() {
+		return record.getValue(AerospikeData.SPRING_ID_BIN);
 	}
 
 }

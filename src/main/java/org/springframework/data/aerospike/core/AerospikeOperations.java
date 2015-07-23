@@ -26,6 +26,7 @@ import org.springframework.data.keyvalue.core.KeyValueOperations;
 import org.springframework.data.mapping.context.MappingContext;
 
 import com.aerospike.client.query.Filter;
+import com.aerospike.client.query.IndexType;
 
 /**
  * Aerospike specific data access operations.
@@ -122,6 +123,16 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 * @return
 	 */
 	long count(Class<?> type);
+
+	/**
+	 * @param <T>
+	 * @param domainType
+	 * @param indexName
+	 * @param binName
+	 * @param indexType
+	 */
+	<T> void createIndex(Class<T> domainType, String indexName, String binName,
+			IndexType indexType);
 
 
 

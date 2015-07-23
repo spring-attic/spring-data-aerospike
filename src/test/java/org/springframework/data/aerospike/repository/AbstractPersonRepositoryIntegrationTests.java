@@ -25,15 +25,23 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.aerospike.core.AerospikeOperations;
+import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.repository.Person.Sex;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.Assert;
 
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.AerospikeException;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.ResultCode;
+import com.aerospike.client.ScanCallback;
+import com.aerospike.client.policy.ScanPolicy;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.client.task.IndexTask;
 
@@ -52,6 +60,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Autowired AerospikeOperations operations;
 	
 	@Autowired AerospikeClient client;
+	
+	static int count = 0;
 
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
 	
@@ -59,8 +69,9 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	
 	@Before
 	public void setUp() throws InterruptedException {
+		
 
-		//repository.deleteAll();
+		repository.deleteAll();
 
 		dave = new Person("Dave-01","Dave", "Matthews", 42);
 		oliver = new Person("Oliver-01","Oliver August", "Matthews", 4);
@@ -69,16 +80,24 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		boyd = new Person("Boyd-01","Boyd", "Tinsley", 45);
 		stefan = new Person("Stefan-01","Stefan", "Lessard", 34);
 		leroi = new Person("Leroi-01","Leroi", "Moore", 41);
-		IndexTask task = client.createIndex(null, "test", "Person", "last_name_index", "lastname", IndexType.STRING);
-		task.waitTillComplete();
-
-
 		alicia = new Person("Alicia-01","Alicia", "Keys", 30, Sex.FEMALE);
+		
+		repository.createIndex(Person.class,"last_name_index", "lastname", IndexType.STRING);
+
+
+
 
 
 		all = (List<Person>) repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
 		
 
+	}
+	
+
+	@Test
+	public void testSetup(){
+		
+		Assert.isInstanceOf(Person.class, dave);
 	}
 	
 	@Test

@@ -42,6 +42,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
+import com.aerospike.client.query.IndexType;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
@@ -50,12 +51,14 @@ import com.aerospike.client.Record;
 import com.aerospike.client.ScanCallback;
 import com.aerospike.client.Value;
 import com.aerospike.client.policy.RecordExistsAction;
+import com.aerospike.client.policy.ScanPolicy;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.KeyRecord;
 import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.ResultSet;
 import com.aerospike.client.query.Statement;
+import com.aerospike.client.task.IndexTask;
 
 /**
  * Primary implementation of {@link AerospikeOperations}.
@@ -72,6 +75,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	private final AerospikeClient client;
 	private final MappingAerospikeConverter converter;
 	private final String namespace;
+	private int count = 0;
 
 
 
@@ -117,6 +121,12 @@ public class AerospikeTemplate implements AerospikeOperations {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
 		}
+	}
+	@Override
+	public <T> void createIndex(Class<T> domainType,String indexName,String binName, IndexType indexType  ){
+
+		IndexTask task =  client.createIndex(null, this.namespace, domainType.getSimpleName(), indexName, binName, indexType);
+		task.waitTillComplete();
 	}
 	
 	/* (non-Javadoc)
@@ -210,7 +220,29 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public void delete(Class<?> type) {
 		try {
 			//"set-config:context=namespace;id=namespace_name;set=set_name;set-delete=true;"
-			Utils.infoAll(client, "set-config:context=namespace;id=" + this.namespace + ";set=" + type.getSimpleName() + ";set-delete=true;");
+			//Utils.infoAll(client, "set-config:context=namespace;id=" + this.namespace + ";set=" + type.getSimpleName() + ";set-delete=true;");
+			ScanPolicy scanPolicy = new ScanPolicy();
+			count = 0;
+			client.scanAll(scanPolicy, namespace,  type.getSimpleName(), new ScanCallback() {
+
+				
+				@Override
+				public void scanCallback(Key key, Record record)
+						throws AerospikeException {
+
+
+					if (client.delete(null, key)) 
+						count++;
+			           /*
+			            * after 25,000 records delete, return print the count.
+			            */
+			           if (count % 25000 == 0){
+			               System.out.println("Deleted "+ count);
+			           }
+					
+				}
+			   }, new String[] {});
+			System.out.println("Deleted "+ count + " records from set " + type.getSimpleName());
 		} catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
@@ -449,8 +481,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 			try {
 				while (rs != null && rs.next()) {
 					Record record = rs.getRecord();
-					AerospikeData data = AerospikeData.forRead(rs.getKey(),
-							null);
+					AerospikeData data = AerospikeData.forRead(rs.getKey(),	null);
 					data.setRecord(record);
 					returnList.add(converter.read(type, data));
 				}
@@ -633,6 +664,11 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public MappingContext<?, ?> getMappingContext() {
 		return this.mappingContext;
+	}
+
+
+	public String getNamespace() {
+		return namespace;
 	}
 
 

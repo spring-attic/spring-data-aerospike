@@ -20,10 +20,13 @@ import java.io.Serializable;
 
 
 
+
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.Repository;
+
+import com.aerospike.client.query.IndexType;
 /**
  * Aerospike specific {@link Repository}
  * @author Oliver Gierke
@@ -32,5 +35,14 @@ import org.springframework.data.repository.Repository;
  */
 @NoRepositoryBean
 public interface AerospikeRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
+	
+	/**
+	 * @param <T>
+	 * @param domainType
+	 * @param indexName
+	 * @param binName
+	 * @param indexType
+	 */
+	<T> void createIndex(Class<T> domainType, String indexName, String binName,	IndexType indexType);
 
 }
