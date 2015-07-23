@@ -17,6 +17,8 @@ package org.springframework.data.aerospike.core;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,13 +30,17 @@ import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
+import org.springframework.data.aerospike.repository.query.Criteria;
+import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.aerospike.utility.Utils;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.keyvalue.core.KeyValueAdapter;
 import org.springframework.data.keyvalue.core.KeyValueCallback;
 import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
 import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
@@ -46,13 +52,14 @@ import com.aerospike.client.Value;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
+import com.aerospike.client.query.KeyRecord;
 import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.ResultSet;
 import com.aerospike.client.query.Statement;
 
 /**
  * Primary implementation of {@link AerospikeOperations}.
- * 
+ *  
  * @author Oliver Gierke
  * @author Peter Milne
  */
@@ -134,7 +141,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public <T> T findById(Serializable id, Class<T> type, Class<T> domainType) {
 		try {
-			//AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
 			Key key = new Key(this.namespace, domainType.getSimpleName(), id.toString());
 			AerospikeData data = AerospikeData.forRead(key, null);
 			Record record = this.client.get(null, key);
@@ -376,28 +382,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	}
 
 	
-	@Override
-	public <T> Iterable<T> findAll(Filter filter, Class<T> type) {
-		return find(filter, type);
-	}
 
-	@Override
-	public <T> Iterable<T> find(Filter filter, final Class<T> type) {
-
-		Assert.notNull(filter, "Filter must not be null!");
-		Assert.notNull(type, "Type must not be null!");
-
-		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
-
-		Statement statement = new Statement();
-		statement.setFilters(filter);
-		statement.setSetName(entity.getSetName());
-		
-		FindAllCallback<T> callBack = new FindAllCallback<T>(type, statement, DEFAULT_CONVERTER);
-		
-		return callBack.recordIterator(client);
-
-	}
 
 
 
@@ -440,16 +425,40 @@ public class AerospikeTemplate implements AerospikeOperations {
 			this.arguments = arguments;
 		}
 
+		/**
+		 * @param type2
+		 * @param statement2
+		 * @param defaultConverter
+		 */
+		public FindAllCallback(Class<T> type, Statement statement, MappingAerospikeConverter converter) {
+			this.type = type;
+			this.statement = statement;
+			this.converter = converter;
+
+		}
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.aerospike.core.AerospikeClientCallback#doWith(com.aerospike.client.AerospikeClient)
 		 */
 		@Override
 		public Iterable<T> recordIterator(AerospikeClient client)  {
+			
+			final List<T> returnList = new ArrayList<T>();
 
-			final RecordSet recordSet = client.query(null, statement);
+			RecordSet rs = client.query(null, statement);
+			try {
+				while (rs != null && rs.next()) {
+					Record record = rs.getRecord();
+					AerospikeData data = AerospikeData.forRead(rs.getKey(),
+							null);
+					data.setRecord(record);
+					returnList.add(converter.read(type, data));
+				}
+			} finally {
+				rs.close();
+			}
 
-			return (Iterable<T>) recordSet.iterator();
+			return (Iterable<T>) returnList;//TODO:create a sort
 		}
 
 		@Override
@@ -478,60 +487,174 @@ public class AerospikeTemplate implements AerospikeOperations {
 	}
 
 
+
+	private String resolveKeySpace(Class<?> type) {
+		return this.mappingContext.getPersistentEntity(type).getSetName();
+	}
+	private static boolean typeCheck(Class<?> requiredType, Object candidate) {
+		return candidate == null ? true : ClassUtils.isAssignable(requiredType, candidate.getClass());
+	}
+
+		
+//		return execute(new KeyValueCallback<Iterable<T>>() {
+//
+//			@SuppressWarnings("unchecked")
+//			@Override
+//			public Iterable<T> doInKeyValue(KeyValueAdapter adapter) {
+//
+//				Iterable<?> result = adapter.find(query, resolveKeySpace(type));//this converted to filter somehoe
+//				if (result == null) {
+//					return Collections.emptySet();
+//				}
+//
+//				List<T> filtered = new ArrayList<T>();
+//
+//				for (Object candidate : result) {
+//					if (typeCheck(type, candidate)) {
+//						filtered.add((T) candidate);
+//					}
+//				}
+//
+//				return filtered;
+//			}
+//		}); 
+//	}
+
+
+//	@Override
+//	public <T> Iterable<T> findInRange(int offset, int rows, Class<T> type) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//
+//	@Override
+//	public <T> Iterable<T> findInRange(int offset, int rows, Sort sort,
+//			Class<T> type) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//
+//	@Override
+//	public long count(Class<?> type) {
+//		// TODO Auto-generated method stub
+//		return 0;
+//	}
+//
+//
+//	@Override
+//	public long count(KeyValueQuery<?> query, Class<?> type) {
+//		// TODO Auto-generated method stub
+//		return 0;
+//	}
+//
+//
+//	@Override
+//	public MappingContext<?, ?> getMappingContext() {
+//		// TODO Auto-generated method stub
+//		return mappingContext;
+//	}
+//
+//
+//	@Override
+//	public void destroy() throws Exception {
+//		// TODO Auto-generated method stub
+//		
+//	}
+
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.keyvalue.core.KeyValueOperations#execute(org.springframework.data.keyvalue.core.KeyValueCallback)
+	 */
 	@Override
 	public <T> T execute(KeyValueCallback<T> action) {
-		// TODO Auto-generated method stub
-		return null;
+		Assert.notNull(action, "KeyValueCallback must not be null!");
+
+		try {
+			return action.doInKeyValue(null);
+		} catch (RuntimeException e) {
+			throw e;
+		}
 	}
 
 
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.aerospike.core.AerospikeOperations#count(org.springframework.data.aerospike.repository.query.Query, java.lang.Class)
+	 */
 	@Override
-	public <T> Iterable<T> find(KeyValueQuery<?> query, Class<T> type) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public <T> Iterable<T> findInRange(int offset, int rows, Class<T> type) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public <T> Iterable<T> findInRange(int offset, int rows, Sort sort,
-			Class<T> type) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	@Override
-	public long count(Class<?> type) {
+	public int count(Query<?> query, Class<?> javaType) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.aerospike.core.AerospikeOperations#find(org.springframework.data.aerospike.repository.query.Query, java.lang.Class)
+	 */
 	@Override
-	public long count(KeyValueQuery<?> query, Class<?> type) {
-		// TODO Auto-generated method stub
-		return 0;
+	public <T> Iterable<T> find(Query<?> query, Class<T> type) {
+		Assert.notNull(query, "Filter must not be null!");
+		Assert.notNull(type, "Type must not be null!");
+		Criteria criteria = (Criteria) query.getCritieria();
+		Filter filter = query.getQueryObject();
+
+		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
+		
+		AerospikeData data = AerospikeData.forWrite(this.namespace);
+		try {
+			converter.write(type.newInstance(), data);
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		String[] bins = {"firstname","lastname"};
+		Statement statement = new Statement();
+		statement.setNamespace(this.namespace);
+		statement.setFilters(filter);
+		statement.setSetName(entity.getSetName());
+		statement.setBinNames(data.getBinNames());
+		
+		FindAllCallback<T> callBack = new FindAllCallback<T>(type, statement, DEFAULT_CONVERTER);
+		
+		
+		
+		return callBack.recordIterator(client);
 	}
 
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.aerospike.core.AerospikeOperations#getMappingContext()
+	 */
 	@Override
 	public MappingContext<?, ?> getMappingContext() {
-		// TODO Auto-generated method stub
-		return mappingContext;
+		return this.mappingContext;
 	}
 
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.keyvalue.core.KeyValueOperations#findInRange(int, int, org.springframework.data.domain.Sort, java.lang.Class)
+	 */
+	@SuppressWarnings("rawtypes")
 	@Override
-	public void destroy() throws Exception {
-		// TODO Auto-generated method stub
-		
+	public <T> Iterable<T> findInRange(int offset, int rows, Sort sort, Class<T> type) {
+		return find(new Query(sort).skip(offset).limit(rows), type);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.keyvalue.core.KeyValueOperations#count(java.lang.Class)
+	 */
+	@Override
+	public long count(Class<?> type) {
+
+		Assert.notNull(type, "Type for count must not be null!");
+		return 0;
 	}
 
 }

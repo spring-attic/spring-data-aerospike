@@ -19,7 +19,11 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.aerospike.repository.query.Query;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.keyvalue.core.KeyValueCallback;
 import org.springframework.data.keyvalue.core.KeyValueOperations;
+import org.springframework.data.mapping.context.MappingContext;
 
 import com.aerospike.client.query.Filter;
 
@@ -29,7 +33,7 @@ import com.aerospike.client.query.Filter;
  * @author Oliver Gierke
  * @author Peter Milne
  */
-public interface AerospikeOperations extends KeyValueOperations {
+public interface AerospikeOperations {//extends KeyValueOperations {
 
 	/**
 	 * The Set name used for the specified class by this template.
@@ -52,6 +56,11 @@ public interface AerospikeOperations extends KeyValueOperations {
 	 */
 	void insert(Serializable id, Object objectToInsert);
 	
+	/**
+	 * @return mapping context in use.
+	 */
+	MappingContext<?, ?> getMappingContext();
+	
 	void save(Serializable id, Object objectToInsert);
 	<T> void save(Serializable id, Object objectToInsert, Class<T> domainType);
 	void update(Object objectToUpdate);
@@ -62,8 +71,9 @@ public interface AerospikeOperations extends KeyValueOperations {
 	<T> T delete(Serializable id, Class<T> type);
 	<T> T delete(T objectToDelete);
 	
-	<T> Iterable<T> find(Filter filter, Class<T> entityClass);
+	<T> Iterable<T> find(Query<?> query, Class<T> type);
 	<T> List<T> findAll(Class<T> type);
+
 	<T> T findById(Serializable id, Class<T> type);
 	<T> T findById(Serializable id, Class<T> type, Class<T> domainType);
 
@@ -77,15 +87,41 @@ public interface AerospikeOperations extends KeyValueOperations {
 	
 
 	/**
-	 * Returns all entities of the given type matching the filter given {@link Filter}.
-	 * 
-	 * @param filter must not be {@literal null}.
-	 * @param type must not be {@literal null}.
+	 * @param query
+	 * @param javaType
 	 * @return
 	 */
-	<T> Iterable<T> findAll(Filter filter, Class<T> type);
+	int count(Query<?> query, Class<?> javaType);
 
-	
+	/**
+	 * Execute operation against underlying store.
+	 * 
+	 * @param action must not be {@literal null}.
+	 * @return
+	 */
+	<T> T execute(KeyValueCallback<T> action);
+
+	/**
+	 * @param sort
+	 * @param type
+	 * @return
+	 */
+	<T> Iterable<T> findAll(Sort sort, Class<T> type);
+
+	/**
+	 * @param offset
+	 * @param rows
+	 * @param sort
+	 * @param type
+	 * @return
+	 */
+	<T> Iterable<T> findInRange(int offset, int rows, Sort sort, Class<T> type);
+
+	/**
+	 * @param type
+	 * @return
+	 */
+	long count(Class<?> type);
 
 
 

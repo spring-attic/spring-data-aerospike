@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Assert;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -44,9 +43,13 @@ import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 
 import com.aerospike.client.Bin;
+import com.aerospike.client.Key;
 import com.aerospike.client.Record;
+import com.aerospike.client.Value;
 
 /**
  * An implementation of {@link AerospikeConverter} to read domain objects from {@link AerospikeData} and write domain
@@ -106,8 +109,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 				.from(type);
 
 		final AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(typeToUse);
-		final RecordReadingPropertyValueProvider recordReadingPropertyValueProvider = new RecordReadingPropertyValueProvider(
-				data.getRecord());
+		final RecordReadingPropertyValueProvider recordReadingPropertyValueProvider = new RecordReadingPropertyValueProvider(data.getRecord());
 
 		EntityInstantiator instantiator = entityInstantiators.getInstantiatorFor(entity);
 		Object instance = instantiator.createInstance(entity,
@@ -120,11 +122,17 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 
 			@Override
-			public void doWithPersistentProperty(
-					AerospikePersistentProperty persistentProperty) {
+			public void doWithPersistentProperty( AerospikePersistentProperty persistentProperty) {
 				PreferredConstructor<?, AerospikePersistentProperty> constructor = entity.getPersistenceConstructor();
 
 				if (constructor.isConstructorParameter(persistentProperty)) {
+					return;
+				}
+				
+				if (persistentProperty.isIdProperty()) {
+					if (data.getKey().userKey != null) {
+						accessor.setProperty(persistentProperty,recordReadingPropertyValueProvider.getPropertyValue(persistentProperty,data.getKey().userKey));
+					}
 					return;
 				}
 
@@ -158,7 +166,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 				if (property.isIdProperty()) {
 
-					data.setID(accessor.getProperty(property).toString());
+					data.setID(accessor.getProperty(property)!=null?accessor.getProperty(property).toString():null);
 					return;
 				}
 //				CachingAerospikePersistentProperty cachingAerospikePersistentProperty = (CachingAerospikePersistentProperty) property;
@@ -167,7 +175,9 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			}
 		});
 		typeMapper.writeType(entity.getTypeInformation(), data);
-		//data.setSetName(entity.getSetName());
+		if(data.getSetName()==null){
+			data.setSetName(entity.getSetName());
+		}		
 		data.add(bins);
 	}
 
@@ -189,6 +199,19 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			this.record = record;
 		}
 
+		/**
+		 * @param persistentProperty
+		 * @param userKey
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")
+		public <T> T getPropertyValue(
+				AerospikePersistentProperty persistentProperty, Value userKey) {
+			if (record == null) return null;
+			T value = (T) AerospikeDataToProperty.convertRecordValueToProperty(userKey,persistentProperty);
+			return value;
+		}
+
 		/* 
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mapping.model.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
@@ -197,9 +220,86 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(AerospikePersistentProperty property) {
 			if (record == null) return null;
-			T value = (T) record.getValue(property.getName());
+			T value = (T) AerospikeDataToProperty.convertRecordValueToProperty(record,property);
 			return value;
 		}
+	}
+	
+	private static class AerospikeDataToProperty {
+
+		/**
+		 * @param <T>
+		 * @param record
+		 * @param property
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")
+		public static <T> T convertRecordValueToProperty(Record record,AerospikePersistentProperty property) {
+			Assert.notNull(record, "record must not be null");
+			Assert.notNull(property,"AerospikePersistentProperty must not be null");
+			T value = (T) record.getValue(property.getName());
+			if (value != null) {
+				Class<T> targetClass = (Class<T>) property.getActualType();
+				if (value.getClass().isAssignableFrom(targetClass) == false) {
+					if (targetClass.equals(Integer.class)) {
+						value = (T) (Integer) record.getInt(property.getName());
+					} else if (targetClass.equals(Double.class)) {
+						value = (T) (Double) record.getDouble(property.getName());
+					} else if (targetClass.equals(Byte.class)) {
+						value = (T) (Byte) record.getByte(property.getName());
+					} else if (targetClass.equals(Float.class)) {
+						value = (T) (Float) record.getFloat(property.getName());
+					} else if (targetClass.equals(Short.class)) {
+						value = (T) (Short) record.getShort(property.getName());
+					} else if (targetClass.equals(Long.class)) {
+						value = (T) (Long) record.getLong(property.getName());
+					} else
+						value = (T) record.getValue(property.getName());
+				}
+			}
+
+			return value;
+		}
+
+		/**
+		 * @param record
+		 * @param userKey
+		 * @return
+		 */
+		@SuppressWarnings("unchecked")
+		public  static <T> T convertRecordValueToProperty(Value userKey,AerospikePersistentProperty property) {
+			T value = null;
+//			if (userKey != null) {
+//				Class<T> targetClass = (Class<T>) userKey.getObject().getClass();			
+//					if (targetClass.equals(Integer.class)) {
+//						value = (T) (Integer) userKey.toInteger();
+//					} else if (targetClass.equals(Long.class)) {
+//						value = (T) (Long) userKey.toLong();
+//					} else
+//						value = (T) (String) userKey.toString();
+//				}
+			if (userKey != null) {
+				Class<T> targetClass = (Class<T>) userKey.getObject().getClass();
+					if (targetClass.equals(Integer.class)) {
+						value = (T) (Integer)  userKey.toInteger();
+					} else if (targetClass.equals(Long.class)) {
+						value = (T) (Long) userKey.toLong();
+					} else if (targetClass.equals(String.class)) {
+						value = (T) (String) userKey.toString();
+					} else if (targetClass.equals(Double.class)) {
+						value = (T) (Double) Double.longBitsToDouble(userKey.toLong());
+					} else if (targetClass.equals(Byte.class)) {
+						value = (T) (Byte) (byte)(userKey.toLong());
+					} else if (targetClass.equals(Float.class)) {
+						value = (T) (Float)(float)Double.longBitsToDouble(userKey.toLong());
+					} else if (targetClass.equals(Short.class)) {
+						value = (T) (Short) (short) userKey.toLong();
+					} else
+						value = (T)  (String) userKey.toString();
+			}
+			return value;
+		}
+		
 	}
 
 	private static enum AerospikeTypeAliasAccessor implements TypeAliasAccessor<AerospikeData> {
@@ -214,7 +314,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		 */
 		@Override
 		public Object readAliasFrom(AerospikeData source) {
-			Assert.assertNotNull(source);
+			Assert.notNull(source);
 			if (source.getRecord() == null) return null;
 			return source.getRecord().getValue(TYPE_BIN_NAME);
 		}
@@ -227,5 +327,34 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		public void writeTypeTo(AerospikeData sink, Object alias) {
 			sink.add(new Bin(TYPE_BIN_NAME, alias.toString()));
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.aerospike.core.AerospikeWriter#convertToAerospikeType(java.lang.Object)
+	 */
+	@Override
+	public Object convertToAerospikeType(Object obj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.aerospike.core.AerospikeWriter#convertToAerospikeType(java.lang.Object, org.springframework.data.util.TypeInformation)
+	 */
+	@Override
+	public Object convertToAerospikeType(Object obj,
+			TypeInformation<?> typeInformation) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.aerospike.core.AerospikeWriter#toAerospikeData(java.lang.Object, org.springframework.data.aerospike.mapping.AerospikePersistentProperty)
+	 */
+	@Override
+	public AerospikeData toAerospikeData(Object object,
+			AerospikePersistentProperty referingProperty) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

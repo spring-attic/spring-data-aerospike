@@ -74,4 +74,11 @@ public class Customer {
 	public long getAge() {
 		return this.age;
 	}
+	@Override
+	public String toString() {
+		return "Customer [id=" + id + ", firstname=" + firstname
+				+ ", lastname=" + lastname + ", age=" + age + "]";
+	}
+	
+	
 }

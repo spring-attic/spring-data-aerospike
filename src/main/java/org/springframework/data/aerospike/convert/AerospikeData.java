@@ -17,7 +17,9 @@ package org.springframework.data.aerospike.convert;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -124,9 +126,17 @@ public class AerospikeData {
 	}
 
 	public String[] getBinNames() {
-		if (this.binNames != null && this.binNames.length  == 0)
+		if (this.bins != null && this.bins.size()  == 0)
 			return null;
-		return this.binNames;
+		
+		String[] binAsStringArray =  new String[bins.size()];
+		int i = 0;
+		for (Iterator<Bin> iterator = bins.iterator(); iterator.hasNext();) {
+			Bin bin = (Bin) iterator.next();
+			binAsStringArray[i] = bin.name;
+			i++;
+		}
+		return binAsStringArray ;
 	}
 
 	public void setRecord(Record record) {
@@ -138,6 +148,5 @@ public class AerospikeData {
 		this.key = new Key(this.getNamespace(), setName, this.key.userKey);
 		
 	}
-
 
 }

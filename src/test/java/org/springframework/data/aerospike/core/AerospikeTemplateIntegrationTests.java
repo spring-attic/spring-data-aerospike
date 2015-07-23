@@ -15,9 +15,25 @@
  */
 package org.springframework.data.aerospike.core;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,10 +41,26 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.repository.ContactRepository;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
+import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
+import org.springframework.data.aerospike.repository.query.Criteria;
+import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.aerospike.sample.Customer;
+import org.springframework.data.aerospike.sample.CustomerRepository;
+import org.springframework.data.keyvalue.core.query.KeyValueQuery;
+import org.springframework.data.keyvalue.repository.query.SpelQueryCreator;
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.expression.spel.standard.SpelExpression;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.ObjectUtils;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Bin;
@@ -36,6 +68,8 @@ import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
+import com.aerospike.client.query.RecordSet;
+import com.aerospike.client.query.Statement;
 import com.aerospike.client.task.IndexTask;
 
 /**
@@ -58,6 +92,10 @@ public class AerospikeTemplateIntegrationTests {
 
 	@Autowired AerospikeTemplate template;
 	@Autowired AerospikeClient client;
+	
+	DefaultRepositoryMetadata  repositoryMetaData =  new DefaultRepositoryMetadata(ContactRepository.class);
+	
+	
 
 	@Before
 	public void cleanUp(){
@@ -73,6 +111,8 @@ public class AerospikeTemplateIntegrationTests {
 		client.delete(null, new Key("test", "Customer", "dave-009"));
 		client.delete(null, new Key("test", "Customer", "dave-010"));
 	}
+	
+	
 
 	@Test
 	public void testInsertWithKey(){
@@ -164,8 +204,156 @@ public class AerospikeTemplateIntegrationTests {
 		Assert.assertEquals(10, list.size());
 
 	}
+	
+	private <T> Query<T> createQueryForMethodWithArgs(String methodName, Object... args)
+			throws NoSuchMethodException, SecurityException {
+
+		Class<?>[] argTypes = new Class<?>[args.length];
+		if (!ObjectUtils.isEmpty(args)) {
+
+			for (int i = 0; i < args.length; i++) {
+				argTypes[i] = args[i].getClass();
+			}
+		}
+
+		Method method = CustomerRepository.class.getMethod(methodName, argTypes);
+
+		PartTree partTree = new PartTree(method.getName(), Customer.class);
+		AerospikeQueryCreator creator = new AerospikeQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,repositoryMetaData).getParameters(), args));
+
+		Query q = creator.createQuery();
+		
+
+		return q;
+	}
 	@Test
-	public void testFindWithFilter(){
+	public void testFindWithFilterEqual() throws NoSuchMethodException, Exception{
+		IndexTask task = client.createIndex(null, "test", "Customer", "first_name_index", "firstname", IndexType.STRING);
+		task.waitTillComplete();
+		
+		client.put(null, new Key("test", "Customer", "dave-001"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		client.put(null, new Key("test", "Customer", "dave-002"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		client.put(null, new Key("test", "Customer", "dave-003"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		client.put(null, new Key("test", "Customer", "dave-004"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		client.put(null, new Key("test", "Customer", "dave-005"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		client.put(null, new Key("test", "Customer", "dave-006"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		client.put(null, new Key("test", "Customer", "dave-007"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		client.put(null, new Key("test", "Customer", "dave-008"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		client.put(null, new Key("test", "Customer", "dave-009"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		client.put(null, new Key("test", "Customer", "dave-010"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		
+		Query query = createQueryForMethodWithArgs("findCustomerByFirstname", "Dave");
+		
+		Iterable<Customer> it = template.find(query, Customer.class);
+		int count = 0;
+		for (Customer customer : it){
+			System.out.print(customer+"\n");
+			count++;
+		}
+		Assert.assertEquals(10, count);
+	
+
+	}
+	
+	@Test
+	public void testFindWithFilterEqualOrderBy() throws NoSuchMethodException, Exception{
+		IndexTask task = client.createIndex(null, "test", "Customer", "age_index", "age", IndexType.NUMERIC);
+		task.waitTillComplete();
+		
+		client.put(null, new Key("test", "Customer", "dave-001"), new Bin(
+				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 21));
+		client.put(null, new Key("test", "Customer", "dave-002"), new Bin(
+				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 22));
+		client.put(null, new Key("test", "Customer", "dave-003"), new Bin(
+				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 23));
+		client.put(null, new Key("test", "Customer", "dave-004"), new Bin(
+				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 24));
+		client.put(null, new Key("test", "Customer", "dave-005"), new Bin(
+				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 25));
+		client.put(null, new Key("test", "Customer", "dave-006"), new Bin(
+				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 26));
+		client.put(null, new Key("test", "Customer", "dave-007"), new Bin(
+				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 27));
+		client.put(null, new Key("test", "Customer", "dave-008"), new Bin(
+				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 28));
+		client.put(null, new Key("test", "Customer", "dave-009"), new Bin(
+				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 29));
+		client.put(null, new Key("test", "Customer", "dave-010"), new Bin(
+				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 30));
+		
+		Query query = createQueryForMethodWithArgs("findCustomerByLastnameOrderByFirstnameAsc","Matthews");
+		
+		Iterable<Customer> it = template.find(query, Customer.class);
+		int count = 0;
+		for (Customer customer : it){
+			System.out.print(customer+"\n");
+			count++;
+		}
+		Assert.assertEquals(10, count);
+	
+
+	}
+	
+	@Test
+	public void testFindWithFilterRange() throws NoSuchMethodException, Exception{
+		IndexTask task = client.createIndex(null, "test", "Customer", "age_index", "age", IndexType.NUMERIC);
+		task.waitTillComplete();
+		
+		client.put(null, new Key("test", "Customer", "dave-001"), new Bin(
+				"firstname", "Dave01"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 21));
+		client.put(null, new Key("test", "Customer", "dave-002"), new Bin(
+				"firstname", "Dave02"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 22));
+		client.put(null, new Key("test", "Customer", "dave-003"), new Bin(
+				"firstname", "Dave03"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 23));
+		client.put(null, new Key("test", "Customer", "dave-004"), new Bin(
+				"firstname", "Dave04"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 24));
+		client.put(null, new Key("test", "Customer", "dave-005"), new Bin(
+				"firstname", "Dave05"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 25));
+		client.put(null, new Key("test", "Customer", "dave-006"), new Bin(
+				"firstname", "Dave06"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 26));
+		client.put(null, new Key("test", "Customer", "dave-007"), new Bin(
+				"firstname", "Dave07"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 27));
+		client.put(null, new Key("test", "Customer", "dave-008"), new Bin(
+				"firstname", "Dave08"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 28));
+		client.put(null, new Key("test", "Customer", "dave-009"), new Bin(
+				"firstname", "Dave09"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 29));
+		client.put(null, new Key("test", "Customer", "dave-010"), new Bin(
+				"firstname", "Dave10"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 30));
+		
+		Query query = createQueryForMethodWithArgs("findCustomerByAgeBetween", 25,30);
+		
+		Iterable<Customer> it = template.find(query, Customer.class);
+		int count = 0;
+		for (Customer customer : it){
+			System.out.print(customer+"\n");
+			count++;
+		}
+		Assert.assertEquals(10, count);
+	
+
+	}
+	@Test
+	public void testFindWithStatement(){
 		IndexTask task = client.createIndex(null, "test", "Customer", "first_name_index", "firstname", IndexType.STRING);
 		task.waitTillComplete();
 		
@@ -189,13 +377,24 @@ public class AerospikeTemplateIntegrationTests {
 				new Bin ("lastname", "Matthews"));
 		client.put(null, new Key("test", "Customer", "dave-010"), new Bin("firstname", "Dave"), 
 				new Bin ("lastname", "Matthews"));
+		
+	Statement aerospikeQuery = new Statement();
+	String[] bins = {"firstname","lastname"}; //fields we want retrieved
+	aerospikeQuery.setNamespace("test"); // Database
+	aerospikeQuery.setSetName("Customer"); //Table
+	aerospikeQuery.setBinNames(bins);
+	aerospikeQuery.setFilters(Filter.equal("firstname","Dave")); //Query
+	
 
-		Iterable<Customer> it = template.find(Filter.equal("firstname","Dave"), Customer.class);
-		int count = 0;
-		for (Customer customer : it){
-			System.out.print(customer);
-			count++;
-		}
+	RecordSet rs =  client.query(null, aerospikeQuery);
+	int count = 0;
+	while (rs.next()) {		
+		Record r = rs.getRecord();
+		System.out.print(r.getValue("lastname")+ ","+r.getValue("firstname"));
+		count++;
+	}
+
+
 		Assert.assertEquals(10, count);
 
 	}

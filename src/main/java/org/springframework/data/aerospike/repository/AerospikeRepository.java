@@ -19,8 +19,10 @@ import java.io.Serializable;
 
 
 
+
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.Repository;
 /**
  * Aerospike specific {@link Repository}
@@ -29,6 +31,6 @@ import org.springframework.data.repository.Repository;
  * @author Jean Mercier
  */
 @NoRepositoryBean
-public interface AerospikeRepository<T, ID extends Serializable> extends CrudRepository<T, ID> {
+public interface AerospikeRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
 
 }
