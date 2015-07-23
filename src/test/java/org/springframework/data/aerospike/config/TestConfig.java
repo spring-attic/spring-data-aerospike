@@ -31,7 +31,7 @@ public class TestConfig {
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {
-		return new AerospikeTemplate(aerospikeClient(), "test"); // TODO verify correct place for namespace
+		return new AerospikeTemplate(aerospikeClient(), "bar"); // TODO verify correct place for namespace
 	}
 
 }

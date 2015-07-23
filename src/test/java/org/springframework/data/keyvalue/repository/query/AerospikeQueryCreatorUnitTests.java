@@ -1,0 +1,68 @@
+/**
+ * 
+ */
+package org.springframework.data.keyvalue.repository.query;
+
+import java.lang.reflect.Method;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.data.aerospike.repository.query.Criteria.*;
+import static org.springframework.data.aerospike.repository.query.StubParameterAccessor.*;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.aerospike.config.TestConfig;
+import org.springframework.data.aerospike.convert.AerospikeConverter;
+import org.springframework.data.aerospike.core.Person;
+import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
+import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
+import org.springframework.data.aerospike.repository.query.Criteria;
+import org.springframework.data.aerospike.repository.query.Query;
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+/**
+ *
+ *
+ * @author Peter Milne
+ * @author Jean Mercier
+ *
+ */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = TestConfig.class)
+public class AerospikeQueryCreatorUnitTests {
+	
+	MappingContext<?, AerospikePersistentProperty> context;
+	Method findByFirstname, findByFirstnameAndFriend, findByFirstnameNotNull;
+	@Mock AerospikeConverter converter;
+	
+	   @Before
+	    public void setUp() {
+	        MockitoAnnotations.initMocks(this);
+	        context = new AerospikeMappingContext();
+	    }
+	   
+	   
+	   
+		@Test
+		public void createsQueryCorrectly() throws Exception {
+
+			PartTree tree = new PartTree("findByFirstName", Person.class);
+			
+			
+
+			AerospikeQueryCreator creator = new AerospikeQueryCreator(tree, getAccessor(converter,  "Oliver"),context);
+			Query query = creator.createQuery();
+			//assertThat(query, is(Query.query(Criteria.where("firstName").is("Oliver"))));
+		}
+
+}

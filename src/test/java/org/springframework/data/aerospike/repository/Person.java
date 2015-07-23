@@ -34,7 +34,7 @@ import org.springframework.data.aerospike.mapping.Field;
  *
  */
 @Document
-public class Person extends Contact {
+public class Person extends Contact implements Comparable<Person> {
 
 
 	public enum Sex {
@@ -91,6 +91,8 @@ public class Person extends Contact {
 
 		this(id, firstname, lastname, age, Sex.MALE);
 	}
+	
+
 
 	/**
 	 * @param id
@@ -108,6 +110,127 @@ public class Person extends Contact {
 		this.sex = sex;
 		this.email = (firstname == null ? "noone" : firstname.toLowerCase()) + "@dmband.com";
 		this.createdAt = new Date();
+	}
+
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + ((address == null) ? 0 : address.hashCode());
+		result = prime * result + ((age == null) ? 0 : age.hashCode());
+		result = prime * result
+				+ ((coworker == null) ? 0 : coworker.hashCode());
+		result = prime * result
+				+ ((createdAt == null) ? 0 : createdAt.hashCode());
+		result = prime * result + ((creator == null) ? 0 : creator.hashCode());
+		result = prime * result
+				+ ((credentials == null) ? 0 : credentials.hashCode());
+		result = prime * result + ((email == null) ? 0 : email.hashCode());
+		result = prime * result + ((fans == null) ? 0 : fans.hashCode());
+		result = prime * result
+				+ ((firstname == null) ? 0 : firstname.hashCode());
+		result = prime * result
+				+ ((lastname == null) ? 0 : lastname.hashCode());
+		result = prime * result
+				+ ((realFans == null) ? 0 : realFans.hashCode());
+		result = prime * result + ((sex == null) ? 0 : sex.hashCode());
+		result = prime
+				* result
+				+ ((shippingAddresses == null) ? 0 : shippingAddresses
+						.hashCode());
+		result = prime * result + ((skills == null) ? 0 : skills.hashCode());
+		return result;
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Person other = (Person) obj;
+		if (address == null) {
+			if (other.address != null)
+				return false;
+		} else if (!address.equals(other.address))
+			return false;
+		if (age == null) {
+			if (other.age != null)
+				return false;
+		} else if (!age.equals(other.age))
+			return false;
+		if (coworker == null) {
+			if (other.coworker != null)
+				return false;
+		} else if (!coworker.equals(other.coworker))
+			return false;
+		if (createdAt == null) {
+			if (other.createdAt != null)
+				return false;
+		} else if (!createdAt.equals(other.createdAt))
+			return false;
+		if (creator == null) {
+			if (other.creator != null)
+				return false;
+		} else if (!creator.equals(other.creator))
+			return false;
+		if (credentials == null) {
+			if (other.credentials != null)
+				return false;
+		} else if (!credentials.equals(other.credentials))
+			return false;
+		if (email == null) {
+			if (other.email != null)
+				return false;
+		} else if (!email.equals(other.email))
+			return false;
+		if (fans == null) {
+			if (other.fans != null)
+				return false;
+		} else if (!fans.equals(other.fans))
+			return false;
+		if (firstname == null) {
+			if (other.firstname != null)
+				return false;
+		} else if (!firstname.equals(other.firstname))
+			return false;
+		if (lastname == null) {
+			if (other.lastname != null)
+				return false;
+		} else if (!lastname.equals(other.lastname))
+			return false;
+		if (realFans == null) {
+			if (other.realFans != null)
+				return false;
+		} else if (!realFans.equals(other.realFans))
+			return false;
+		if (sex != other.sex)
+			return false;
+		if (shippingAddresses == null) {
+			if (other.shippingAddresses != null)
+				return false;
+		} else if (!shippingAddresses.equals(other.shippingAddresses))
+			return false;
+		if (skills == null) {
+			if (other.skills != null)
+				return false;
+		} else if (!skills.equals(other.skills))
+			return false;
+		return true;
+	}
+
+
+	/* (non-Javadoc)
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(Person another) {
+		return this.lastname.compareTo(another.lastname);
+
 	}
 
 
