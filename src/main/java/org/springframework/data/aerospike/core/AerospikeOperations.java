@@ -122,7 +122,7 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 * @param type
 	 * @return
 	 */
-	long count(Class<?> type);
+	long count(Class<?> type,String setName);
 
 	/**
 	 * @param <T>

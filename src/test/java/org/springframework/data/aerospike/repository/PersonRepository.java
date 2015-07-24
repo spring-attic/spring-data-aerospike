@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import org.springframework.data.aerospike.repository.Person.Sex;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -124,11 +125,23 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 	List<Person> findByKeyValue(String key, String value);
 
 	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
-//	@Query("{ firstname : ?#{[0]}}")
+
 	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly(String firstname);
 	
-//	@Query("{ firstname : ?#{[0]}, email: ?#{principal.email} }")
 	List<Person> findWithSpelByFirstnameAndCurrentUserWithCustomQuery(String firstname);
+
+	/**
+	 * @param string
+	 * @return
+	 */
+	List<Person> findByFirstname(String string);
+
+	/**
+	 * @param string
+	 * @param pageRequest
+	 * @return
+	 */
+//	Page<Person> findByLastnameLike(String string, PageRequest pageRequest);
 	
 //	@Query("{ firstname : :#{#firstname}}")
 //	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterVariableOnly(@Param("firstname") String firstname);

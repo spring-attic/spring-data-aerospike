@@ -68,7 +68,7 @@ public class Query<T> {
 	}
 
 	/**
-	 * Creates new instance of {@link KeyValueQuery} with given {@link Sort}.
+	 * Creates new instance of {@link Query} with given {@link Sort}.
 	 * 
 	 * @param sort can be {@literal null}.
 	 */

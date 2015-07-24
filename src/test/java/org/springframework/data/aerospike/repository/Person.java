@@ -234,4 +234,144 @@ public class Person extends Contact implements Comparable<Person> {
 	}
 
 
+	public String getFirstname() {
+		return firstname;
+	}
+
+
+	public void setFirstname(String firstname) {
+		this.firstname = firstname;
+	}
+
+
+	public String getLastname() {
+		return lastname;
+	}
+
+
+	public void setLastname(String lastname) {
+		this.lastname = lastname;
+	}
+
+
+	public String getEmail() {
+		return email;
+	}
+
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+
+	public Integer getAge() {
+		return age;
+	}
+
+
+	public void setAge(Integer age) {
+		this.age = age;
+	}
+
+
+	public Sex getSex() {
+		return sex;
+	}
+
+
+	public void setSex(Sex sex) {
+		this.sex = sex;
+	}
+
+
+	public Date getCreatedAt() {
+		return createdAt;
+	}
+
+
+	public void setCreatedAt(Date createdAt) {
+		this.createdAt = createdAt;
+	}
+
+
+	public List<String> getSkills() {
+		return skills;
+	}
+
+
+	public void setSkills(List<String> skills) {
+		this.skills = skills;
+	}
+
+
+	public Address getAddress() {
+		return address;
+	}
+
+
+	public void setAddress(Address address) {
+		this.address = address;
+	}
+
+
+	public Set<Address> getShippingAddresses() {
+		return shippingAddresses;
+	}
+
+
+	public void setShippingAddresses(Set<Address> shippingAddresses) {
+		this.shippingAddresses = shippingAddresses;
+	}
+
+
+	public User getCreator() {
+		return creator;
+	}
+
+
+	public void setCreator(User creator) {
+		this.creator = creator;
+	}
+
+
+	public User getCoworker() {
+		return coworker;
+	}
+
+
+	public void setCoworker(User coworker) {
+		this.coworker = coworker;
+	}
+
+
+	public List<User> getFans() {
+		return fans;
+	}
+
+
+	public void setFans(List<User> fans) {
+		this.fans = fans;
+	}
+
+
+	public ArrayList<User> getRealFans() {
+		return realFans;
+	}
+
+
+	public void setRealFans(ArrayList<User> realFans) {
+		this.realFans = realFans;
+	}
+
+
+	public Credentials getCredentials() {
+		return credentials;
+	}
+
+
+	public void setCredentials(Credentials credentials) {
+		this.credentials = credentials;
+	}
+
+
 }

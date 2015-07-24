@@ -30,6 +30,7 @@ import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
+import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.aerospike.utility.Utils;
@@ -39,6 +40,8 @@ import org.springframework.data.keyvalue.core.KeyValueCallback;
 import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
 import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -46,10 +49,12 @@ import com.aerospike.client.query.IndexType;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
+import com.aerospike.client.Info;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.client.ScanCallback;
 import com.aerospike.client.Value;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.ScanPolicy;
 import com.aerospike.client.policy.WritePolicy;
@@ -253,8 +258,10 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> T delete(Serializable id, Class<T> type) {
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
-			converter.write(type, data);
 			data.setID(id);
+			data.setSetName(type.getSimpleName());
+			//converter.write(type, data);
+			//data.setID(id);
 			this.client.delete(null, data.getKey());
 		} catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
@@ -626,7 +633,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 */
 	@Override
 	public <T> Iterable<T> find(Query<?> query, Class<T> type) {
-		Assert.notNull(query, "Filter must not be null!");
+		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(type, "Type must not be null!");
 		Criteria criteria = (Criteria) query.getCritieria();
 		Filter filter = query.getQueryObject();
@@ -643,7 +650,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		String[] bins = {"firstname","lastname"};
 		Statement statement = new Statement();
 		statement.setNamespace(this.namespace);
 		statement.setFilters(filter);
@@ -679,7 +685,48 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public <T> Iterable<T> findInRange(int offset, int rows, Sort sort, Class<T> type) {
-		return find(new Query(sort).skip(offset).limit(rows), type);
+		System.out.println("skiping first " + offset + " and returning " + rows + " rows");
+		final List<Record> batchOfRecords = new ArrayList<Record>();
+		AerospikeData data = AerospikeData.forWrite(this.namespace);
+		final List<T> returnList = new ArrayList<T>();
+		count = 0;
+		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
+		
+		try {
+			this.client.scanAll(null, this.namespace, entity.getSetName(), new ScanCallback() {
+				
+				@Override
+				public void scanCallback(Key key, Record record) throws AerospikeException {
+					/*
+					 * process each Record into a "batch" 
+					 */
+							count++;
+							if (count > offset) {
+
+								if (batchOfRecords.size() == rows) {
+									for (Record rec : batchOfRecords) {
+										AerospikeData data = AerospikeData.forRead(key, null);
+										data.setRecord(rec);
+										returnList.add(converter.read(type, data));
+										System.out.println("+" + " added " + rec.getString("firstname")+ " " +  rec.getString("lastname"));
+									}
+									System.out.println();
+									System.out.println("Processed " + rows 	+ " records");
+									throw new com.aerospike.client.AerospikeException.ScanTerminated();
+								} 
+								
+								batchOfRecords.add(record);
+
+							} else {
+								System.out.println("skipped number  " + count);
+							}
+						}
+			}, data.getBinNames());
+		} catch (AerospikeException.ScanTerminated e) {
+			System.out.println("scan terminated");
+		}
+		
+		return (Iterable<T>) returnList;//TODO:create a sort
 	}
 
 	/*
@@ -687,10 +734,26 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 * @see org.springframework.data.keyvalue.core.KeyValueOperations#count(java.lang.Class)
 	 */
 	@Override
-	public long count(Class<?> type) {
-
+	public long count(Class<?> type, String setName) {
 		Assert.notNull(type, "Type for count must not be null!");
-		return 0;
+		String answer = Info.request(null, client.getNodes()[0], "sets");
+		String answer2 = Info.request(null, client.getNodes()[0], "namespaces");
+		Node[] nodes = client.getNodes();
+		int replicationCount = 2; 
+		int nodeCount = nodes.length;
+		int n_objects = 0;
+		for (Node node : nodes){
+			// Invoke an info call to each node in the cluster and sum the n_objects value
+			// The infoString will contain a result like this:
+			// n_objects=100001:set-stop-write-count=0:set-evict-hwm-count=0:set-enable-xdr=use-default:set-delete=false;
+			String infoString = Info.request(node, "sets/"+this.namespace+"/"+setName); 
+			String n_objectsString = infoString.substring(infoString.indexOf("=")+1, infoString.indexOf(":"));
+			n_objects = Integer.parseInt(n_objectsString);
+		}
+		System.out.println(String.format("Total Master and Replica objects %d", n_objects));
+		System.out.println(String.format("Total Master objects %d", (nodeCount > 1) ? n_objects/replicationCount : n_objects));
+		
+		return (nodeCount > 1) ? n_objects/replicationCount : n_objects;
 	}
 
 }

@@ -16,12 +16,15 @@
 
 package org.springframework.data.aerospike.repository;
 
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
+
 import java.util.Arrays;
-import java.util.Collections;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Before;
@@ -30,20 +33,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.aerospike.core.AerospikeOperations;
-import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.repository.Person.Sex;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.Assert;
 
 import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.AerospikeException;
-import com.aerospike.client.Key;
-import com.aerospike.client.Record;
-import com.aerospike.client.ResultCode;
-import com.aerospike.client.ScanCallback;
-import com.aerospike.client.policy.ScanPolicy;
 import com.aerospike.client.query.IndexType;
-import com.aerospike.client.task.IndexTask;
 
 /**
  *
@@ -83,6 +81,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		alicia = new Person("Alicia-01","Alicia", "Keys", 30, Sex.FEMALE);
 		
 		repository.createIndex(Person.class,"last_name_index", "lastname", IndexType.STRING);
+		repository.createIndex(Person.class,"first_name_index", "firstname", IndexType.STRING);
+		repository.createIndex(Person.class,"person_age_index", "age", IndexType.NUMERIC);
 
 
 
@@ -114,10 +114,31 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.containsAll(all), is(true));
 	}
 	
+
+	
+	@Test
+	public void findsAllWithGivenIds() {
+
+		Iterable<Person> result = repository.findAll(Arrays.asList(dave.id, boyd.id));
+		assertThat(result, hasItems(dave, boyd));
+		assertThat(result, not(hasItems(oliver, carter, stefan, leroi, alicia)));
+	}
+	
 	@Test
 	public void deletesPersonCorrectly() throws Exception {
 
 		repository.delete(dave);
+
+		List<Person> result = (List<Person>) repository.findAll();
+
+		assertThat(result.size(), is(all.size() - 1));
+		assertThat(result, not(hasItem(dave)));
+	}
+	
+	@Test
+	public void deletesPersonByIdCorrectly() {
+
+		repository.delete(dave.getId().toString());
 
 		List<Person> result = (List<Person>) repository.findAll();
 
@@ -132,5 +153,59 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(carter));
 	}
+	
+	@Test
+	public void findsPersonsByFirstname() {
 
+		List<Person> result = repository.findByFirstname("Leroi");
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(leroi));
+		assertThat(result.get(0).getAge(), is(41));
+	}
+	
+	@Ignore("Aerospike Query does not support like") @Test
+	public void findsPersonsByFirstnameLike() throws Exception {
+
+		List<Person> result = repository.findByFirstnameLike("Bo*");
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(boyd));
+	}
+	
+	@Test
+	public void findsPagedPersons() throws Exception {
+
+		Page<Person> result = repository.findAll(new PageRequest(1, 2, Direction.ASC, "lastname", "firstname"));
+		assertThat(result.isFirst(), is(false));
+		assertThat(result.isLast(), is(false));
+		assertThat(result, hasItems(leroi, stefan));
+	}
+	@Ignore("Aerospike Query does not support like")  @Test
+	public void executesPagedFinderCorrectly() throws Exception {
+
+//		Page<Person> page = repository.findByLastnameLike("*a*",
+//				new PageRequest(0, 2, Direction.ASC, "lastname", "firstname"));
+//		assertThat(page.isFirst(), is(true));
+//		assertThat(page.isLast(), is(false));
+//		assertThat(page.getNumberOfElements(), is(2));
+//		assertThat(page, hasItems(carter, stefan));
+	}
+	
+	@Test
+	public void findsPersonInAgeRangeCorrectly() throws Exception {
+
+		List<Person> result = repository.findByAgeBetween(40, 45);
+		assertThat(result.size(), is(3));
+		assertThat(result, hasItems(dave, leroi,boyd));
+	}
+
+//	@Test
+//	public void findsPersonByShippingAddressesCorrectly() throws Exception {
+//
+//		Address address = new Address("Foo Street 1", "C0123", "Bar");
+//		dave.setShippingAddresses(new HashSet<Address>(asList(address)));
+//
+//		repository.save(dave);
+//		assertThat(repository.findByShippingAddresses(address), is(dave));
+//	}
+	
 }

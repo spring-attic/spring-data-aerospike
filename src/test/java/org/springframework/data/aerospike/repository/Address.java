@@ -18,6 +18,8 @@
  */
 package org.springframework.data.aerospike.repository;
 
+import java.io.Serializable;
+
 /**
  *
  *
@@ -25,7 +27,7 @@ package org.springframework.data.aerospike.repository;
  * @author Jean Mercier
  *
  */
-public class Address {
+public class Address implements Serializable{
 
 	private String street;
 	private String zipCode;

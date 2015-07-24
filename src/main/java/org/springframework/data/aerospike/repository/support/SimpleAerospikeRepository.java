@@ -12,6 +12,7 @@ import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
 import org.springframework.util.Assert;
 import org.springframework.data.aerospike.repository.AerospikeRepository;
+import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -114,11 +115,9 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 			return new PageImpl<T>(result, null, result.size());
 		}
 
-		Iterable<T> content = operations.findInRange(pageable.getOffset(), pageable.getPageSize(), pageable.getSort(),
-				entityInformation.getJavaType());
+		Iterable<T> content = operations.findInRange(pageable.getOffset(), pageable.getPageSize(), pageable.getSort(),entityInformation.getJavaType());
 
-		return new PageImpl<T>(IterableConverter.toList(content), pageable, this.operations.count(entityInformation
-				.getJavaType()));
+		return new PageImpl<T>(IterableConverter.toList(content), pageable, this.operations.count(entityInformation.getJavaType(),getDomainClass().getSimpleName()));
 	}
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#exists(java.io.Serializable)
@@ -166,6 +165,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	 */
 	@Override
 	public void delete(ID id) {
+		Assert.notNull(id, "The given id must not be null!");
 		operations.delete(id, entityInformation.getJavaType());
 		
 	}
@@ -194,4 +194,5 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	public <T> void createIndex(Class<T> domainType, String indexName,String binName, IndexType indexType) {
 		operations.createIndex(domainType, indexName, binName, indexType);
 	}
+	
 }
