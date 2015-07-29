@@ -44,6 +44,7 @@ import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Info;
 import com.aerospike.client.Key;
+import com.aerospike.client.Operation;
 import com.aerospike.client.Record;
 import com.aerospike.client.ScanCallback;
 import com.aerospike.client.Value;
@@ -275,41 +276,45 @@ public class AerospikeTemplate implements AerospikeOperations {
 	}
 
 	public <T> T add(T objectToAddTo, Map<String, Long> values) {
+		T result = null;
 		try {
 			
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToAddTo, data);
-			Bin[] bins = new Bin[values.size()];
+			Operation[] operations = new Operation[values.size()+1];
 			int x = 0;
 			for(Map.Entry<String, Long> entry : values.entrySet()){
 				Bin newBin = new Bin(entry.getKey(), entry.getValue());
-				bins[x] = newBin;
+				operations[x] = Operation.add(newBin);
 				x++;
 			}
-			this.client.add(null, data.getKey(), bins);
+			operations[x] = Operation.get();
+			Record record = this.client.operate(null, data.getKey(), operations);
+			data.setRecord(record);
+			result = (T) converter.read(objectToAddTo.getClass(), data);
 			
 		} catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
 		}
-		return null;
+		return result;
 	}
 
 	public <T> T add(T objectToAddTo, String binName, int value) {
+		T result = null;
 		try {
 			
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToAddTo, data);
-			this.client.add(null, data.getKey(), new Bin(binName, value));
-			
+			Record record = this.client.operate(null, data.getKey(), Operation.add(new Bin(binName, value)), Operation.get());
+			data.setRecord(record);
+			result = (T) converter.read(objectToAddTo.getClass(), data);
 		} catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
 		}
-		return null;
+		return result;
 	}
-
-
 
 	
 	@Override
@@ -572,7 +577,12 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return (nodeCount > 1) ? n_objects/replicationCount : n_objects;
 	}
 	
-	
+	/**
+	 * This method us a utility to read all records based on a type and an optional filter
+	 * @param type
+	 * @param filter Optional, if null the results are not filtered in any way
+	 * @return 
+	 */
 	protected <T> Iterable<T> findAllUsingQuery(Class<T> type, Filter filter){
 		final Class<T> classType = type;
 		Statement stmt = new Statement();
@@ -593,7 +603,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return results;
 	} 
 	
-	protected class EntityIterator<T> implements Iterator<T>, CloseableIterator<T>{
+	protected class EntityIterator<T> implements CloseableIterator<T>{
 		
 		private RecordSet recordSet;
 		private Iterator<KeyRecord> recordSetIterator;
@@ -626,6 +636,21 @@ public class AerospikeTemplate implements AerospikeOperations {
 			
 		}
 		
+	}
+
+
+
+	@Override
+	public <T> T prepend(T objectToAppenTo, Map<String, String> values) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public <T> T prepend(T objectToAppenTo, String binName, String value) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

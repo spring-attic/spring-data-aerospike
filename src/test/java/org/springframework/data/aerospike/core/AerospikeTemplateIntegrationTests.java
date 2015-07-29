@@ -132,9 +132,10 @@ public class AerospikeTemplateIntegrationTests {
 	public void testSingleIncrement(){
 		Person customer = new Person("dave-002", "Dave", "Matthews");
 		template.insert(customer);
-		template.add(customer, "age", 1);
+		customer = template.add(customer, "age", 1);
 		Record result = client.get(null, new Key("test", "Person", "dave-002"), "age");
 		Assert.assertEquals(1, result.getInt("age"));
+		Assert.assertEquals((Integer)result.getInt("age"), customer.getAge());
 	}
 	@Test
 	public void testMultipleIncrement(){
@@ -142,12 +143,11 @@ public class AerospikeTemplateIntegrationTests {
 		template.insert(customer);
 		Map<String, Long> values = new HashMap<String, Long>();
 		values.put("age", 1L);
-		values.put("waist", 32L);
 
-		template.add(customer, values);
+		customer = template.add(customer, values);
 		Record result = client.get(null, new Key("test", "Person", "dave-002"), "age", "waist");
 		Assert.assertEquals(1, result.getInt("age"));
-		Assert.assertEquals(32, result.getInt("waist"));
+		Assert.assertEquals((Integer)result.getInt("age"), customer.getAge());
 	}
 	@Test
 	public void testDelete(){
