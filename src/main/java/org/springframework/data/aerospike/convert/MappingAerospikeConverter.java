@@ -99,7 +99,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public <R> R read(Class<R> type, AerospikeData data) {
+	public <R> R read(Class<R> type, final AerospikeData data) {
 		TypeInformation<?> readType = typeMapper.readType(data, ClassTypeInformation.from(type));
 		TypeInformation<?> typeToUse = type.isAssignableFrom(readType.getType()) ? readType : ClassTypeInformation
 				.from(type);

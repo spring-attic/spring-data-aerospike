@@ -17,10 +17,10 @@ package org.springframework.data.aerospike.core;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.aerospike.convert.AerospikeConverter;
@@ -30,22 +30,15 @@ import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
-import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
-import org.springframework.data.aerospike.utility.Utils;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.keyvalue.core.KeyValueAdapter;
 import org.springframework.data.keyvalue.core.KeyValueCallback;
-import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
-import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import com.aerospike.client.query.IndexType;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
@@ -59,6 +52,7 @@ import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.ScanPolicy;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
+import com.aerospike.client.query.IndexType;
 import com.aerospike.client.query.KeyRecord;
 import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.ResultSet;
@@ -224,10 +218,9 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public void delete(Class<?> type) {
 		try {
-			//"set-config:context=namespace;id=namespace_name;set=set_name;set-delete=true;"
-			//Utils.infoAll(client, "set-config:context=namespace;id=" + this.namespace + ";set=" + type.getSimpleName() + ";set-delete=true;");
 			ScanPolicy scanPolicy = new ScanPolicy();
-			count = 0;
+			scanPolicy.includeBinData = false;
+			final AtomicLong count = new AtomicLong();
 			client.scanAll(scanPolicy, namespace,  type.getSimpleName(), new ScanCallback() {
 
 				
@@ -237,12 +230,12 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 
 					if (client.delete(null, key)) 
-						count++;
+						count.addAndGet(1);
 			           /*
 			            * after 25,000 records delete, return print the count.
 			            */
-			           if (count % 25000 == 0){
-			               System.out.println("Deleted "+ count);
+			           if (count.get() % 10000 == 0){
+			               System.out.println("Deleted "+ count.get());
 			           }
 					
 				}
@@ -260,8 +253,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			data.setID(id);
 			data.setSetName(type.getSimpleName());
-			//converter.write(type, data);
-			//data.setID(id);
 			this.client.delete(null, data.getKey());
 		} catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
@@ -362,22 +353,23 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	@Override
 	public <T> List<T> findAll(final Class<T> type) {
-		
+
 		//TODO returning a list is dangerous because
 		// the list is unbounded and could contain billions of elements
 		// we need to find another solution
 		final List<T> scanList = new ArrayList<T>();
-		this.client.scanAll(null, this.namespace, this.getSetName(type), new ScanCallback() {
-			
-			@Override
-			public void scanCallback(Key key, Record record) throws AerospikeException {
-				AerospikeData data = AerospikeData.forRead(key, null);
-				data.setRecord(record);
-				scanList.add(converter.read(type, data));
+		Iterable<T> results = findAllUsingQuery(type, null);
+		Iterator<T> iterator = results.iterator();
+		try {
+			while (iterator.hasNext()){
+				scanList.add(iterator.next());
 			}
-		});
+		} finally {
+			((EntityIterator<T>)iterator).close();
+		}
 		return scanList;
 	}
+	
 
 	@Override
 	public <T> T findById(Serializable id, Class<T> type) {
@@ -393,6 +385,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 			throw translatedException == null ? o_O : translatedException;
 		}
 	}
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> Iterable<T> aggregate(Filter filter, Class<?> type,
 			Class<T> outputType, String module, String function, List<?> arguments) {
@@ -420,97 +413,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 		this.exceptionTranslator = exceptionTranslator == null ? DEFAULT_EXCEPTION_TRANSLATOR : exceptionTranslator;
 	}
 
-	
-
-
-
-
-
-	/**
-	 * {@link AerospikeClientCallback} to execute a query to return an {@link Iterable} of objects.
-	 * 
-	 * @author Oliver Gierke
-	 * @author Peter Milne
-	 */
-	private static final class FindAllCallback<T> implements AerospikeClientCallback<Iterable<T>> {
-
-		private final Class<T> type;
-		private final Statement statement;
-		private final AerospikeConverter converter;
-		private String module;
-		private String function;
-		private List<Value> arguments;
-
-		/**
-		 * Creates a new {@link FindAllCallback} for the given type, {@link Statement} and {@link AerospikeConverter}.
-		 * 
-		 * @param type must not be {@literal null}.
-		 * @param statement must not be {@literal null}.
-		 * @param converter must not be {@literal null}.
-		 */
-		private FindAllCallback(Class<T> type, Statement statement, AerospikeConverter converter) {
-
-			this.type = type;
-			this.statement = statement;
-			this.converter = converter;
-		}
-		private FindAllCallback(Class<T> type, Statement statement, AerospikeConverter converter, String module, String function, List<Value> arguments) {
-
-			this.type = type;
-			this.statement = statement;
-			this.converter = converter;
-			this.module = module;
-			this.function = function;
-			this.arguments = arguments;
-		}
-
-		/**
-		 * @param type2
-		 * @param statement2
-		 * @param defaultConverter
-		 */
-		public FindAllCallback(Class<T> type, Statement statement, MappingAerospikeConverter converter) {
-			this.type = type;
-			this.statement = statement;
-			this.converter = converter;
-
-		}
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.aerospike.core.AerospikeClientCallback#doWith(com.aerospike.client.AerospikeClient)
-		 */
-		@Override
-		public Iterable<T> recordIterator(AerospikeClient client)  {
-			
-			final List<T> returnList = new ArrayList<T>();
-
-			RecordSet rs = client.query(null, statement);
-			try {
-				while (rs != null && rs.next()) {
-					Record record = rs.getRecord();
-					AerospikeData data = AerospikeData.forRead(rs.getKey(),	null);
-					data.setRecord(record);
-					returnList.add(converter.read(type, data));
-				}
-			} finally {
-				rs.close();
-			}
-
-			return (Iterable<T>) returnList;//TODO:create a sort
-		}
-
-		@Override
-		public Iterable<T> resultIterator(AerospikeClient client)
-				throws AerospikeException {
-			final ResultSet resultSet = client.queryAggregate(null, statement, module, function, 
-					(arguments==null || arguments.size() == 0)? null: arguments.toArray(new Value[arguments.size()]));
-
-			
-			return (Iterable<T>) resultSet.iterator();
-		}
-	}
-
-
 	@Override
 	public String getSetName(Class<?> entityClass) {
 		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(entityClass);
@@ -533,73 +435,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return candidate == null ? true : ClassUtils.isAssignable(requiredType, candidate.getClass());
 	}
 
-		
-//		return execute(new KeyValueCallback<Iterable<T>>() {
-//
-//			@SuppressWarnings("unchecked")
-//			@Override
-//			public Iterable<T> doInKeyValue(KeyValueAdapter adapter) {
-//
-//				Iterable<?> result = adapter.find(query, resolveKeySpace(type));//this converted to filter somehoe
-//				if (result == null) {
-//					return Collections.emptySet();
-//				}
-//
-//				List<T> filtered = new ArrayList<T>();
-//
-//				for (Object candidate : result) {
-//					if (typeCheck(type, candidate)) {
-//						filtered.add((T) candidate);
-//					}
-//				}
-//
-//				return filtered;
-//			}
-//		}); 
-//	}
-
-
-//	@Override
-//	public <T> Iterable<T> findInRange(int offset, int rows, Class<T> type) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-//
-//
-//	@Override
-//	public <T> Iterable<T> findInRange(int offset, int rows, Sort sort,
-//			Class<T> type) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-//
-//
-//	@Override
-//	public long count(Class<?> type) {
-//		// TODO Auto-generated method stub
-//		return 0;
-//	}
-//
-//
-//	@Override
-//	public long count(KeyValueQuery<?> query, Class<?> type) {
-//		// TODO Auto-generated method stub
-//		return 0;
-//	}
-//
-//
-//	@Override
-//	public MappingContext<?, ?> getMappingContext() {
-//		// TODO Auto-generated method stub
-//		return mappingContext;
-//	}
-//
-//
-//	@Override
-//	public void destroy() throws Exception {
-//		// TODO Auto-generated method stub
-//		
-//	}
 
 
 	/* (non-Javadoc)
@@ -623,7 +458,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 */
 	@Override
 	public int count(Query<?> query, Class<?> javaType) {
-		// TODO Auto-generated method stub
+		// TODO Invoke aggregation to count
 		return 0;
 	}
 
@@ -637,30 +472,8 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(type, "Type must not be null!");
 		Criteria criteria = (Criteria) query.getCritieria();
 		Filter filter = query.getQueryObject();
-
-		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
 		
-		AerospikeData data = AerospikeData.forWrite(this.namespace);
-		try {
-			converter.write(type.newInstance(), data);
-		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Statement statement = new Statement();
-		statement.setNamespace(this.namespace);
-		statement.setFilters(filter);
-		statement.setSetName(entity.getSetName());
-		statement.setBinNames(data.getBinNames());
-		
-		FindAllCallback<T> callBack = new FindAllCallback<T>(type, statement, DEFAULT_CONVERTER);
-		
-		
-		
-		return callBack.recordIterator(client);
+		return findAllUsingQuery(type, filter);
 	}
 
 
@@ -686,46 +499,49 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public <T> Iterable<T> findInRange(int offset, int rows, Sort sort, Class<T> type) {
 		System.out.println("skiping first " + offset + " and returning " + rows + " rows");
-		final List<Record> batchOfRecords = new ArrayList<Record>();
-		AerospikeData data = AerospikeData.forWrite(this.namespace);
-		final List<T> returnList = new ArrayList<T>();
-		count = 0;
-		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
+		final long rowCount = rows;
+		final AtomicLong count = new AtomicLong(0);
+		final Iterable<T> results = findAllUsingQuery(type, null);
+		final Iterator<T> iterator = results.iterator();
+		/*
+		 * skip over offset
+		 */
 		
-		try {
-			this.client.scanAll(null, this.namespace, entity.getSetName(), new ScanCallback() {
-				
-				@Override
-				public void scanCallback(Key key, Record record) throws AerospikeException {
-					/*
-					 * process each Record into a "batch" 
-					 */
-							count++;
-							if (count > offset) {
-
-								if (batchOfRecords.size() == rows) {
-									for (Record rec : batchOfRecords) {
-										AerospikeData data = AerospikeData.forRead(key, null);
-										data.setRecord(rec);
-										returnList.add(converter.read(type, data));
-										System.out.println("+" + " added " + rec.getString("firstname")+ " " +  rec.getString("lastname"));
-									}
-									System.out.println();
-									System.out.println("Processed " + rows 	+ " records");
-									throw new com.aerospike.client.AerospikeException.ScanTerminated();
-								} 
-								
-								batchOfRecords.add(record);
-
-							} else {
-								System.out.println("skipped number  " + count);
-							}
-						}
-			}, data.getBinNames());
-		} catch (AerospikeException.ScanTerminated e) {
-			System.out.println("scan terminated");
+		for (int skip = 0; skip < offset; skip++){
+			if (iterator.hasNext())
+				iterator.next();
 		}
-		
+		/*
+		 * setup the iterable litimed by 'rows'
+		 */
+
+		Iterable<T> returnList = new Iterable<T>() {
+
+			@Override
+			public Iterator<T> iterator() {
+				return new Iterator<T>() {
+
+					@Override
+					public boolean hasNext() {
+						if (count.get() == rowCount){
+							((EntityIterator<T>)iterator).close();
+							return false;
+						} else {
+							return iterator.hasNext();
+						}
+					}
+
+					@Override
+					public T next() {
+						if (count.addAndGet(1) <= rowCount){
+							return iterator.next();
+						} else {
+							return null;
+						}
+					}
+				};
+			}
+		};
 		return (Iterable<T>) returnList;//TODO:create a sort
 	}
 
@@ -739,7 +555,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		String answer = Info.request(null, client.getNodes()[0], "sets");
 		String answer2 = Info.request(null, client.getNodes()[0], "namespaces");
 		Node[] nodes = client.getNodes();
-		int replicationCount = 2; 
+		int replicationCount = 2;  //TODO
 		int nodeCount = nodes.length;
 		int n_objects = 0;
 		for (Node node : nodes){
@@ -755,5 +571,62 @@ public class AerospikeTemplate implements AerospikeOperations {
 		
 		return (nodeCount > 1) ? n_objects/replicationCount : n_objects;
 	}
+	
+	
+	protected <T> Iterable<T> findAllUsingQuery(Class<T> type, Filter filter){
+		final Class<T> classType = type;
+		Statement stmt = new Statement();
+		stmt.setNamespace(this.namespace);
+		stmt.setSetName(this.getSetName(type));
+		if (filter != null)
+			stmt.setFilters(filter);
+		
+		final RecordSet recordSet = this.client.query(null, stmt);
+		Iterable<T> results = new Iterable<T> (){
+
+			@Override
+			public Iterator<T> iterator() {
+				return new EntityIterator<T>(classType, converter, recordSet);
+			}
+			
+		};
+		return results;
+	} 
+	
+	protected class EntityIterator<T> implements Iterator<T>, CloseableIterator<T>{
+		
+		private RecordSet recordSet;
+		private Iterator<KeyRecord> recordSetIterator;
+		private MappingAerospikeConverter converter;
+		private Class<T> type;
+
+		public EntityIterator(Class<T> type, MappingAerospikeConverter converter, RecordSet recordSet){
+			this.converter = converter;
+			this.type = type;
+			this.recordSet = recordSet;
+			this.recordSetIterator = recordSet.iterator();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return this.recordSetIterator.hasNext();
+		}
+
+		@Override
+		public T next() {
+			KeyRecord keyRecord = this.recordSetIterator.next();
+			AerospikeData data = AerospikeData.forRead(keyRecord.key, null);
+			data.setRecord(keyRecord.record);
+			return converter.read(type, data);
+		}
+
+		@Override
+		public void close()  {
+			recordSet.close();
+			
+		}
+		
+	}
+
 
 }
