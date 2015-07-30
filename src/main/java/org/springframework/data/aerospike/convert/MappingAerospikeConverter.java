@@ -15,12 +15,14 @@
  */
 package org.springframework.data.aerospike.convert;
 
+import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
@@ -45,6 +47,7 @@ import org.springframework.util.Assert;
 
 import com.aerospike.client.Bin;
 import com.aerospike.client.Record;
+import com.aerospike.client.Value;
 
 /**
  * An implementation of {@link AerospikeConverter} to read domain objects from {@link AerospikeData} and write domain
@@ -68,7 +71,9 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	 */
 	public MappingAerospikeConverter() {
 		this.mappingContext = new AerospikeMappingContext();
-		this.conversionService = new DefaultConversionService();
+		DefaultConversionService defaultConversionService =  new DefaultConversionService();
+		defaultConversionService.addConverter(new LongToBoolean());
+		this.conversionService = defaultConversionService;
 		this.entityInstantiators = new EntityInstantiators();
 
 		this.typeMapper = new DefaultTypeMapper<AerospikeData>(AerospikeTypeAliasAccessor.INSTANCE, mappingContext,
@@ -105,39 +110,45 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 				.from(type);
 
 		final AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(typeToUse);
-		final RecordReadingPropertyValueProvider recordReadingPropertyValueProvider = new RecordReadingPropertyValueProvider(data.getRecord());
+		final RecordReadingPropertyValueProvider recordReadingPropertyValueProvider = new RecordReadingPropertyValueProvider(data.getRecord(),getConversionService());
 
 		EntityInstantiator instantiator = entityInstantiators.getInstantiatorFor(entity);
 		Object instance = instantiator.createInstance(entity,
 				new PersistentEntityParameterValueProvider<AerospikePersistentProperty>(entity,
 						recordReadingPropertyValueProvider, null));
+		if (data.getRecord() != null) {
 
-		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(instance);
+			final PersistentPropertyAccessor accessor = entity
+					.getPropertyAccessor(instance);
 
-		entity.doWithProperties(new PropertyHandler<AerospikePersistentProperty>() {
+			entity.doWithProperties(new PropertyHandler<AerospikePersistentProperty>() {
 
+				@Override
+				public void doWithPersistentProperty(
+						AerospikePersistentProperty persistentProperty) {
+					PreferredConstructor<?, AerospikePersistentProperty> constructor = entity.getPersistenceConstructor();
 
-			@Override
-			public void doWithPersistentProperty( AerospikePersistentProperty persistentProperty) {
-				PreferredConstructor<?, AerospikePersistentProperty> constructor = entity.getPersistenceConstructor();
+					if (constructor.isConstructorParameter(persistentProperty)) {
+						return;
+					}
 
-				if (constructor.isConstructorParameter(persistentProperty)) {
-					return;
+					if (persistentProperty.isIdProperty()) {
+						Object value = recordReadingPropertyValueProvider.getPropertyValue(persistentProperty,data.getSpringId());
+						if (value != null) {
+							accessor.setProperty(persistentProperty,value);
+						}
+						return;
+					}
+
+					Object value = recordReadingPropertyValueProvider.getPropertyValue(persistentProperty);
+					if (value != null) {
+						accessor.setProperty(persistentProperty,value);
+					}
 				}
-				
-				if (persistentProperty.isIdProperty()) {
-					accessor.setProperty(persistentProperty, data.getSringId());
-					return;
-				}
-
-				Object value = recordReadingPropertyValueProvider.getPropertyValue(persistentProperty);
-				if (value != null){
-					accessor.setProperty(persistentProperty,
-							recordReadingPropertyValueProvider.getPropertyValue(persistentProperty));
-				}
-			}
-		});
-
+			});
+		} else {
+			instance = null;
+		}
 		return (R) instance;
 	}
 
@@ -182,14 +193,17 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	private static class RecordReadingPropertyValueProvider implements PropertyValueProvider<AerospikePersistentProperty> {
 
 		private final Record record;
+		private final ConversionService conversionService;
 
 		/**
 		 * Creates a new {@link RecordReadingPropertyValueProvider} for the given {@link Record}.
 		 * 
 		 * @param record must not be {@literal null}.
+		 * @param conversionService 
 		 */
-		public RecordReadingPropertyValueProvider(Record record) {
+		public RecordReadingPropertyValueProvider(Record record, ConversionService conversionService) {
 			this.record = record;
+			this.conversionService = conversionService;
 		}
 
 		/* 
@@ -199,13 +213,33 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		@Override
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(AerospikePersistentProperty property) {
-			if (record == null) return null;
-			T value = (T) AerospikeDataToProperty.convertRecordValueToProperty(record,property);
+			T value = null;
+			if (record == null) return value;
+			Object propertyObject =  record.getValue(((CachingAerospikePersistentProperty)property).getFieldName());
+			if(propertyObject!=null){
+				value = (T) conversionService.convert(propertyObject,TypeDescriptor.valueOf(propertyObject.getClass()) ,TypeDescriptor.valueOf(property.getType()));				
+			}
+			return value;
+		}
+		
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mapping.model.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
+		 */
+		@SuppressWarnings("unchecked")
+		public <T> T getPropertyValue(AerospikePersistentProperty property,Object propertyObject) {
+			T value = null;
+			if (record == null) return value;
+			if(propertyObject!=null){
+				value = (T) conversionService.convert(propertyObject,TypeDescriptor.valueOf(propertyObject.getClass()) ,TypeDescriptor.valueOf(property.getType()));				
+			}
 			return value;
 		}
 	}
 	
 	private static class AerospikeDataToProperty {
+		
+		
 
 		/**
 		 * @param <T>
@@ -215,27 +249,29 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		 */
 		@SuppressWarnings("unchecked")
 		public static <T> T convertRecordValueToProperty(Record record,AerospikePersistentProperty property) {
+			final ConversionService conversionService = new DefaultConversionService();
 			Assert.notNull(record, "record must not be null");
 			Assert.notNull(property,"AerospikePersistentProperty must not be null");
 			T value = (T) record.getValue(property.getName());
 			if (value != null) {
-				Class<T> targetClass = (Class<T>) property.getActualType();
-				if (value.getClass().isAssignableFrom(targetClass) == false) {
-					if (targetClass.equals(Integer.class)) {
-						value = (T) (Integer) record.getInt(property.getName());
-					} else if (targetClass.equals(Double.class)) {
-						value = (T) (Double) record.getDouble(property.getName());
-					} else if (targetClass.equals(Byte.class)) {
-						value = (T) (Byte) record.getByte(property.getName());
-					} else if (targetClass.equals(Float.class)) {
-						value = (T) (Float) record.getFloat(property.getName());
-					} else if (targetClass.equals(Short.class)) {
-						value = (T) (Short) record.getShort(property.getName());
-					} else if (targetClass.equals(Long.class)) {
-						value = (T) (Long) record.getLong(property.getName());
-					} else
-						value = (T) record.getValue(property.getName());
-				}
+				value = (T) conversionService.convert(value,TypeDescriptor.valueOf(value.getClass()) ,TypeDescriptor.valueOf(property.getActualType()));
+//				Class<T> targetClass = (Class<T>) property.getActualType();
+//				if (value.getClass().isAssignableFrom(targetClass) == false) {
+//					if (targetClass.equals(Integer.class)) {
+//						value = (T) (Integer) record.getInt(property.getName());
+//					} else if (targetClass.equals(Double.class)) {
+//						value = (T) (Double) record.getDouble(property.getName());
+//					} else if (targetClass.equals(Byte.class)) {
+//						value = (T) (Byte) record.getByte(property.getName());
+//					} else if (targetClass.equals(Float.class)) {
+//						value = (T) (Float) record.getFloat(property.getName());
+//					} else if (targetClass.equals(Short.class)) {
+//						value = (T) (Short) record.getShort(property.getName());
+//					} else if (targetClass.equals(Long.class)) {
+//						value = (T) (Long) record.getLong(property.getName());
+//					} else
+//						value = (T) record.getValue(property.getName());
+//				}
 			}
 
 			return value;
