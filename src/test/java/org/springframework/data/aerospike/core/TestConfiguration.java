@@ -16,12 +16,11 @@
 package org.springframework.data.aerospike.core;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.policy.ClientPolicy;
 
-@Configuration
+
 public class TestConfiguration {
 
 	public @Bean(destroyMethod = "close") AerospikeClient aerospikeClient() {

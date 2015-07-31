@@ -17,12 +17,14 @@ package org.springframework.data.aerospike.core;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.aerospike.convert.AerospikeConverter;
 import org.springframework.data.aerospike.convert.AerospikeData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
@@ -139,6 +141,9 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 */
 	@Override
 	public <T> void save(Serializable id, Object objectToInsert, Class<T> domainType) {
+		Assert.notNull(id, "Id must not be null!");
+		Assert.notNull(domainType, "Domain Type must not be null!");
+		Assert.notNull(objectToInsert, "Object to insert must not be null!");
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToInsert, data);
@@ -155,6 +160,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	}
 	@Override
 	public <T> T findById(Serializable id, Class<T> type, Class<T> domainType) {
+		Assert.notNull(type, "Class Type must not be null!");
 		try {
 			Key key = new Key(this.namespace, domainType.getSimpleName(), id.toString());
 			AerospikeData data = AerospikeData.forRead(key, null);
@@ -167,6 +173,8 @@ public class AerospikeTemplate implements AerospikeOperations {
 		}
 	}
 	public void save(Serializable id, Object objectToInsert) {
+		Assert.notNull(id, "Id must not be null!");
+		Assert.notNull(objectToInsert, "Object to insert must not be null!");
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToInsert, data);
@@ -179,6 +187,18 @@ public class AerospikeTemplate implements AerospikeOperations {
 			throw translatedException == null ? o_O : translatedException;
 		}
 	}
+	
+	public <T> void insertAll(Collection<? extends T> objectsToSave) {
+		for (T element : objectsToSave) {
+			if (element == null) {
+				continue;
+			}
+			
+			insert(element);
+		}
+	}
+	
+	
 	@Override
 	public <T> T insert(T objectToInsert) {
 		try{
@@ -378,7 +398,10 @@ public class AerospikeTemplate implements AerospikeOperations {
 		});
 		return scanList;
 	}
-
+	@Override
+	public <T> T findOne(Serializable id, Class<T> type) {
+		return findById(id, type);
+	}
 	@Override
 	public <T> T findById(Serializable id, Class<T> type) {
 		try {
@@ -534,72 +557,16 @@ public class AerospikeTemplate implements AerospikeOperations {
 	}
 
 		
-//		return execute(new KeyValueCallback<Iterable<T>>() {
-//
-//			@SuppressWarnings("unchecked")
-//			@Override
-//			public Iterable<T> doInKeyValue(KeyValueAdapter adapter) {
-//
-//				Iterable<?> result = adapter.find(query, resolveKeySpace(type));//this converted to filter somehoe
-//				if (result == null) {
-//					return Collections.emptySet();
-//				}
-//
-//				List<T> filtered = new ArrayList<T>();
-//
-//				for (Object candidate : result) {
-//					if (typeCheck(type, candidate)) {
-//						filtered.add((T) candidate);
-//					}
-//				}
-//
-//				return filtered;
-//			}
-//		}); 
-//	}
-
-
-//	@Override
-//	public <T> Iterable<T> findInRange(int offset, int rows, Class<T> type) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-//
-//
-//	@Override
-//	public <T> Iterable<T> findInRange(int offset, int rows, Sort sort,
-//			Class<T> type) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-//
-//
-//	@Override
-//	public long count(Class<?> type) {
-//		// TODO Auto-generated method stub
-//		return 0;
-//	}
-//
-//
-//	@Override
-//	public long count(KeyValueQuery<?> query, Class<?> type) {
-//		// TODO Auto-generated method stub
-//		return 0;
-//	}
-//
-//
-//	@Override
-//	public MappingContext<?, ?> getMappingContext() {
-//		// TODO Auto-generated method stub
-//		return mappingContext;
-//	}
-//
-//
-//	@Override
-//	public void destroy() throws Exception {
-//		// TODO Auto-generated method stub
-//		
-//	}
+	public boolean exists(Query query, Class<?> entityClass) {
+		
+		if (query == null) {
+			throw new InvalidDataAccessApiUsageException("Query passed in to exist can't be null");
+		}
+		
+		Iterator iterator = (Iterator<?>) find(query,entityClass).iterator();
+		
+		return iterator.hasNext();
+	}
 
 
 	/* (non-Javadoc)
@@ -621,12 +588,17 @@ public class AerospikeTemplate implements AerospikeOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.aerospike.core.AerospikeOperations#count(org.springframework.data.aerospike.repository.query.Query, java.lang.Class)
 	 */
+	@SuppressWarnings("rawtypes")
 	@Override
-	public int count(Query<?> query, Class<?> javaType) {
-		// TODO Auto-generated method stub
-		return 0;
+	public int count(Query<?> query, Class<?> type) {
+		Assert.notNull(query, "Query must not be null!");
+		Assert.notNull(type, "Type must not be null!");
+		int i = 0;
+		Iterator iterator = (Iterator<?>) find(query,type).iterator();
+		for ( ; iterator.hasNext() ; ++i ) iterator.next();
+		return i; 
 	}
-
+	
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.aerospike.core.AerospikeOperations#find(org.springframework.data.aerospike.repository.query.Query, java.lang.Class)
@@ -635,7 +607,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> Iterable<T> find(Query<?> query, Class<T> type) {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(type, "Type must not be null!");
-		Criteria criteria = (Criteria) query.getCritieria();
 		Filter filter = query.getQueryObject();
 
 		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
@@ -685,7 +656,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public <T> Iterable<T> findInRange(int offset, int rows, Sort sort, Class<T> type) {
-		System.out.println("skiping first " + offset + " and returning " + rows + " rows");
+		Assert.notNull(type, "Type for count must not be null!");
 		final List<Record> batchOfRecords = new ArrayList<Record>();
 		AerospikeData data = AerospikeData.forWrite(this.namespace);
 		final List<T> returnList = new ArrayList<T>();
@@ -728,6 +699,13 @@ public class AerospikeTemplate implements AerospikeOperations {
 		
 		return (Iterable<T>) returnList;//TODO:create a sort
 	}
+	
+	@Override
+	public long count(Class<?> type) {
+		Assert.notNull(type, "Type for count must not be null!");
+		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
+		return count(type,entity.getSetName());
+	}	
 
 	/*
 	 * (non-Javadoc)
@@ -736,22 +714,17 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public long count(Class<?> type, String setName) {
 		Assert.notNull(type, "Type for count must not be null!");
-		String answer = Info.request(null, client.getNodes()[0], "sets");
-		String answer2 = Info.request(null, client.getNodes()[0], "namespaces");
 		Node[] nodes = client.getNodes();
 		int replicationCount = 2; 
 		int nodeCount = nodes.length;
 		int n_objects = 0;
 		for (Node node : nodes){
-			// Invoke an info call to each node in the cluster and sum the n_objects value
-			// The infoString will contain a result like this:
-			// n_objects=100001:set-stop-write-count=0:set-evict-hwm-count=0:set-enable-xdr=use-default:set-delete=false;
 			String infoString = Info.request(node, "sets/"+this.namespace+"/"+setName); 
 			String n_objectsString = infoString.substring(infoString.indexOf("=")+1, infoString.indexOf(":"));
 			n_objects = Integer.parseInt(n_objectsString);
 		}
-		System.out.println(String.format("Total Master and Replica objects %d", n_objects));
-		System.out.println(String.format("Total Master objects %d", (nodeCount > 1) ? n_objects/replicationCount : n_objects));
+//		System.out.println(String.format("Total Master and Replica objects %d", n_objects));
+//		System.out.println(String.format("Total Master objects %d", (nodeCount > 1) ? n_objects/replicationCount : n_objects));
 		
 		return (nodeCount > 1) ? n_objects/replicationCount : n_objects;
 	}

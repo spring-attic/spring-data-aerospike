@@ -52,7 +52,7 @@ public class Person extends Contact implements Comparable<Person> {
 	List<String> skills;
 	//@DBRef(lazy = true)
 	private Address address;
-	@Field(name="ShipAddresses")
+	@Field(value="ShipAddresses")
 	private Set<Address> shippingAddresses;
 
 	User creator;

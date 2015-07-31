@@ -38,7 +38,7 @@ public class AerospikeData {
 	/**
 	 * 
 	 */
-	private static final String SPRING_ID_BIN = "SpringID";
+	public static final String SPRING_ID_BIN = "SpringID";
 	private Key key;
 	private Record record;
 	private final String namespace;
@@ -130,7 +130,7 @@ public class AerospikeData {
 	}
 
 	public String[] getBinNames() {
-		if (this.bins != null && this.bins.size()  == 0)
+		if (this.bins == null || this.bins.size()  == 0)
 			return null;
 		
 		String[] binAsStringArray =  new String[bins.size()];
@@ -157,7 +157,7 @@ public class AerospikeData {
 	/**
 	 * @return
 	 */
-	public Object getSringId() {
+	public Object getSpringId() {
 		return record.getValue(AerospikeData.SPRING_ID_BIN);
 	}
 

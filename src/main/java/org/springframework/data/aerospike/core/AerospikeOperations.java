@@ -134,6 +134,20 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	<T> void createIndex(Class<T> domainType, String indexName, String binName,
 			IndexType indexType);
 
+	/**
+	 * @param <T>
+	 * @param id
+	 * @param type
+	 * @return
+	 */
+	<T> T findOne(Serializable id, Class<T> type);
+
+	/**
+	 * @param type
+	 * @return
+	 */
+	long count(Class<?> type);
+
 
 
 	

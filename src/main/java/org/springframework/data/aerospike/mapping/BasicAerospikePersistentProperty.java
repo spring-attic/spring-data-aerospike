@@ -131,14 +131,11 @@ AerospikePersistentProperty{
 	}
 
 	private String getAnnotatedFieldName() {
-
-//		org.springframework.data.aerospike.annotation.Bin annotation = findAnnotation(org.springframework.data.aerospike.annotation.Bin.class);
-		
+	
 		org.springframework.data.aerospike.mapping.Field annotation = findAnnotation(org.springframework.data.aerospike.mapping.Field.class);
-		if (annotation != null && StringUtils.hasText(annotation.name())) {
-			return annotation.name();
+		if (annotation != null && StringUtils.hasText(annotation.value())) {
+			return annotation.value();
 		}
-
 		return null;
 	}
 	

@@ -19,6 +19,7 @@ import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.ConversionService;
@@ -61,7 +62,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	private final ConversionService conversionService;
 	private final EntityInstantiators entityInstantiators;
 	private final TypeMapper<AerospikeData> typeMapper;
-	private static final String SPRING_ID_BIN = "SpringID";
+	public static final String SPRING_ID_BIN = "SpringID";
 
 	protected ApplicationContext applicationContext;
 	protected final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
@@ -159,6 +160,18 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	 */
 	@Override
 	public void write(Object source, final AerospikeData data) {
+		
+		if (null == source) {
+			return;
+		}
+		
+//		Class<?> entityType = source.getClass();
+//		TypeInformation<? extends Object> type = ClassTypeInformation.from(entityType);
+//		typeMapper.writeType(type, data);
+//		Object target = source;
+//		
+//		writeInternal(target,data,type);
+		
 
 		final AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(source.getClass());
 		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(source);
@@ -183,6 +196,41 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			data.setSetName(entity.getSetName());
 		}		
 		data.add(bins);
+		
+		
+	}
+
+	/**
+	 * @param target
+	 * @param data
+	 * @param type
+	 */
+	protected void writeInternal(final Object obj, final AerospikeData data, final TypeInformation<?> type) {
+		
+		if (null == obj) {
+			return;
+		}
+		
+		Class<?> entityType = obj.getClass();
+		
+		if (Map.class.isAssignableFrom(entityType)) {
+			writeMapInternal((Map<Object, Object>) obj, data, ClassTypeInformation.MAP);
+			return;
+		}
+		
+		
+
+		
+	}
+
+	/**
+	 * @param obj
+	 * @param data
+	 * @param map
+	 */
+	protected void writeMapInternal(Map<Object, Object> obj, AerospikeData data,	TypeInformation<?> propertyType) {
+			
+		
 	}
 
 	/**
