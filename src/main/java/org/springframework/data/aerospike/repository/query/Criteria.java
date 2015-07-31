@@ -94,9 +94,9 @@ public class Criteria implements CriteriaDefinition {
 			if(Criteria.CRITERIA_EQUAL.compareTo(k)==0){
 				equalValue = value;				
 			} else if (Criteria.CRITERIA_BEGIN.compareTo(k)==0) {
-				beginValue = (long) value;
+				beginValue = (Long) value;
 			} else if (Criteria.CRITERIA_END.compareTo(k)==0) {
-				endValue = (long) value;
+				endValue = (Long) value;
 			}
 		}
 		

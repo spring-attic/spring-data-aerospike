@@ -83,6 +83,8 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 
 	<T> T append(T objectToAppenTo, Map<String, String> values);
 	<T> T append(T objectToAppenTo, String binName, String value);
+	<T> T prepend(T objectToAppenTo, Map<String, String> values);
+	<T> T prepend(T objectToAppenTo, String binName, String value);
 	
 	<T> Iterable<T> aggregate(Filter filter, Class<?> type, Class<T> outputType, String module, String function, List<?> arguments);
 	
