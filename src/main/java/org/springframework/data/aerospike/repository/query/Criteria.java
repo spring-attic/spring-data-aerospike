@@ -84,7 +84,7 @@ public class Criteria implements CriteriaDefinition {
 	
 	protected Filter getSingleCriteriaObject(){
 		
-		String equalValue = null;
+		Object equalValue = null;
 		Long beginValue = null;
 		Long endValue = null;
 		Filter filter = null;
@@ -92,7 +92,7 @@ public class Criteria implements CriteriaDefinition {
 		for (String k : this.criteria.keySet()) {
 			Object value = this.criteria.get(k);
 			if(Criteria.CRITERIA_EQUAL.compareTo(k)==0){
-				equalValue = (String) value;
+				equalValue = value;				
 			} else if (Criteria.CRITERIA_BEGIN.compareTo(k)==0) {
 				beginValue = (long) value;
 			} else if (Criteria.CRITERIA_END.compareTo(k)==0) {
@@ -109,7 +109,13 @@ public class Criteria implements CriteriaDefinition {
 		} else if (beginValue!=null&&endValue!=null) {
 			filter = Filter.range(getKey(), beginValue, endValue);
 		} else if(equalValue!=null) {
-			filter = Filter.equal(getKey(), equalValue);
+			if(equalValue instanceof Number){
+				Long equalLong = (Long) cs.convert(equalValue, TypeDescriptor.valueOf(equalValue.getClass()), TypeDescriptor.valueOf(Long.class));
+				filter = Filter.equal(getKey(), equalLong);
+			} else {
+				String equalString = (String) cs.convert(equalValue, TypeDescriptor.valueOf(equalValue.getClass()), TypeDescriptor.valueOf(String.class));
+				filter = Filter.equal(getKey(), equalString);
+			}
 		}
 
 		return filter;
