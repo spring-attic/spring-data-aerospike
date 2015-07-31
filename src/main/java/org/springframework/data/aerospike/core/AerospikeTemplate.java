@@ -33,6 +33,7 @@ import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.keyvalue.core.IterableConverter;
 import org.springframework.data.keyvalue.core.KeyValueCallback;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.CloseableIterator;
@@ -516,8 +517,8 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(type, "Type must not be null!");
 		Filter filter = query.getQueryObject();
-		
-		return findAllUsingQuery(type, filter);
+		final Iterable<T> results = findAllUsingQuery(type, filter);
+		return IterableConverter.toList(results);//TODO:create a sort
 	}
 
 

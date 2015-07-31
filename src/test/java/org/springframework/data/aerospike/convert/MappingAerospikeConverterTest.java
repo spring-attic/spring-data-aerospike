@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.beans.HasProperty;
 import org.hamcrest.beans.SamePropertyValuesAs;
 import org.junit.After;
@@ -244,7 +245,7 @@ public class MappingAerospikeConverterTest {
 
 		assertThat(object, is(instanceOf(Enum.class)));
 		assertThat(object.toString(), is("FIRST"));
-		assertThat(object, is(SampleEnum.FIRST));
+		assertThat((SampleEnum)object, is(SampleEnum.FIRST));
 	}
 	
 	@Test
@@ -315,7 +316,7 @@ public class MappingAerospikeConverterTest {
 		Object foo = returnBinPropertyValue(dbObject,"foo");
 		Object firstName = returnBinPropertyValue(dbObject,"firstName");
 
-		assertThat(foo, is("Oliver"));
+		MatcherAssert.assertThat((String)foo, is(equalTo("Oliver")));
 		assertNull(firstName);
 	}
 	
@@ -365,7 +366,7 @@ public class MappingAerospikeConverterTest {
 	@Test
 	public void resolvesNestedComplexTypeForReadCorrectly() {
 		
-		Address address = new Address();
+		final Address address = new Address();
 		address.city = "London";
 		address.street =  "110 Southwark Street";
 
@@ -404,7 +405,7 @@ public class MappingAerospikeConverterTest {
 		Object objectMap = returnBinPropertyValue(dbObject,"map");
 
 		assertThat(objectValue, is(instanceOf(BigDecimal.class)));
-		assertThat(objectValue, is(BigDecimal.valueOf(2.5)));
+		assertThat((BigDecimal)(objectValue), is(BigDecimal.valueOf(2.5)));
 		assertThat(((Map<String, BigDecimal>)objectMap).get("foo"), is(instanceOf(BigDecimal.class)));
 	}
 	

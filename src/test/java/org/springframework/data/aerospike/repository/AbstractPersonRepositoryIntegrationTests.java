@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -193,7 +193,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void findsPersonInAgeRangeCorrectly() throws Exception {
 
+		Iterable<Person> it = repository.findByAgeBetween(40, 45);
 		List<Person> result = repository.findByAgeBetween(40, 45);
+		int count = 0;
+		for (Person person : it){
+			System.out.print(person+"\n");
+			count++;
+		}
+		assertEquals(3, count);
 		assertThat(result.size(), is(3));
 		assertThat(result, hasItems(dave, leroi,boyd));
 	}
