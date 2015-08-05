@@ -19,9 +19,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.data.aerospike.mapping.AerospikeMetadataBin;
 
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
@@ -43,6 +46,7 @@ public class AerospikeData {
 	private Record record;
 	private final String namespace;
 	private final List<Bin> bins;
+	private AerospikeMetadataBin metaData;
 	private String[] binNames;
 
 	private AerospikeData(Key key, Record record, String namespace, List<Bin> bins, String[] binNames) {
@@ -51,6 +55,7 @@ public class AerospikeData {
 		this.record = record;
 		this.namespace = namespace;
 		this.bins = bins;
+		this.metaData =  new AerospikeMetadataBin();
 		
 	}
 
@@ -84,10 +89,11 @@ public class AerospikeData {
 	public void setID(int ID){
 		this.key = new Key(this.getNamespace(), this.getSetName(), ID);
 	}
-	public void setID(Value ID){
+	public void setID(Value ID){		
 		this.key = new Key(this.getNamespace(), this.getSetName(), ID);
 	}
 	public void setID(Serializable id) {
+		//getMetaData().addKeyValuetoAerospikeMetaData(AerospikeData.SPRING_ID_BIN, id);
 		setID(id.toString());
 	}
 
@@ -128,6 +134,21 @@ public class AerospikeData {
 	public void add(Bin bin) {
 		this.bins.add(bin);
 	}
+	
+	public void addMetaDataToBin() {
+		add(getMetaData().getAerospikeMetaDataBin());
+	}
+	
+	public void setMetaData(Bin bin){
+		
+		//this.metaData = Bin.asMap(name, value)
+	}
+	
+	
+	
+	public void addMetaDataItem(String key, Object value){
+		getMetaData().addKeyValuetoAerospikeMetaData(key, value);
+	}
 
 	public String[] getBinNames() {
 		if (this.bins == null || this.bins.size()  == 0)
@@ -143,7 +164,9 @@ public class AerospikeData {
 		return binAsStringArray ;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void setRecord(Record record) {
+		getMetaData().addMap((HashMap<String, Object>) record.getValue(AerospikeMetadataBin.AEROSPIKE_META_DATA));
 		this.record = record;
 	}
 
@@ -158,7 +181,18 @@ public class AerospikeData {
 	 * @return
 	 */
 	public Object getSpringId() {
-		return record.getValue(AerospikeData.SPRING_ID_BIN);
+		HashMap<String, Object> aerospikeMetaData = (HashMap<String, Object>) record.getValue(AerospikeMetadataBin.AEROSPIKE_META_DATA);
+		return aerospikeMetaData==null?null:aerospikeMetaData.get(SPRING_ID_BIN);
+	}
+
+
+	public AerospikeMetadataBin getMetaData() {
+		return metaData;
+	}
+
+
+	public void setMetaData(AerospikeMetadataBin metaData) {
+		this.metaData = metaData;
 	}
 
 }
