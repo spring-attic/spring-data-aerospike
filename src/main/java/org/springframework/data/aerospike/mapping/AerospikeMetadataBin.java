@@ -35,7 +35,7 @@ public class AerospikeMetadataBin {
 	}
 	
 	public void setAerospikeMetaDataBin(Bin bin){
-		map = (Map<String, Object>) bin.value;
+		map = (Map<String, Object>) bin.value.getObject();
 	}
 	
 	public Bin getAerospikeMetaDataBin(){

@@ -166,7 +166,9 @@ public class AerospikeData {
 
 	@SuppressWarnings("unchecked")
 	public void setRecord(Record record) {
-		getMetaData().addMap((HashMap<String, Object>) record.getValue(AerospikeMetadataBin.AEROSPIKE_META_DATA));
+		if(record!=null){
+			getMetaData().addMap((HashMap<String, Object>) record.getValue(AerospikeMetadataBin.AEROSPIKE_META_DATA));
+		}
 		this.record = record;
 	}
 

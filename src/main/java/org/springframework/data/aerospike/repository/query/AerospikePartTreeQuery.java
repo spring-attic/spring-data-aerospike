@@ -1,15 +1,12 @@
 /**
  * 
  */
-package org.springframework.data.aerospike.repository.support;
+package org.springframework.data.aerospike.repository.query;
 
 import java.lang.reflect.Constructor;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.aerospike.core.AerospikeOperations;
-import org.springframework.data.aerospike.repository.query.Criteria;
-import org.springframework.data.aerospike.repository.query.CriteriaDefinition;
-import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.keyvalue.core.IterableConverter;

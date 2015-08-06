@@ -22,7 +22,6 @@ import java.util.Map;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.keyvalue.core.KeyValueCallback;
-import org.springframework.data.keyvalue.core.KeyValueOperations;
 import org.springframework.data.mapping.context.MappingContext;
 
 import com.aerospike.client.query.Filter;
