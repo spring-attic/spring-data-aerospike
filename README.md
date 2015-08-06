@@ -51,7 +51,7 @@ If you'd rather like the latest snapshots of the upcoming major version, use our
 AerospikeTemplate is the central support class for Aerospike database operations. It provides:
 
 * Basic POJO mapping support to and from Bins
-* Convenience methods to interact with the store (insert object, update objects) and Aerospike specific ones (geo-spatial operations, upserts, map-reduce etc.)
+* Convenience methods to interact with the store (insert object, update objects) and Aerospike specific ones.
 * Connection affinity callback
 * Exception translation into Spring's [technology agnostic DAO exception hierarchy](http://docs.spring.io/spring/docs/current/spring-framework-reference/html/dao.html#dao-exceptions).
 
