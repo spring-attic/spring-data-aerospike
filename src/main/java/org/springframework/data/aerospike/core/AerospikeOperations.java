@@ -22,9 +22,9 @@ import java.util.Map;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.keyvalue.core.KeyValueCallback;
-import org.springframework.data.keyvalue.core.KeyValueOperations;
 import org.springframework.data.mapping.context.MappingContext;
 
+import com.aerospike.client.Value;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 
@@ -86,7 +86,7 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	<T> T prepend(T objectToAppenTo, Map<String, String> values);
 	<T> T prepend(T objectToAppenTo, String binName, String value);
 	
-	<T> Iterable<T> aggregate(Filter filter, Class<?> type, Class<T> outputType, String module, String function, List<?> arguments);
+	<T> Iterable<T> aggregate(Filter filter, Class<T> outputType, String module, String function, List<Value> arguments);
 	
 
 	/**

@@ -3,10 +3,9 @@
  */
 package org.springframework.data.aerospike.core;
 
-import static org.junit.Assert.fail;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,29 +22,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.RecoverableDataAccessException;
-import org.springframework.data.aerospike.mapping.Field;
+import org.springframework.data.aerospike.core.AerospikeTemplate.FilterOperation;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
-import org.springframework.data.aerospike.sample.Customer;
-import org.springframework.data.annotation.Id;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Value;
 import com.aerospike.client.query.IndexType;
 
 /**
@@ -137,6 +121,37 @@ public class AerospikeTemplateTests {
 		template.insertAll(records);
 	}
 	
+	@Test 
+	public void findMultipleFilters(){
+		
+		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
+		
+		Person personSven01 = new Person("Sven-01","ZLastName",25);
+		Person personSven02 = new Person("Sven-02","QLastName",21);
+		Person personSven03 = new Person("Sven-03","ALastName",24);
+		Person personSven04 = new Person("Sven-04","WLastName",25);
+		
+		template.insert(personSven01);
+		template.insert(personSven02);
+		template.insert(personSven03);
+		template.insert(personSven04);
+		
+		Map<String, Object> filter = new HashMap<String, Object>();
+		filter.put("binName", "age");
+		filter.put("operation", FilterOperation.EQ);
+		filter.put("value1", Value.get(25));
+		Iterable<Person> it = template.findAllUsingQuery(Person.class, null, filter);
+		int count = 0;
+		Person firstPerson = null;
+		for (Person person : it){
+			firstPerson = person;
+			System.out.print(firstPerson+"\n");
+			count++;
+		}
+		Assert.assertEquals(2, count);
+
+		
+	}
 	@Test 
 	public void checkIndexingString(){
 		
