@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.springframework.data.aerospike.core.AerospikeOperations;
+import org.springframework.data.aerospike.repository.query.AerospikePartTreeQuery;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.keyvalue.core.KeyValueOperations;
 import org.springframework.data.keyvalue.repository.support.QuerydslKeyValueRepository;

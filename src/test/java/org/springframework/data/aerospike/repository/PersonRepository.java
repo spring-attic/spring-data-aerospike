@@ -81,6 +81,10 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 	List<Person> findByLastnameNot(String lastname);
 
 	List<Person> findByCredentials(Credentials credentials);
+	
+	List<Person> findCustomerByAgeBetween(Integer from, Integer to);
+	
+	List<Person> findPersonByFirstname(String firstname);
 
 	long countByLastname(String lastname);
 

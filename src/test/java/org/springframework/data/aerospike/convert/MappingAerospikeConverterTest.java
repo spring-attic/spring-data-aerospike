@@ -13,7 +13,9 @@ import static org.hamcrest.Matchers.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
@@ -21,6 +23,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -41,6 +44,7 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverterTest.ClassWithMapUsingEnumAsKey.FooBarEnum;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
+import org.springframework.data.aerospike.mapping.AerospikeMetadataBin;
 import org.springframework.data.aerospike.mapping.Document;
 import org.springframework.data.aerospike.mapping.Field;
 import org.springframework.data.aerospike.mapping.PersonPojoStringId;
@@ -463,6 +467,102 @@ public class MappingAerospikeConverterTest {
 		
 
 	}
+	
+	@Test
+	public void convertsCustomEmptyMapCorrectly() {
+
+		final Map<String, Object> map = new HashMap<String, Object>() {
+			{
+				put("city", "New York");
+				put("street", "Broadway");
+			}
+		};
+		
+		Map<String, Object> bins = new HashMap<String, Object>() {
+			{
+				put("map", map);
+			}
+		};
+		Record record = new Record(bins, 1, 1);
+		AerospikeData dbObject = AerospikeData.forRead(key, null );
+		dbObject.setRecord(record);
+
+		ClassWithSortedMap result = converter.read(ClassWithSortedMap.class, dbObject);
+
+		assertThat(result, is(instanceOf(ClassWithSortedMap.class)));
+		assertThat(result.map, is(instanceOf(Map.class)));
+	}
+	
+	@Test
+	public void maybeConvertHandlesNullValuesCorrectly() {
+		assertThat(converter.convertToAerospikeType(null), is(nullValue()));
+	}
+	
+	@Test
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void testSaveMapWithACollectionAsValue() {
+
+		Map<String, Object> keyValues = new HashMap<String, Object>();
+		keyValues.put("string", "hello");
+		List<String> list = new ArrayList<String>();
+		list.add("ping");
+		list.add("pong");
+		keyValues.put("list", list);
+
+		AerospikeData dbObject = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
+		dbObject.setID(AEROSPIKE_KEY);
+		converter.write(keyValues, dbObject);
+		
+		Record record = new Record(listToMap(dbObject.getBins()), 1, 1);
+		dbObject.setRecord(record);
+
+		Map<String, Object> keyValuesFromAerospike = converter.read(Map.class, dbObject);
+
+		assertEquals(keyValues.size(), keyValuesFromAerospike.size());
+		assertEquals(keyValues.get("string"), keyValuesFromAerospike.get("string"));
+		assertTrue(List.class.isAssignableFrom(keyValuesFromAerospike.get("list").getClass()));
+		List<String> listFromMongo = (List) keyValuesFromAerospike.get("list");
+		assertEquals(list.size(), listFromMongo.size());
+		assertEquals(list.get(0), listFromMongo.get(0));
+		assertEquals(list.get(1), listFromMongo.get(1));
+	}
+	
+	@Test
+	public void writesIntIdCorrectly() {
+
+		ClassWithIntId value = new ClassWithIntId();
+		value.id = 5;
+
+		AerospikeData result = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
+		result.setID(AEROSPIKE_KEY);
+
+		converter.write(value, result);
+		
+		Object objectValue = returnBinPropertyValue(result,"_id");
+		Object objectSpringValue = returnBinPropertyValue(result,MappingAerospikeConverter.SPRING_ID_BIN);
+
+		assertThat(objectSpringValue, is((Object) 5));
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void writesNullValuesForCollection() {
+
+		CollectionWrapper wrapper = new CollectionWrapper();
+		wrapper.contacts = Arrays.<Contact> asList(new Person(), null);
+
+		AerospikeData result = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
+		result.setID(AEROSPIKE_KEY);
+
+		converter.write(wrapper, result);
+
+		Object contacts = returnBinPropertyValue(result,"contacts");
+		assertThat(contacts, is(instanceOf(Collection.class)));
+		assertThat(((Collection<?>) contacts).size(), is(2));
+		assertThat((Collection<Object>) contacts, hasItem(nullValue()));
+	}
+	
+
 
 	/**
 	 * @param bins
@@ -486,7 +586,14 @@ public class MappingAerospikeConverterTest {
 			return null;
 		for (Iterator<Bin> iterator = aerospikeData.getBins().iterator(); iterator.hasNext();) {
 			Bin bin = (Bin) iterator.next();
-			if(bin.name.equals(property)){
+			if(bin.name.equals(AerospikeMetadataBin.AEROSPIKE_META_DATA)){
+				HashMap<String, Object> map = (HashMap<String, Object>) bin.value.getObject();
+				for (Map.Entry<String, Object> entry : map.entrySet()) {
+					if(entry.getKey().equals(property)){
+						return entry.getValue();
+					}
+				}
+			} else if (bin.name.equals(property)) {
 				return bin.value.getObject();
 			}
 		}

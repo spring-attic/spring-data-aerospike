@@ -43,8 +43,6 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	public <S extends T> S save(S entity) {
 		Assert.notNull(entity);
 		operations.save(entityInformation.getId(entity), entity, getDomainClass());
-		
-		//operations.save(entityInformation.getId(entity), entity,entityInformation.get);
 		return entity;
 	}
 	
@@ -74,7 +72,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 		return  this.entityInformation.getJavaType();
 	}
 	
-	private static <T> List<T> convertIterableToList(Iterable<T> entities) {
+	static <T> List<T> convertIterableToList(Iterable<T> entities) {
 
 		if (entities instanceof List) {
 			return (List<T>) entities;
@@ -126,14 +124,14 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	public boolean exists(ID id) {
 		return findOne(id) != null;
 	}
-	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.CrudRepository#findAll()
+	 */
+
 	@Override
 	public List<T> findAll() {
 		return IterableConverter.toList(operations.findAll(entityInformation.getJavaType()));
 	}
-	/* (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#findAll()
-	 */
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#findAll(java.lang.Iterable)
 	 */

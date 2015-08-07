@@ -113,6 +113,9 @@ public class Person extends Contact implements Comparable<Person> {
 	}
 
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -124,8 +127,6 @@ public class Person extends Contact implements Comparable<Person> {
 		result = prime * result
 				+ ((createdAt == null) ? 0 : createdAt.hashCode());
 		result = prime * result + ((creator == null) ? 0 : creator.hashCode());
-		result = prime * result
-				+ ((credentials == null) ? 0 : credentials.hashCode());
 		result = prime * result + ((email == null) ? 0 : email.hashCode());
 		result = prime * result + ((fans == null) ? 0 : fans.hashCode());
 		result = prime * result
@@ -144,6 +145,9 @@ public class Person extends Contact implements Comparable<Person> {
 	}
 
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -177,11 +181,6 @@ public class Person extends Contact implements Comparable<Person> {
 			if (other.creator != null)
 				return false;
 		} else if (!creator.equals(other.creator))
-			return false;
-		if (credentials == null) {
-			if (other.credentials != null)
-				return false;
-		} else if (!credentials.equals(other.credentials))
 			return false;
 		if (email == null) {
 			if (other.email != null)
@@ -371,6 +370,21 @@ public class Person extends Contact implements Comparable<Person> {
 
 	public void setCredentials(Credentials credentials) {
 		this.credentials = credentials;
+	}
+
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Person [firstname=" + firstname + ", lastname=" + lastname
+				+ ", email=" + email + ", age=" + age + ", sex=" + sex
+				+ ", createdAt=" + createdAt + ", skills=" + skills
+				+ ", address=" + address + ", shippingAddresses="
+				+ shippingAddresses + ", creator=" + creator + ", coworker="
+				+ coworker + ", fans=" + fans + ", realFans=" + realFans
+				+ ", credentials=" + credentials + "]";
 	}
 
 

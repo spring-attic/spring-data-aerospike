@@ -18,6 +18,7 @@ package org.springframework.data.aerospike.convert;
 import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
+import org.springframework.data.aerospike.mapping.AerospikeMetadataBin;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.aerospike.mapping.CachingAerospikePersistentProperty;
@@ -77,8 +79,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		this.conversionService = defaultConversionService;
 		this.entityInstantiators = new EntityInstantiators();
 
-		this.typeMapper = new DefaultTypeMapper<AerospikeData>(AerospikeTypeAliasAccessor.INSTANCE, mappingContext,
-				Arrays.asList(SimpleTypeInformationMapper.INSTANCE));
+		this.typeMapper = new DefaultTypeMapper<AerospikeData>(AerospikeTypeAliasAccessor.INSTANCE, mappingContext,	Arrays.asList(SimpleTypeInformationMapper.INSTANCE));
 	}
 
 	/* 
@@ -147,6 +148,8 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 					}
 				}
 			});
+			
+			
 		} else {
 			instance = null;
 		}
@@ -165,13 +168,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			return;
 		}
 		
-//		Class<?> entityType = source.getClass();
-//		TypeInformation<? extends Object> type = ClassTypeInformation.from(entityType);
-//		typeMapper.writeType(type, data);
-//		Object target = source;
-//		
-//		writeInternal(target,data,type);
-		
+	
 
 		final AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(source.getClass());
 		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(source);
@@ -185,7 +182,8 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 				if (property.isIdProperty()) {
 
 					data.setID(accessor.getProperty(property)!=null?accessor.getProperty(property).toString():null);
-					bins.add(new Bin(SPRING_ID_BIN,accessor.getProperty(property)));
+					data.addMetaDataItem(SPRING_ID_BIN, accessor.getProperty(property));
+					//bins.add(new Bin(SPRING_ID_BIN,accessor.getProperty(property)));
 					return;
 				}
 				bins.add(new Bin(((CachingAerospikePersistentProperty) property).getFieldName(), accessor.getProperty(property)));
@@ -196,6 +194,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			data.setSetName(entity.getSetName());
 		}		
 		data.add(bins);
+		data.addMetaDataToBin();
 		
 		
 	}
@@ -337,11 +336,12 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.TypeAliasAccessor#readAliasFrom(java.lang.Object)
 		 */
+		@SuppressWarnings("unchecked")
 		@Override
 		public Object readAliasFrom(AerospikeData source) {
 			Assert.notNull(source);
 			if (source.getRecord() == null) return null;
-			return source.getRecord().getValue(TYPE_BIN_NAME);
+			return source.getMetaData()==null?null:source.getMetaData().getAerospikeMetaDataUsingKey(TYPE_BIN_NAME);
 		}
 
 		/* 
@@ -350,7 +350,8 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		 */
 		@Override
 		public void writeTypeTo(AerospikeData sink, Object alias) {
-			sink.add(new Bin(TYPE_BIN_NAME, alias.toString()));
+			sink.addMetaDataItem(TYPE_BIN_NAME, alias.toString());
+			//sink.add(new Bin(TYPE_BIN_NAME, alias.toString()));
 		}
 	}
 	
