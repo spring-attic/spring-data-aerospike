@@ -344,89 +344,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return null;
 	}
 
-	public <T> T add(T objectToAddTo, Map<String, Long> values) {
-		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
-		T result = null;
-		try {
 
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
-			converter.write(objectToAddTo, data);
-			Operation[] operations = new Operation[values.size()+1];
-			int x = 0;
-			for(Map.Entry<String, Long> entry : values.entrySet()){
-				Bin newBin = new Bin(entry.getKey(), entry.getValue());
-				operations[x] = Operation.add(newBin);
-				x++;
-			}
-			operations[x] = Operation.get();
-			Record record = this.client.operate(null, data.getKey(), operations);
-			data.setRecord(record);
-			result = (T) converter.read(objectToAddTo.getClass(), data);
-
-		} catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
-		}
-		return result;
-	}
-
-	public <T> T add(T objectToAddTo, String binName, int value) {
-		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
-		T result = null;
-		try {
-
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
-			converter.write(objectToAddTo, data);
-			Record record = this.client.operate(null, data.getKey(), Operation.add(new Bin(binName, value)), Operation.get());
-			data.setRecord(record);
-			result = (T) converter.read(objectToAddTo.getClass(), data);
-		} catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
-		}
-		return result;
-	}
-
-
-	@Override
-	public <T> T append(T objectToAppenTo, Map<String, String> values) {
-		Assert.notNull(objectToAppenTo, "Object to append to must not be null!");
-		try {
-
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
-			converter.write(objectToAppenTo, data);
-			Bin[] bins = new Bin[values.size()];
-			int x = 0;
-			for(Map.Entry<String, String> entry : values.entrySet()){
-				Bin newBin = new Bin(entry.getKey(), entry.getValue());
-				bins[x] = newBin;
-				x++;
-			}
-			this.client.add(null, data.getKey(), bins);
-
-		} catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
-		}
-		return null;
-	}
-
-
-	@Override
-	public <T> T append(T objectToAppenTo, String binName, String value) {
-		Assert.notNull(objectToAppenTo, "Object to append to must not be null!");
-		try {
-
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
-			converter.write(objectToAppenTo, data);
-			this.client.add(null, data.getKey(), new Bin(binName, value));
-
-		} catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
-		}
-		return null;
-	}
 
 
 	@Override
@@ -641,6 +559,11 @@ public class AerospikeTemplate implements AerospikeOperations {
 							return null;
 						}
 					}
+
+					@Override
+					public void remove() {
+						
+					}
 				};
 			}
 		};
@@ -676,17 +599,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return (nodeCount > 1) ? n_objects/replicationCount : n_objects;
 	}
 
-	/**
-	 * 
-	 * @param type
-	 * @param filter
-	 * @param extraFilters a variable number of filters in the form of a map with these entries:
-	 * 			"binName" = "a-bin-name" 
-	 *			"operation" =  FilterOperation.EQ
-	 *			"value1" =	Value.get(27) 
-	 *			"value2" =	Value.get(51)  - NOTE: the second value is only used in range
-	 * @return
-	 */
 	protected <T> Iterable<T> findAllUsingQuery(Class<T> type, Filter filter, Qualifier... qualifiers){
 		final Class<T> classType = type;
 		Statement stmt = new Statement();
@@ -709,7 +621,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 
 
-	protected class EntityIterator<T> implements CloseableIterator<T>{
+	public class EntityIterator<T> implements CloseableIterator<T>{
 
 		private KeyRecordIterator keyRecordIterator;
 		private MappingAerospikeConverter converter;
@@ -743,22 +655,146 @@ public class AerospikeTemplate implements AerospikeOperations {
 				e.printStackTrace();
 			}
 		}
+
+		@Override
+		public void remove() {
+			
+		}
 	}
 
 
 
 	@Override
-	public <T> T prepend(T objectToAppenTo, Map<String, String> values) {
-		// TODO Auto-generated method stub
-		return null;
+	public <T> T prepend(T objectToPrependTo, String fieldName, String value) {
+		Assert.notNull(objectToPrependTo, "Object to prepend to must not be null!");
+		T result = null;
+		try {
+
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToPrependTo, data);
+			Record record = this.client.operate(null, data.getKey(), Operation.prepend(new Bin(fieldName, value)), Operation.get(fieldName));
+			data.setRecord(record);
+			result = (T) converter.read(objectToPrependTo, data);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return result;
+	}
+	
+	@Override
+	public <T> T prepend(T objectToPrependTo, Map<String, String> values) {
+		Assert.notNull(objectToPrependTo, "Object to prepend to must not be null!");
+		T result = null;
+		try {
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToPrependTo, data);
+			Operation[] ops = new Operation[values.size()+1];
+			int x = 0;
+			for(Map.Entry<String, String> entry : values.entrySet()){
+				Bin newBin = new Bin(entry.getKey(), entry.getValue());
+				ops[x] = Operation.prepend(newBin);
+				x++;
+			}
+			ops[x] = Operation.get();
+			Record record = this.client.operate(null, data.getKey(), ops);
+			data.setRecord(record);
+			result = (T) converter.read(objectToPrependTo, data);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return result;
+	}
+
+	@Override
+	public <T> T append(T objectToAppendTo, Map<String, String> values) {
+		Assert.notNull(objectToAppendTo, "Object to append to must not be null!");
+		T result = null;
+		try {
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToAppendTo, data);
+			Operation[] ops = new Operation[values.size()+1];
+			int x = 0;
+			for(Map.Entry<String, String> entry : values.entrySet()){
+				Bin newBin = new Bin(entry.getKey(), entry.getValue());
+				ops[x] = Operation.append(newBin);
+				x++;
+			}
+			ops[x] = Operation.get();
+			Record record = this.client.operate(null, data.getKey(), ops);
+			data.setRecord(record);
+			result = (T) converter.read(objectToAppendTo, data);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return result;
 	}
 
 
 	@Override
-	public <T> T prepend(T objectToAppenTo, String binName, String value) {
-		// TODO Auto-generated method stub
-		return null;
+	public <T> T append(T objectToAppendTo, String binName, String value) {
+		Assert.notNull(objectToAppendTo, "Object to append to must not be null!");
+		T result = null;
+		try {
+
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToAppendTo, data);
+			Record record = this.client.operate(null, data.getKey(), Operation.append(new Bin(binName, value)), Operation.get(binName));
+			data.setRecord(record);
+			result = (T) converter.read(objectToAppendTo, data);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return result;
 	}
+
+
+	public <T> T add(T objectToAddTo, Map<String, Long> values) {
+		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
+		T result = null;
+		try {
+
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToAddTo, data);
+			Operation[] operations = new Operation[values.size()+1];
+			int x = 0;
+			for(Map.Entry<String, Long> entry : values.entrySet()){
+				Bin newBin = new Bin(entry.getKey(), entry.getValue());
+				operations[x] = Operation.add(newBin);
+				x++;
+			}
+			operations[x] = Operation.get();
+			Record record = this.client.operate(null, data.getKey(), operations);
+			data.setRecord(record);
+			result = (T) converter.read(objectToAddTo, data);
+
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return result;
+	}
+
+	public <T> T add(T objectToAddTo, String binName, int value) {
+		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
+		T result = null;
+		try {
+
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToAddTo, data);
+			Record record = this.client.operate(null, data.getKey(), Operation.add(new Bin(binName, value)), Operation.get());
+			data.setRecord(record);
+			result = (T) converter.read(objectToAddTo, data);
+		} catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+		return result;
+	}
+
 
 
 

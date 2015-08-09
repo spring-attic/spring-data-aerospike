@@ -81,10 +81,10 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	<T> T add(T objectToAddTo, Map<String, Long> values);
 	<T> T add(T objectToAddTo, String binName, int value);
 
-	<T> T append(T objectToAppenTo, Map<String, String> values);
-	<T> T append(T objectToAppenTo, String binName, String value);
-	<T> T prepend(T objectToAppenTo, Map<String, String> values);
-	<T> T prepend(T objectToAppenTo, String binName, String value);
+	<T> T append(T objectToAppendTo, Map<String, String> values);
+	<T> T append(T objectToAppendTo, String binName, String value);
+	<T> T prepend(T objectToPrependTo, Map<String, String> values);
+	<T> T prepend(T objectToPrependTo, String binName, String value);
 	
 	<T> Iterable<T> aggregate(Filter filter, Class<T> outputType, String module, String function, List<Value> arguments);
 	

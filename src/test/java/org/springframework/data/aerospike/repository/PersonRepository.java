@@ -6,7 +6,7 @@ package org.springframework.data.aerospike.repository;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Stream;
+//import java.util.stream.Stream;
 
 import org.springframework.data.aerospike.repository.Person.Sex;
 import org.springframework.data.domain.Page;
@@ -32,9 +32,9 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	List<Person> findByLastnameOrderByFirstnameAsc(String lastname);
 
-	List<Person> findByThePersonsFirstname(String firstname);
-
-	Person[] findByThePersonsFirstnameAsArray(String firstname);
+//	List<Person> findByThePersonsFirstname(String firstname);
+//
+//	Person[] findByThePersonsFirstnameAsArray(String firstname);
 
 	List<Person> findByFirstnameLike(String firstname);
 
@@ -64,7 +64,7 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	List<Person> findBySex(Sex sex, Pageable pageable);
 
-	List<Person> findByNamedQuery(String firstname);
+//	List<Person> findByNamedQuery(String firstname);
 
 	List<Person> findByCreator(User user);
 
@@ -72,7 +72,7 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	List<Person> findByCreatedAtGreaterThan(Date date);
 
-	List<Person> findByCreatedAtLessThanManually(Date date);
+//	List<Person> findByCreatedAtLessThanManually(Date date);
 
 	List<Person> findByCreatedAtBefore(Date date);
 
@@ -104,35 +104,35 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	Slice<Person> findByAgeGreaterThan(int age, Pageable pageable);
 
-	Page<Person> findByHavingCreator(Pageable page);
+//	Page<Person> findByHavingCreator(Pageable page);
 
 	List<Person> deleteByLastname(String lastname);
 
 	Long deletePersonByLastname(String lastname);
 
-	List<Person> removeByLastnameUsingAnnotatedQuery(String lastname);
+//	List<Person> removeByLastnameUsingAnnotatedQuery(String lastname);
 
-	Long removePersonByLastnameUsingAnnotatedQuery(String lastname);
+//	Long removePersonByLastnameUsingAnnotatedQuery(String lastname);
 
 	Page<Person> findByAddressIn(List<Address> address, Pageable page);
 
 //	@Query("{firstname:{$in:?0}, lastname:?1}")
-	Page<Person> findByCustomQueryFirstnamesAndLastname(List<String> firstnames, String lastname, Pageable page);
+//	Page<Person> findByCustomQueryFirstnamesAndLastname(List<String> firstnames, String lastname, Pageable page);
 
 //	@Query("{lastname:?0, address.street:{$in:?1}}")
-	Page<Person> findByCustomQueryLastnameAndAddressStreetInList(String lastname, List<String> streetNames, Pageable page);
+//	Page<Person> findByCustomQueryLastnameAndAddressStreetInList(String lastname, List<String> streetNames, Pageable page);
 
 	List<Person> findTop3ByLastnameStartingWith(String lastname);
 
 	Page<Person> findTop3ByLastnameStartingWith(String lastname, Pageable pageRequest);
 
-	List<Person> findByKeyValue(String key, String value);
-
-	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
-
-	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly(String firstname);
-	
-	List<Person> findWithSpelByFirstnameAndCurrentUserWithCustomQuery(String firstname);
+//	List<Person> findByKeyValue(String key, String value);
+//
+//	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
+//
+//	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly(String firstname);
+//	
+//	List<Person> findWithSpelByFirstnameAndCurrentUserWithCustomQuery(String firstname);
 
 	/**
 	 * @param string

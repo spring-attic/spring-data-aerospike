@@ -155,6 +155,52 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		}
 		return (R) instance;
 	}
+	public <R> R read(Object instance, final AerospikeData data) {
+		Class<R> type = (Class<R>) instance.getClass(); 
+		TypeInformation<?> readType = typeMapper.readType(data, ClassTypeInformation.from(type));
+		TypeInformation<?> typeToUse = type.isAssignableFrom(readType.getType()) ? readType : ClassTypeInformation
+				.from(type);
+
+		final AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(typeToUse);
+		final RecordReadingPropertyValueProvider recordReadingPropertyValueProvider = new RecordReadingPropertyValueProvider(data.getRecord(),getConversionService());
+
+		if (data.getRecord() != null) {
+
+			final PersistentPropertyAccessor accessor = entity
+					.getPropertyAccessor(instance);
+
+			entity.doWithProperties(new PropertyHandler<AerospikePersistentProperty>() {
+
+				@Override
+				public void doWithPersistentProperty(
+						AerospikePersistentProperty persistentProperty) {
+					PreferredConstructor<?, AerospikePersistentProperty> constructor = entity.getPersistenceConstructor();
+
+					if (constructor.isConstructorParameter(persistentProperty)) {
+						return;
+					}
+
+					if (persistentProperty.isIdProperty()) {
+						Object value = recordReadingPropertyValueProvider.getPropertyValue(persistentProperty,data.getSpringId());
+						if (value != null) {
+							accessor.setProperty(persistentProperty,value);
+						}
+						return;
+					}
+
+					Object value = recordReadingPropertyValueProvider.getPropertyValue(persistentProperty);
+					if (value != null) {
+						accessor.setProperty(persistentProperty,value);
+					}
+				}
+			});
+			
+			
+		} else {
+			instance = null;
+		}
+		return (R) instance;
+	}
 
 	
 	/*
