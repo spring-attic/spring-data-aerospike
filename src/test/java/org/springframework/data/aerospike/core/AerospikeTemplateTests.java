@@ -22,7 +22,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.RecoverableDataAccessException;
-import org.springframework.data.aerospike.core.AerospikeTemplate.FilterOperation;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.test.context.ContextConfiguration;
@@ -31,6 +30,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Value;
 import com.aerospike.client.query.IndexType;
+import com.aerospike.helper.query.Qualifier;
+import com.aerospike.helper.query.Qualifier.FilterOperation;
 
 /**
  *
@@ -136,11 +137,8 @@ public class AerospikeTemplateTests {
 		template.insert(personSven03);
 		template.insert(personSven04);
 		
-		Map<String, Object> filter = new HashMap<String, Object>();
-		filter.put("binName", "age");
-		filter.put("operation", FilterOperation.EQ);
-		filter.put("value1", Value.get(25));
-		Iterable<Person> it = template.findAllUsingQuery(Person.class, null, filter);
+		Qualifier qual1 = new Qualifier("age", FilterOperation.EQ, Value.get(25));
+		Iterable<Person> it = template.findAllUsingQuery(Person.class, null, qual1);
 		int count = 0;
 		Person firstPerson = null;
 		for (Person person : it){

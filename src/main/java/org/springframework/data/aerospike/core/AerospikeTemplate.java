@@ -15,6 +15,7 @@
  */
 package org.springframework.data.aerospike.core;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.logging.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -45,15 +45,11 @@ import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import ch.qos.logback.classic.Level;
-
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Info;
 import com.aerospike.client.Key;
-import com.aerospike.client.Language;
-import com.aerospike.client.Log.Callback;
 import com.aerospike.client.Operation;
 import com.aerospike.client.Record;
 import com.aerospike.client.ScanCallback;
@@ -70,6 +66,9 @@ import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.ResultSet;
 import com.aerospike.client.query.Statement;
 import com.aerospike.client.task.IndexTask;
+import com.aerospike.helper.query.KeyRecordIterator;
+import com.aerospike.helper.query.Qualifier;
+import com.aerospike.helper.query.QueryEngine;
 
 /**
  * Primary implementation of {@link AerospikeOperations}.
@@ -87,6 +86,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	private final MappingAerospikeConverter converter;
 	private final String namespace;
 	private int count = 0;
+	private final QueryEngine queryEngine;
 
 
 
@@ -115,7 +115,9 @@ public class AerospikeTemplate implements AerospikeOperations {
 		this.updatePolicy = new WritePolicy(this.client.writePolicyDefault);
 		this.insertPolicy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
 		this.updatePolicy.recordExistsAction = RecordExistsAction.UPDATE_ONLY;
-		regusterUDF();
+		
+		this.queryEngine = new QueryEngine(this.client);
+		
 		loggerSetup();
 
 	}
@@ -145,19 +147,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 			}
 		});
 
-	}
-
-
-	private void regusterUDF() {
-//		Node[] nodes = this.client.getNodes();
-//		String moduleString = Info.request(nodes[0], "udf-list");
-//		if (moduleString.isEmpty()
-//				|| !moduleString.contains("spring_api.lua")){ // register the spring_api udf module
-
-			this.client.register(null, this.getClass().getClassLoader(), 
-					"org/springframework/data/aerospike/core/spring_api.lua", 
-					"spring_api.lua", Language.LUA);
-//		}
 	}
 
 
@@ -698,165 +687,48 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 *			"value2" =	Value.get(51)  - NOTE: the second value is only used in range
 	 * @return
 	 */
-	protected <T> Iterable<T> findAllUsingQuery(Class<T> type, Filter filter, Map<String, Object>... extraFilters){
+	protected <T> Iterable<T> findAllUsingQuery(Class<T> type, Filter filter, Qualifier... qualifiers){
 		final Class<T> classType = type;
 		Statement stmt = new Statement();
 		stmt.setNamespace(this.namespace);
 		stmt.setSetName(this.getSetName(type));
 		Iterable<T> results = null;
-		if (filter != null)
-			stmt.setFilters(filter);
-		if (extraFilters == null && extraFilters.length > 0) {
-			final RecordSet recordSet = this.client.query(null, stmt);
 
-			results = new Iterable<T> (){
+		final KeyRecordIterator recIterator = this.queryEngine.select(this.namespace, this.getSetName(type), filter, qualifiers);
 
-				@Override
-				public Iterator<T> iterator() {
-					return new EntityIterator<T>(classType, converter, recordSet);
-				}
+		results = new Iterable<T> (){
 
-			};
-		} else {
+			@Override
+			public Iterator<T> iterator() {
+				return new EntityIterator<T>(classType, converter, recIterator);
+			}
 
-			Map<String, Object> originArgs = new HashMap<String, Object>();
-			originArgs.put("includeAllFields", 1);
-			String filterFuncStr = buildFilterFunction(extraFilters);
-			originArgs.put("filterFuncStr", filterFuncStr);
-			final ResultSet resultSet = this.client.queryAggregate(null, stmt, "spring_api", "select_records", Value.get(originArgs));
-
-			results = new Iterable<T> (){
-
-				@Override
-				public Iterator<T> iterator() {
-					return new EntityIterator<T>(classType, converter, resultSet);
-				}
-
-			};
-
-		} 
+		};
 		return results;
 	} 
 
-	private String buildFilterFunction(Map<String, Object>[] filters) {
-		StringBuilder sb = new StringBuilder("if ");
-		for (int i = 0; i < filters.length; i++){
-			
-			sb.append(luaFilterString((String)filters[i].get("binName"), 
-					(FilterOperation) filters[i].get("operation"), 
-					(Value)filters[i].get("value1"), 
-					(Value)filters[i].get("value2")));
-			if (filters.length > 1 && i < (filters.length -1) )
-				sb.append(" and ");
-		}
-		sb.append(" then selectedRec = true end");
-		return sb.toString();
-	}
-	
-	public enum FilterOperation {
-	    EQ, GT, GTEQ, LT, LTEQ, NOTEQ, BETWEEN
-	}
-	
-	private String luaFilterString(String binName, FilterOperation operation, Value value1, Value value2){
-
-		StringBuilder res = new StringBuilder("rec['" + binName + "']");
-		
-		switch (operation) {
-		case EQ:
-			res.append(" == " + luaValueString(value1) );
-			break;
-		case NOTEQ:
-			res.append("~= " + luaValueString(value1) );
-			break;
-		case GT:
-			res.append(" > " + luaValueString(value1) );
-			break;
-		case GTEQ:
-			res.append(" >= " + luaValueString(value1) );
-			break;
-		case LT:
-			res.append(" < " + luaValueString(value1) );
-			break;
-		case LTEQ:
-			res.append(" <= " + luaValueString(value1) );
-			break;
-		case BETWEEN:
-			res.append(" >= " + luaValueString(value1) + " and <= " + luaValueString(value2));			
-			break;
-		}
-		return res.toString();
-	}
-
-	private String luaValueString(Value value){
-		StringBuilder res = new StringBuilder();
-		int type = value.getType();
-		switch (type) {
-		case ParticleType.LIST:
-			res.append(value.toString());
-			break;
-		case ParticleType.MAP:
-			res.append(value.toString());
-			break;
-		default:
-			res.append(value.toString());
-			break;
-		}
-		return res.toString();
-	}
 
 
 	protected class EntityIterator<T> implements CloseableIterator<T>{
 
-		private RecordSet recordSet;
-		private Iterator<KeyRecord> recordSetIterator;
+		private KeyRecordIterator keyRecordIterator;
 		private MappingAerospikeConverter converter;
 		private Class<T> type;
-		private ResultSet resultSet;
-		private Iterator<Object> resultSetIterator;
 
-		public EntityIterator(Class<T> type, MappingAerospikeConverter converter, RecordSet recordSet){
+		public EntityIterator(Class<T> type, MappingAerospikeConverter converter, KeyRecordIterator keyRecordIterator){
 			this.converter = converter;
 			this.type = type;
-			this.recordSet = recordSet;
-			this.recordSetIterator = recordSet.iterator();
+			this.keyRecordIterator = keyRecordIterator;
 		}
 
-		public EntityIterator(Class<T> type, MappingAerospikeConverter converter, ResultSet resultSet){
-			this.converter = converter;
-			this.type = type;
-			this.resultSet = resultSet;
-			this.resultSetIterator = resultSet.iterator();
-		}
 		@Override
 		public boolean hasNext() {
-			if (this.recordSetIterator != null)
-				return this.recordSetIterator.hasNext();
-			else
-				return this.resultSetIterator.hasNext();
+				return this.keyRecordIterator.hasNext();
 		}
 
 		@Override
 		public T next() {
-			KeyRecord keyRecord = null;
-
-			if (this.recordSetIterator != null) {
-				keyRecord = this.recordSetIterator.next();
-			} else {
-				Map map = (Map) this.resultSetIterator.next();
-				Map<String,Object> meta = (Map<String, Object>) map.get("meta_data");
-				map.remove("meta_data");
-				Map<String,Object> binMap = new HashMap<String, Object>(map);
-				//				for (Map.Entry<String, String> entry : map.entrySet())
-				//				{
-				//				    System.out.println(entry.getKey() + "/" + entry.getValue());
-				//				}
-				//				Record record = new Record((Map<String,Object>)map.get("bins"), (Integer) map.get("generation"), (Integer) map.get("expiration"));
-				Long generation =  (Long) meta.get("generation");
-				Long ttl =  (Long) meta.get("ttl");
-				Record record = new Record(binMap, generation.intValue(), ttl.intValue());
-				Key key = new Key(namespace, (String) meta.get("set_name"), (byte[]) meta.get("digest")); 
-				keyRecord = new KeyRecord(key , record);
-			}
+			KeyRecord keyRecord = this.keyRecordIterator.next();
 			AerospikeData data = AerospikeData.forRead(keyRecord.key, null);
 			data.setRecord(keyRecord.record);
 			return converter.read(type, data);
@@ -864,10 +736,13 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 		@Override
 		public void close()  {
-			recordSet.close();
-
+			try {
+				keyRecordIterator.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-
 	}
 
 
