@@ -570,4 +570,19 @@ public class AerospikeTemplateTests {
 		Assert.assertEquals(firstPerson, personWithMail);
 		assertThat(personWithMail.getEmailAddress(), is("new@mail.com"));
 	}
+	@Test
+	public void TestAdd() {
+
+		Person personSven01 = new Person("Sven-01", "ZLastName", 25);
+
+		template.insert(personSven01);
+
+		template.add(personSven01, "age", 1);
+		
+		
+		//clean up
+		template.delete(personSven01);
+		Assert.assertEquals(26, personSven01.getAge());
+
+	}
 }
