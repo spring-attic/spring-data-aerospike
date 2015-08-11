@@ -4,6 +4,7 @@
 package org.springframework.data.aerospike.repository.query;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -15,10 +16,13 @@ import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.CollectionUtils;
 
+import com.aerospike.client.Value;
 import com.aerospike.client.query.Filter;
+import com.aerospike.helper.query.Qualifier;
 
 /**
  *
@@ -28,32 +32,46 @@ import com.aerospike.client.query.Filter;
  *
  */
 public class Criteria implements CriteriaDefinition {
-	
+
 	/**
 	 * 
 	 */
 	private static final String CRITERIA_END = "end";
+
 	/**
 	 * 
 	 */
 	private static final String CRITERIA_BEGIN = "begin";
+
 	/**
 	 * 
 	 */
 	private static final String CRITERIA_EQUAL = "equal";
+
 	/**
-	 * Custom "not-null" object as we have to be able to work with {@literal null} values as well.
+	 * Custom "not-null" object as we have to be able to work with
+	 * {@literal null} values as well.
 	 */
 	private static final Object NOT_SET = new Object();
+
 	DefaultConversionService cs = new DefaultConversionService();
 
 	private String key;
+
 	private List<Criteria> criteriaChain;
+
 	private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
+
 	private Object isValue = NOT_SET;
 
 	public Criteria(String key) {
 		this.criteriaChain = new ArrayList<Criteria>();
+		this.criteriaChain.add(this);
+		this.key = key;
+	}
+
+	protected Criteria(List<Criteria> criteriaChain, String key) {
+		this.criteriaChain = criteriaChain;
 		this.criteriaChain.add(this);
 		this.key = key;
 	}
@@ -65,71 +83,107 @@ public class Criteria implements CriteriaDefinition {
 		this.criteriaChain = new ArrayList<Criteria>();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.aerospike.repository.query.CriteriaDefinition#getCriteriaObject()
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.aerospike.repository.query.CriteriaDefinition#
+	 * getCriteriaObject()
 	 */
 	@Override
-	public Filter getCriteriaObject() {
-		
+	public List<Qualifier> getCriteriaObject() {
+
+		List<Qualifier> qualifiers = new ArrayList<Qualifier>();
+
 		if (this.criteriaChain.size() == 1) {
-			return criteriaChain.get(0).getSingleCriteriaObject();
-		} else if (CollectionUtils.isEmpty(this.criteriaChain) && !CollectionUtils.isEmpty(this.criteria)) {
-			return getSingleCriteriaObject();
-		} else {
-			throw new InvalidAerospikeDataAccessApiUsageException(
-					"Multiple criteria is not currently supported");
+			qualifiers.add(criteriaChain.get(0).getSingleCriteriaObject());
+			return qualifiers;
 		}
-	
+		else if (CollectionUtils.isEmpty(this.criteriaChain)
+				&& !CollectionUtils.isEmpty(this.criteria)) {
+			qualifiers.add(getSingleCriteriaObject());
+		}
+		else {
+			for (Criteria c : this.criteriaChain) {
+				qualifiers.add(c.getSingleCriteriaObject());
+			}
+		}
+		return qualifiers;
+
 	}
-	
-	protected Filter getSingleCriteriaObject(){
-		
+
+	protected Qualifier getSingleCriteriaObject() {
+
 		Object equalValue = null;
 		Long beginValue = null;
 		Long endValue = null;
 		Filter filter = null;
-		
+		Qualifier qualifier = null;
+
 		for (String k : this.criteria.keySet()) {
 			Object value = this.criteria.get(k);
-			if(Criteria.CRITERIA_EQUAL.compareTo(k)==0){
-				equalValue = value;				
-			} else if (Criteria.CRITERIA_BEGIN.compareTo(k)==0) {
+			if (Criteria.CRITERIA_EQUAL.compareTo(k) == 0) {
+				equalValue = value;
+			}
+			else if (Criteria.CRITERIA_BEGIN.compareTo(k) == 0) {
 				beginValue = (Long) value;
-			} else if (Criteria.CRITERIA_END.compareTo(k)==0) {
+			}
+			else if (Criteria.CRITERIA_END.compareTo(k) == 0) {
 				endValue = (Long) value;
 			}
 		}
-		
-		if(equalValue==null&&beginValue==null&&endValue==null){
+
+		if (equalValue == null && beginValue == null && endValue == null) {
 			throw new InvalidAerospikeDataAccessApiUsageException(
 					"Invalid query: no recognizable criterias");
-		} else if ((beginValue==null&&endValue!=null)||(beginValue!=null&&endValue==null)) {
+		}
+		else if ((beginValue == null && endValue != null)
+				|| (beginValue != null && endValue == null)) {
 			throw new InvalidAerospikeDataAccessApiUsageException(
-					"Invalid query: missing end or start criteria");	
-		} else if (beginValue!=null&&endValue!=null) {
+					"Invalid query: missing end or start criteria");
+		}
+		else if (beginValue != null && endValue != null) {
 			filter = Filter.range(getKey(), beginValue, endValue);
-		} else if(equalValue!=null) {
-			if(equalValue instanceof Number){
-				Long equalLong = (Long) cs.convert(equalValue, TypeDescriptor.valueOf(equalValue.getClass()), TypeDescriptor.valueOf(Long.class));
+			qualifier = new Qualifier(getKey(),
+					Qualifier.FilterOperation.BETWEEN, Value.get(beginValue),
+					Value.get(endValue));
+		}
+		else if (equalValue != null) {
+			if (equalValue instanceof Number) {
+				Long equalLong = (Long) cs.convert(equalValue,
+						TypeDescriptor.valueOf(equalValue.getClass()),
+						TypeDescriptor.valueOf(Long.class));
 				filter = Filter.equal(getKey(), equalLong);
-			} else {
-				String equalString = (String) cs.convert(equalValue, TypeDescriptor.valueOf(equalValue.getClass()), TypeDescriptor.valueOf(String.class));
+				qualifier = new Qualifier(getKey(),
+						Qualifier.FilterOperation.EQ, Value.get(equalLong));
+			}
+			else {
+				String equalString = (String) cs.convert(equalValue,
+						TypeDescriptor.valueOf(equalValue.getClass()),
+						TypeDescriptor.valueOf(String.class));
 				filter = Filter.equal(getKey(), equalString);
+				qualifier = new Qualifier(getKey(),
+						Qualifier.FilterOperation.EQ, Value.get(equalString));
 			}
 		}
 
-		return filter;
-		
+		return qualifier;
+
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.aerospike.repository.query.CriteriaDefinition#getKey()
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.aerospike.repository.query.CriteriaDefinition#
+	 * getKey()
 	 */
 	@Override
 	public String getKey() {
 		// TODO Auto-generated method stub
 		return this.key;
 	}
+
 	/**
 	 * Static factory method to create a Criteria using the provided key
 	 * 
@@ -141,15 +195,26 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * @param property 
+	 * Static factory method to create a Criteria using the provided key
+	 * 
+	 * @return
+	 */
+	public Criteria and(String key) {
+		return new Criteria(this.criteriaChain, key);
+	}
+
+	/**
+	 * @param property
 	 * @param next
 	 * @return
 	 */
 	public Criteria gt(Object o) {
 		if (lastOperatorWasNotEqual()) {
-			throw new InvalidAerospikeDataAccessApiUsageException("Invalid query: cannot combine range with is");
+			throw new InvalidAerospikeDataAccessApiUsageException(
+					"Invalid query: cannot combine range with is");
 		}
-		Long value = (Long) cs.convert(o, TypeDescriptor.valueOf(o.getClass()), TypeDescriptor.valueOf(Long.class));
+		Long value = (Long) cs.convert(o, TypeDescriptor.valueOf(o.getClass()),
+				TypeDescriptor.valueOf(Long.class));
 		criteria.put(Criteria.CRITERIA_BEGIN, value);
 		return this;
 	}
@@ -169,9 +234,11 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria lt(Object o) {
 		if (lastOperatorWasNotEqual()) {
-			throw new InvalidAerospikeDataAccessApiUsageException("Invalid query: cannot combine range with is");
+			throw new InvalidAerospikeDataAccessApiUsageException(
+					"Invalid query: cannot combine range with is");
 		}
-		Long value = (Long) cs.convert(o, TypeDescriptor.valueOf(o.getClass()), TypeDescriptor.valueOf(Long.class));
+		Long value = (Long) cs.convert(o, TypeDescriptor.valueOf(o.getClass()),
+				TypeDescriptor.valueOf(Long.class));
 		criteria.put(Criteria.CRITERIA_END, value);
 		return this;
 	}
@@ -207,11 +274,13 @@ public class Criteria implements CriteriaDefinition {
 		}
 
 		if (lastOperatorWasNot()) {
-			throw new InvalidAerospikeDataAccessApiUsageException("Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
+			throw new InvalidAerospikeDataAccessApiUsageException(
+					"Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
 		}
-		
+
 		if (lastOperatorWasNotRange()) {
-			throw new InvalidAerospikeDataAccessApiUsageException("Invalid query: cannot combine range with is");
+			throw new InvalidAerospikeDataAccessApiUsageException(
+					"Invalid query: cannot combine range with is");
 		}
 		this.isValue = o;
 		criteria.put(Criteria.CRITERIA_EQUAL, o);
@@ -219,30 +288,31 @@ public class Criteria implements CriteriaDefinition {
 
 	}
 
-
-	
-	
 	/**
 	 * @return
 	 */
 	private boolean lastOperatorWasNot() {
-		return this.criteria.size() > 0 && "$not".equals(this.criteria.keySet().toArray()[this.criteria.size() - 1]);
+		return this.criteria.size() > 0 && "$not".equals(
+				this.criteria.keySet().toArray()[this.criteria.size() - 1]);
 	}
-	
+
 	/**
 	 * @return
 	 */
 	private boolean lastOperatorWasNotEqual() {
-		return this.criteria.size() > 0 && CRITERIA_EQUAL.equals(this.criteria.keySet().toArray()[this.criteria.size() - 1]);
+		return this.criteria.size() > 0 && CRITERIA_EQUAL.equals(
+				this.criteria.keySet().toArray()[this.criteria.size() - 1]);
 	}
-	
+
 	/**
 	 * @return
 	 */
 	private boolean lastOperatorWasNotRange() {
-		return this.criteria.size() > 0 
-				&& CRITERIA_BEGIN.equals(this.criteria.keySet().toArray()[this.criteria.size() - 1])
-				&& CRITERIA_END.equals(this.criteria.keySet().toArray()[this.criteria.size() - 1]);
+		return this.criteria.size() > 0
+				&& CRITERIA_BEGIN.equals(this.criteria.keySet()
+						.toArray()[this.criteria.size() - 1])
+				&& CRITERIA_END.equals(this.criteria.keySet()
+						.toArray()[this.criteria.size() - 1]);
 	}
 
 	/**
@@ -271,5 +341,27 @@ public class Criteria implements CriteriaDefinition {
 	public Criteria orOperator(Criteria... criteria) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	/**
+	 * @return the criteriaChain
+	 */
+	public List<Criteria> getCriteriaChain() {
+		return criteriaChain;
+	}
+
+
+	/**
+	 * @param accessor
+	 */
+	public void updateCriteriaValues(ParametersParameterAccessor accessor) {
+		int i = 0;
+		for (Criteria c : this.criteriaChain) {
+			c.isValue = accessor.getBindableValue(i);
+			c.is(isValue);
+			//c.criteria.replace(c.key, c.isValue);
+			i++;			
+		}
+		
 	}
 }

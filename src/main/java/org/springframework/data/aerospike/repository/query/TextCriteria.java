@@ -3,7 +3,10 @@
  */
 package org.springframework.data.aerospike.repository.query;
 
+import java.util.List;
+
 import com.aerospike.client.query.Filter;
+import com.aerospike.helper.query.Qualifier;
 
 /**
  *
@@ -18,7 +21,7 @@ public class TextCriteria implements CriteriaDefinition {
 	 * @see org.springframework.data.aerospike.repository.query.CriteriaDefinition#getCriteriaObject()
 	 */
 	@Override
-	public Filter getCriteriaObject() {
+	public List<Qualifier> getCriteriaObject() {
 		// TODO Auto-generated method stub
 		return null;
 	}

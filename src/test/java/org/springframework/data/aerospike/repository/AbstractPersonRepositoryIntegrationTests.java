@@ -61,7 +61,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	
 	static int count = 0;
 
-	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
+	Person dave, oliver, carter, boyd, stefan, leroi2, leroi, alicia;
 	
 	List<Person> all,allKeyLess;
 	
@@ -78,17 +78,18 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		boyd = new Person("Boyd-01","Boyd", "Tinsley", 45);
 		stefan = new Person("Stefan-01","Stefan", "Lessard", 34);
 		leroi = new Person("Leroi-01","Leroi", "Moore", 41);
+		leroi2 = new Person("Leroi-02","Leroi", "Moore", 25);
 		alicia = new Person("Alicia-01","Alicia", "Keys", 30, Sex.FEMALE);
 		
 		repository.createIndex(Person.class,"last_name_index", "lastname", IndexType.STRING);
 		repository.createIndex(Person.class,"first_name_index", "firstname", IndexType.STRING);
-		repository.createIndex(Person.class,"person_age_index", "age", IndexType.NUMERIC);
+	//	repository.createIndex(Person.class,"person_age_index", "age", IndexType.NUMERIC);
 
 
 
 
 
-		all = (List<Person>) repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
+		all = (List<Person>) repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi,leroi2, alicia));
 		
 
 	}
@@ -158,9 +159,22 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void findsPersonsByFirstname() {
 
 		List<Person> result = repository.findByFirstname("Leroi");
+		assertThat(result.size(), is(2));
+		assertThat(result, hasItem(leroi));
+	}
+	
+	@Test
+	public void findsPersonsByFirstnameAndByAge() {
+
+		List<Person> result = repository.findByFirstnameAndAge("Leroi",25);
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(leroi2));
+		assertThat(result.get(0).getAge(), is(25));
+		result = repository.findByFirstnameAndAge("Leroi",41);
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(leroi));
 		assertThat(result.get(0).getAge(), is(41));
+
 	}
 	
 	@Ignore("Aerospike Query does not support like") @Test
@@ -177,7 +191,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		Page<Person> result = repository.findAll(new PageRequest(1, 2, Direction.ASC, "lastname", "firstname"));
 		assertThat(result.isFirst(), is(false));
 		assertThat(result.isLast(), is(false));
-		assertThat(result, hasItems(leroi, stefan));
+		assertThat(result, hasItems(leroi, leroi2));
 	}
 	@Ignore("Aerospike Query does not support like")  @Test
 	public void executesPagedFinderCorrectly() throws Exception {
@@ -189,6 +203,9 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 //		assertThat(page.getNumberOfElements(), is(2));
 //		assertThat(page, hasItems(carter, stefan));
 	}
+	
+
+	
 	
 	@Test
 	public void findsPersonInAgeRangeCorrectly() throws Exception {
@@ -203,6 +220,27 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertEquals(3, count);
 		assertThat(result.size(), is(3));
 		assertThat(result, hasItems(dave, leroi,boyd));
+	}
+	
+	@Test
+	public void findsPersonInAgeRangeAndNameCorrectly() throws Exception {
+
+		Iterable<Person> it = repository.findByAgeBetweenAndLastname(40, 45,"Matthews");
+		Iterable<Person> result = repository.findByAgeBetweenAndLastname(20, 26,"Moore");
+		int count = 0;
+		for (Person person : it){
+			System.out.print(person+"\n");
+			count++;
+		}
+		assertEquals(1, count);
+		
+		count = 0;
+		for (Person person : result){
+			System.out.print(person+"\n");
+			count++;
+		}
+		assertEquals(1, count);
+
 	}
 
 //	@Test

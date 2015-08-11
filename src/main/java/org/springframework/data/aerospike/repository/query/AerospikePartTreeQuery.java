@@ -100,6 +100,8 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 
 		if (this.query == null) {
 			this.query = createQuery(accessor);
+		} else {
+			this.query = updateQuery(accessor);
 		}
 
 		Criteria criteria = (Criteria) query.getCritieria();
@@ -127,6 +129,20 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 
 		return q;
 	}
+	/**
+	 * @param accessor
+	 * @param queryCreator 
+	 * @return
+	 */
+	private Query<?> updateQuery(ParametersParameterAccessor accessor) {
+
+		PartTree tree = new PartTree(getQueryMethod().getName(), getQueryMethod().getEntityInformation().getJavaType());
+
+		Constructor<? extends AbstractQueryCreator<?, ?>> constructor = (Constructor<? extends AbstractQueryCreator<?, ?>>) ClassUtils
+				.getConstructorIfAvailable(queryCreator, PartTree.class, ParameterAccessor.class);
+		return (Query<?>) BeanUtils.instantiateClass(constructor, tree, accessor).createQuery();
+	}
+
 	public Query<?> createQuery(ParametersParameterAccessor accessor) {
 
 		PartTree tree = new PartTree(getQueryMethod().getName(), getQueryMethod().getEntityInformation().getJavaType());

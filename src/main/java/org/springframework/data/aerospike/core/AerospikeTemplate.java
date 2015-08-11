@@ -69,6 +69,7 @@ import com.aerospike.client.task.IndexTask;
 import com.aerospike.helper.query.KeyRecordIterator;
 import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.QueryEngine;
+import com.aerospike.helper.query.Qualifier.FilterOperation;
 
 /**
  * Primary implementation of {@link AerospikeOperations}.
@@ -491,9 +492,16 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> Iterable<T> find(Query<?> query, Class<T> type) {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(type, "Type must not be null!");
-		Filter filter = query.getQueryObject();
-		final Iterable<T> results = findAllUsingQuery(type, filter, null);
-		return IterableConverter.toList(results);//TODO:create a sort
+		List<Qualifier> qualifiers = null;
+		Filter secondaryFilter = null;
+		qualifiers = query.getQueryObject();
+		if(qualifiers!=null && qualifiers.size()>0){
+			secondaryFilter = qualifiers.get(0).returnAsFilter();
+			qualifiers.remove(0);
+		}
+
+		final Iterable<T> results = findAllUsingQuery(type, secondaryFilter, qualifiers.toArray(new Qualifier[qualifiers.size()]));
+		return IterableConverter.toList(results);
 	}
 
 

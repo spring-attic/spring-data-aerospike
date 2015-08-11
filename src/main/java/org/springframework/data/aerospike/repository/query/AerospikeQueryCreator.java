@@ -136,8 +136,10 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query, Criteria
 		}
 		PersistentPropertyPath<AerospikePersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
 		AerospikePersistentProperty property = path.getLeafProperty();
+		
+		return from(part, property, base.and(path.toDotPath()), iterator);
 
-		return from(part, property, Criteria.where(path.toDotPath()), iterator);
+		//return from(part, property, Criteria.where(path.toDotPath()), iterator);
 	}
 
 	/* (non-Javadoc)

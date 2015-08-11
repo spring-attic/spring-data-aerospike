@@ -32,6 +32,7 @@ import com.aerospike.client.Value;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.Qualifier.FilterOperation;
+import com.aerospike.client.query.Filter;
 
 /**
  *
@@ -123,7 +124,7 @@ public class AerospikeTemplateTests {
 	}
 	
 	@Test 
-	public void findMultipleFilters(){
+	public void findMultipleFiltersQualifierOnly(){
 		
 		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
 		
@@ -139,6 +140,44 @@ public class AerospikeTemplateTests {
 		
 		Qualifier qual1 = new Qualifier("age", FilterOperation.EQ, Value.get(25));
 		Iterable<Person> it = template.findAllUsingQuery(Person.class, null, qual1);
+		int count = 0;
+		Person firstPerson = null;
+		for (Person person : it){
+			firstPerson = person;
+			System.out.print(firstPerson+"\n");
+			count++;
+		}
+		Assert.assertEquals(2, count);
+
+		
+	}
+	@Test 
+	public void findMultipleFiltersFilterAndQualifier(){
+		
+		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
+		
+		Person personSven01 = new Person("Sven-01","John",25);
+		Person personSven02 = new Person("Sven-02","John",21);
+		Person personSven03 = new Person("Sven-03","John",24);
+		Person personSven04 = new Person("Sven-04","WFirstName",25);
+		Person personSven05 = new Person("Sven-05","ZFirstName",25);
+		Person personSven06 = new Person("Sven-06","QFirstName",21);
+		Person personSven07 = new Person("Sven-07","AFirstName",24);
+		Person personSven08 = new Person("Sven-08","John",25);
+
+		
+		template.insert(personSven01);
+		template.insert(personSven02);
+		template.insert(personSven03);
+		template.insert(personSven04);
+		template.insert(personSven05);
+		template.insert(personSven06);
+		template.insert(personSven07);
+		template.insert(personSven08);
+
+		Filter filter = Filter.equal("firstName", "John");
+		Qualifier qual1 = new Qualifier("age", FilterOperation.EQ, Value.get(25));
+		Iterable<Person> it = template.findAllUsingQuery(Person.class, filter, qual1);
 		int count = 0;
 		Person firstPerson = null;
 		for (Person person : it){

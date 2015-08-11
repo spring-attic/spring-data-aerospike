@@ -6,6 +6,7 @@ package org.springframework.data.aerospike.repository.query;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.aerospike.InvalidAerospikeDataAccessApiUsageException;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 
 import com.aerospike.client.query.Filter;
+import com.aerospike.helper.query.Qualifier;
 
 /**
  *
@@ -23,17 +25,20 @@ import com.aerospike.client.query.Filter;
  *
  */
 public class Query<T> {
-	
 
 	private Sort sort;
+
 	private int offset = -1;
+
 	private int rows = -1;
+
 	private final Map<String, CriteriaDefinition> criteria = new LinkedHashMap<String, CriteriaDefinition>();
 
 	/**
 	 * Creates new instance of {@link KeyValueQuery}.
 	 */
-	public Query() {}
+	public Query() {
+	}
 
 	/**
 	 * Creates new instance of {@link KeyValueQuery} with given criteria.
@@ -42,8 +47,9 @@ public class Query<T> {
 	 */
 	public Query(CriteriaDefinition criteria) {
 		addCriteria(criteria);
-		//this.criteria = criteria;
+		// this.criteria = criteria;
 	}
+
 	/**
 	 * Adds the given {@link CriteriaDefinition} to the current {@link Query}.
 	 * 
@@ -53,15 +59,19 @@ public class Query<T> {
 	 */
 	public Query addCriteria(CriteriaDefinition criteriaDefinition) {
 
-		CriteriaDefinition existing = this.criteria.get(criteriaDefinition.getKey());
+		CriteriaDefinition existing = this.criteria
+				.get(criteriaDefinition.getKey());
 		String key = criteriaDefinition.getKey();
 
 		if (existing == null) {
 			this.criteria.put(key, criteriaDefinition);
-		} else {
-			throw new InvalidAerospikeDataAccessApiUsageException("Due to limitations of the Filter, "
-					+ "you can't add a second '" + key + "' criteria. " + "Query already contains '"
-					+ existing.getCriteriaObject() + "'.");
+		}
+		else {
+			throw new InvalidAerospikeDataAccessApiUsageException(
+					"Due to limitations of the Filter, "
+							+ "you can't add a second '" + key + "' criteria. "
+							+ "Query already contains '"
+							+ existing.getCriteriaObject() + "'.");
 		}
 
 		return this;
@@ -83,11 +93,12 @@ public class Query<T> {
 	 */
 	@SuppressWarnings("unchecked")
 	public T getCritieria() {
-		
+
 		T value = null;
-		for (Map.Entry<String, CriteriaDefinition> entry : this.criteria.entrySet()) {
-		    value = (T) entry.getValue();
-		    // now work with key and value...
+		for (Map.Entry<String, CriteriaDefinition> entry : this.criteria
+				.entrySet()) {
+			value = (T) entry.getValue();
+			// now work with key and value...
 		}
 		return value;
 	}
@@ -160,7 +171,8 @@ public class Query<T> {
 
 		if (this.sort != null) {
 			this.sort.and(sort);
-		} else {
+		}
+		else {
 			this.sort = sort;
 		}
 		return this;
@@ -185,7 +197,7 @@ public class Query<T> {
 		setRows(rows);
 		return this;
 	}
-	
+
 	/**
 	 * @param sort
 	 * @return
@@ -197,27 +209,44 @@ public class Query<T> {
 
 		for (Order order : sort) {
 			if (order.isIgnoreCase()) {
-				throw new IllegalArgumentException(String.format("Given sort contained an Order for %s with ignore case! "
-						+ "Aerospike does not support sorting ignoreing case currently!", order.getProperty()));
+				throw new IllegalArgumentException(String.format(
+						"Given sort contained an Order for %s with ignore case! "
+								+ "Aerospike does not support sorting ignoreing case currently!",
+						order.getProperty()));
 			}
 		}
 
 		if (this.sort == null) {
 			this.sort = sort;
-		} else {
+		}
+		else {
 			this.sort = this.sort.and(sort);
 		}
 
 		return this;
 	}
-	
-	public Filter getQueryObject(){
-		Filter filter = null;
+
+	public List<Qualifier> getQueryObject() {
+		List<Qualifier> qualifiers = null;
 		for (String k : criteria.keySet()) {
 			CriteriaDefinition c = criteria.get(k);
-			filter = c.getCriteriaObject();
+			qualifiers = c.getCriteriaObject();
 		}
-		
-		return filter;
+
+		return qualifiers;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder res = new StringBuilder();
+		for (Qualifier qualifier : getQueryObject()) {
+			res.append(qualifier.luaFilterString());
+			res.append('\n');
+		}
+		return res.toString();
+	}
+
 }
