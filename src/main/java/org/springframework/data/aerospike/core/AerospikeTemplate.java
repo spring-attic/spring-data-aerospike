@@ -496,7 +496,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Filter secondaryFilter = null;
 		qualifiers = query.getQueryObject();
 		if(qualifiers!=null && qualifiers.size()>0){
-			secondaryFilter = qualifiers.get(0).returnAsFilter();
+			secondaryFilter = qualifiers.get(0).asFilter();
 			qualifiers.remove(0);
 		}
 
