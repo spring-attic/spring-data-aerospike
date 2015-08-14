@@ -557,7 +557,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 			if (secondaryFilter != null) {
 				qualifiers.remove(0);
 			}
-
 		}
 
 		final Iterable<T> results = findAllUsingQuery(type, secondaryFilter,query.getSort(),qualifiers.toArray(new Qualifier[qualifiers.size()]));
