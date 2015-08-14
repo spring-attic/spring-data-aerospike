@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.mapping.CachingAerospikePersistentProperty;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.keyvalue.core.IterableConverter;
 import org.springframework.data.mapping.context.MappingContext;
@@ -75,30 +76,31 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query, Criteria
 	private Criteria from(Part part, AerospikePersistentProperty property, Criteria criteria, Iterator parameters) {
 
 		Type type = part.getType();
+		String fieldName = ((CachingAerospikePersistentProperty) property).getFieldName();
 
 		switch (type) {
 			case AFTER:
 			case GREATER_THAN:
-				return criteria.gt(parameters.next());
+				return criteria.gt(parameters.next(), fieldName);
 			case GREATER_THAN_EQUAL:
-				return criteria.gte(parameters.next());
+				return criteria.gte(parameters.next(), fieldName);
 			case BEFORE:
 			case LESS_THAN:
-				return criteria.lt(parameters.next());
+				return criteria.lt(parameters.next(), fieldName);
 			case LESS_THAN_EQUAL:
-				return criteria.lte(parameters.next());
+				return criteria.lte(parameters.next(), fieldName);
 			case BETWEEN:
-				return criteria.gt(parameters.next()).lt(parameters.next());
+				return criteria.between(parameters.next(),parameters.next(), fieldName );
 			case IS_NOT_NULL:
 				return criteria.ne(null);
 			case IS_NULL:
-				return criteria.is(parameters.next());
 			case NOT_IN:
 				return null;
 			case IN:
 				return criteria.in(parameters.next());
 			case LIKE:
 			case STARTING_WITH:
+				return criteria.startingWith(parameters.next(), fieldName);
 			case ENDING_WITH:
 			case CONTAINING:
 				return null;
@@ -109,16 +111,13 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query, Criteria
 			case EXISTS:
 				return null;
 			case TRUE:
-				return criteria.is(parameters.next());
 			case FALSE:
-				return criteria.is(parameters.next());
 			case NEAR:
 				return null;
 			case WITHIN:
 				return null;
 			case SIMPLE_PROPERTY:
-				return criteria.is(parameters.next());
-
+				return criteria.is(parameters.next(), fieldName);
 			case NEGATING_SIMPLE_PROPERTY:
 				return criteria.ne(parameters.next());
 			default:

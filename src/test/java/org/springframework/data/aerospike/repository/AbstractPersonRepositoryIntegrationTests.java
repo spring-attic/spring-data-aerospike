@@ -26,7 +26,9 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -61,7 +63,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	
 	static int count = 0;
 
-	Person dave, oliver, carter, boyd, stefan, leroi2, leroi, alicia;
+	Person dave, donny,oliver, carter, boyd, stefan, leroi2, leroi, alicia;
 	
 	List<Person> all,allKeyLess;
 	
@@ -72,6 +74,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		repository.deleteAll();
 
 		dave = new Person("Dave-01","Dave", "Matthews", 42);
+		donny = new Person("Dave-02","Donny", "Macintire", 39);
 		oliver = new Person("Oliver-01","Oliver August", "Matthews", 4);
 		carter = new Person("Carter-01", "Carter", "Beauford", 49);
 		Thread.sleep(10);
@@ -89,7 +92,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 
 
-		all = (List<Person>) repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi,leroi2, alicia));
+		all = (List<Person>) repository.save(Arrays.asList(oliver, dave, donny, carter, boyd, stefan, leroi,leroi2, alicia));
 		
 
 	}
@@ -177,12 +180,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	}
 	
-	@Ignore("Aerospike Query does not support like") @Test
-	public void findsPersonsByFirstnameLike() throws Exception {
+	@Test
+	public void findsPersonsByFirstnameStartsWith() throws Exception {
 
-		List<Person> result = repository.findByFirstnameLike("Bo*");
-		assertThat(result.size(), is(1));
-		assertThat(result, hasItem(boyd));
+		List<Person> result = repository.findByFirstnameStartsWith("D");
+		assertThat(result.size(), is(2));
+		assertThat(result, hasItem(donny));
 	}
 	
 	@Test
@@ -191,19 +194,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		Page<Person> result = repository.findAll(new PageRequest(1, 2, Direction.ASC, "lastname", "firstname"));
 		assertThat(result.isFirst(), is(false));
 		assertThat(result.isLast(), is(false));
-		assertThat(result, hasItems(leroi, leroi2));
 	}
-	@Ignore("Aerospike Query does not support like")  @Test
-	public void executesPagedFinderCorrectly() throws Exception {
-
-//		Page<Person> page = repository.findByLastnameLike("*a*",
-//				new PageRequest(0, 2, Direction.ASC, "lastname", "firstname"));
-//		assertThat(page.isFirst(), is(true));
-//		assertThat(page.isLast(), is(false));
-//		assertThat(page.getNumberOfElements(), is(2));
-//		assertThat(page, hasItems(carter, stefan));
-	}
-	
 
 	
 	
@@ -221,7 +212,17 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.size(), is(3));
 		assertThat(result, hasItems(dave, leroi,boyd));
 	}
-	
+	@Test
+	public void findsPersonInAgeRangeCorrectlyOrderByLastname() throws Exception {
+
+		Iterable<Person> it = repository.findByAgeBetweenOrderByLastname(30, 45);
+		int count = 0;
+		for (Person person : it){
+			System.out.print(person+"\n");
+			count++;
+		}
+		assertEquals(6, count);
+	}
 	@Test
 	public void findsPersonInAgeRangeAndNameCorrectly() throws Exception {
 
@@ -243,14 +244,39 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	}
 
-//	@Test
-//	public void findsPersonByShippingAddressesCorrectly() throws Exception {
-//
-//		Address address = new Address("Foo Street 1", "C0123", "Bar");
-//		dave.setShippingAddresses(new HashSet<Address>(asList(address)));
-//
-//		repository.save(dave);
-//		assertThat(repository.findByShippingAddresses(address), is(dave));
-//	}
+	@Ignore("Searching by association not Supported Yet!" )@Test
+	public void findsPersonByShippingAddressesCorrectly() throws Exception {
+
+		Address address = new Address("Foo Street 1", "C0123", "Bar");
+		dave.setShippingAddresses(new HashSet<Address>(asList(address)));
+
+		repository.save(dave);
+		Person person = repository.findByShippingAddresses(address);
+		assertThat(repository.findByShippingAddresses(address), is(dave));
+	}
+	
+	@Test
+	public void findsPersonByNameRetriveShippingAddressesCorrectly() throws Exception {
+
+		Address address = new Address("Foo Street 1", "C0123", "Bar");
+		Address addressHome = new Address("Foo Street 1", "C0123", "Bar");
+		alicia.setAddress(addressHome);
+		alicia.setShippingAddresses(new HashSet<Address>(asList(address)));
+
+		repository.save(alicia);
+		List<Person> result = repository.findByLastname(alicia.getLastname());
+		count = 0;
+		
+		for (Person person : result){
+			System.out.print(person+"\n");
+			count++;
+		}
+		assertEquals(1, count);
+		assertThat(result.get(0).getShippingAddresses(), Matchers.notNullValue());
+		Set<Address> returnedAddressSet = result.get(0).getShippingAddresses();
+		Address retAddress = (Address) returnedAddressSet.toArray()[0];
+		assertThat(address.getZipCode(), is(retAddress.getZipCode()));
+		
+	}
 	
 }

@@ -236,17 +236,17 @@ public class Query<T> {
 		return qualifiers;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		StringBuilder res = new StringBuilder();
-		for (Qualifier qualifier : getQueryObject()) {
-			res.append(qualifier.luaFilterString());
-			res.append('\n');
-		}
-		return res.toString();
-	}
+//	/* (non-Javadoc)
+//	 * @see java.lang.Object#toString()
+//	 */
+//	@Override
+//	public String toString() {
+//		StringBuilder res = new StringBuilder();
+//		for (Qualifier qualifier : getQueryObject()) {
+//			res.append(qualifier.luaFilterString());
+//			res.append(',');
+//		}
+//		return res.toString();
+//	}
 
 }

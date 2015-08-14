@@ -17,6 +17,8 @@ import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.data.repository.query.parser.Part;
+import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.CollectionUtils;
 
@@ -33,25 +35,6 @@ import com.aerospike.helper.query.Qualifier;
  */
 public class Criteria implements CriteriaDefinition {
 
-	/**
-	 * 
-	 */
-	private static final String CRITERIA_END = "end";
-
-	/**
-	 * 
-	 */
-	private static final String CRITERIA_BEGIN = "begin";
-
-	/**
-	 * 
-	 */
-	private static final String CRITERIA_EQUAL = "equal";
-
-	/**
-	 * Custom "not-null" object as we have to be able to work with
-	 * {@literal null} values as well.
-	 */
 	private static final Object NOT_SET = new Object();
 
 	DefaultConversionService cs = new DefaultConversionService();
@@ -114,57 +97,10 @@ public class Criteria implements CriteriaDefinition {
 
 	protected Qualifier getSingleCriteriaObject() {
 
-		Object equalValue = null;
-		Long beginValue = null;
-		Long endValue = null;
-		Filter filter = null;
 		Qualifier qualifier = null;
 
 		for (String k : this.criteria.keySet()) {
-			Object value = this.criteria.get(k);
-			if (Criteria.CRITERIA_EQUAL.compareTo(k) == 0) {
-				equalValue = value;
-			}
-			else if (Criteria.CRITERIA_BEGIN.compareTo(k) == 0) {
-				beginValue = (Long) value;
-			}
-			else if (Criteria.CRITERIA_END.compareTo(k) == 0) {
-				endValue = (Long) value;
-			}
-		}
-
-		if (equalValue == null && beginValue == null && endValue == null) {
-			throw new InvalidAerospikeDataAccessApiUsageException(
-					"Invalid query: no recognizable criterias");
-		}
-		else if ((beginValue == null && endValue != null)
-				|| (beginValue != null && endValue == null)) {
-			throw new InvalidAerospikeDataAccessApiUsageException(
-					"Invalid query: missing end or start criteria");
-		}
-		else if (beginValue != null && endValue != null) {
-			filter = Filter.range(getKey(), beginValue, endValue);
-			qualifier = new Qualifier(getKey(),
-					Qualifier.FilterOperation.BETWEEN, Value.get(beginValue),
-					Value.get(endValue));
-		}
-		else if (equalValue != null) {
-			if (equalValue instanceof Number) {
-				Long equalLong = (Long) cs.convert(equalValue,
-						TypeDescriptor.valueOf(equalValue.getClass()),
-						TypeDescriptor.valueOf(Long.class));
-				filter = Filter.equal(getKey(), equalLong);
-				qualifier = new Qualifier(getKey(),
-						Qualifier.FilterOperation.EQ, Value.get(equalLong));
-			}
-			else {
-				String equalString = (String) cs.convert(equalValue,
-						TypeDescriptor.valueOf(equalValue.getClass()),
-						TypeDescriptor.valueOf(String.class));
-				filter = Filter.equal(getKey(), equalString);
-				qualifier = new Qualifier(getKey(),
-						Qualifier.FilterOperation.EQ, Value.get(equalString));
-			}
+			qualifier = (Qualifier) this.criteria.get(k);
 		}
 
 		return qualifier;
@@ -180,7 +116,6 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	@Override
 	public String getKey() {
-		// TODO Auto-generated method stub
 		return this.key;
 	}
 
@@ -208,14 +143,37 @@ public class Criteria implements CriteriaDefinition {
 	 * @param next
 	 * @return
 	 */
-	public Criteria gt(Object o) {
-		if (lastOperatorWasNotEqual()) {
-			throw new InvalidAerospikeDataAccessApiUsageException(
-					"Invalid query: cannot combine range with is");
-		}
-		Long value = (Long) cs.convert(o, TypeDescriptor.valueOf(o.getClass()),
-				TypeDescriptor.valueOf(Long.class));
-		criteria.put(Criteria.CRITERIA_BEGIN, value);
+	public Criteria gt(Object o, String propertyName) {
+		Qualifier qualifier = new Qualifier(propertyName,
+				Qualifier.FilterOperation.EQ, Value.get(o));
+		this.isValue = o;
+		this.criteria.put(Qualifier.FilterOperation.GT.name(), qualifier);
+		return this;
+
+	}
+
+	/**
+	 * @param next
+	 * @return
+	 */
+	public Criteria gte(Object o,String propertyName) {
+		Qualifier qualifier = new Qualifier(propertyName,
+				Qualifier.FilterOperation.EQ, Value.get(o));
+		this.isValue = o;
+		this.criteria.put(Qualifier.FilterOperation.GTEQ.name(), qualifier);
+		return this;
+
+	}
+
+	/**
+	 * @param next
+	 * @return
+	 */
+	public Criteria lt(Object o,String propertyName) {
+		Qualifier qualifier = new Qualifier(propertyName,
+				Qualifier.FilterOperation.EQ, Value.get(o));
+		this.isValue = o;
+		this.criteria.put(Qualifier.FilterOperation.LT.name(), qualifier);
 		return this;
 	}
 
@@ -223,33 +181,12 @@ public class Criteria implements CriteriaDefinition {
 	 * @param next
 	 * @return
 	 */
-	public Criteria gte(Object next) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/**
-	 * @param next
-	 * @return
-	 */
-	public Criteria lt(Object o) {
-		if (lastOperatorWasNotEqual()) {
-			throw new InvalidAerospikeDataAccessApiUsageException(
-					"Invalid query: cannot combine range with is");
-		}
-		Long value = (Long) cs.convert(o, TypeDescriptor.valueOf(o.getClass()),
-				TypeDescriptor.valueOf(Long.class));
-		criteria.put(Criteria.CRITERIA_END, value);
+	public Criteria lte(Object o,String propertyName) {
+		Qualifier qualifier = new Qualifier(propertyName,
+				Qualifier.FilterOperation.EQ, Value.get(o));
+		this.isValue = o;
+		this.criteria.put(Qualifier.FilterOperation.LTEQ.name(), qualifier);
 		return this;
-	}
-
-	/**
-	 * @param next
-	 * @return
-	 */
-	public Criteria lte(Object next) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/**
@@ -259,33 +196,6 @@ public class Criteria implements CriteriaDefinition {
 	public Criteria ne(Object object) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	/**
-	 * Creates a criterion using equality
-	 * 
-	 * @param oParameterAccessor
-	 * @return
-	 */
-	public Criteria is(Object o) {
-		if (!isValue.equals(NOT_SET)) {
-			throw new InvalidAerospikeDataAccessApiUsageException(
-					"Multiple 'is' values declared. You need to use 'and' with multiple criteria");
-		}
-
-		if (lastOperatorWasNot()) {
-			throw new InvalidAerospikeDataAccessApiUsageException(
-					"Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
-		}
-
-		if (lastOperatorWasNotRange()) {
-			throw new InvalidAerospikeDataAccessApiUsageException(
-					"Invalid query: cannot combine range with is");
-		}
-		this.isValue = o;
-		criteria.put(Criteria.CRITERIA_EQUAL, o);
-		return this;
-
 	}
 
 	/**
@@ -300,8 +210,9 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	private boolean lastOperatorWasNotEqual() {
-		return this.criteria.size() > 0 && CRITERIA_EQUAL.equals(
-				this.criteria.keySet().toArray()[this.criteria.size() - 1]);
+		return this.criteria.size() > 0
+				&& Qualifier.FilterOperation.EQ.name().equals(this.criteria
+						.keySet().toArray()[this.criteria.size() - 1]);
 	}
 
 	/**
@@ -309,10 +220,8 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	private boolean lastOperatorWasNotRange() {
 		return this.criteria.size() > 0
-				&& CRITERIA_BEGIN.equals(this.criteria.keySet()
-						.toArray()[this.criteria.size() - 1])
-				&& CRITERIA_END.equals(this.criteria.keySet()
-						.toArray()[this.criteria.size() - 1]);
+				&& Qualifier.FilterOperation.BETWEEN.name().equals(this.criteria
+						.keySet().toArray()[this.criteria.size() - 1]);
 	}
 
 	/**
@@ -350,18 +259,63 @@ public class Criteria implements CriteriaDefinition {
 		return criteriaChain;
 	}
 
+	/**
+	 * @param next
+	 * @param part
+	 * @param criteria2
+	 * @return
+	 */
+	public Criteria is(Object o, String propertyName) {
+		if (!isValue.equals(NOT_SET)) {
+			throw new InvalidAerospikeDataAccessApiUsageException(
+					"Multiple 'is' values declared. You need to use 'and' with multiple criteria");
+		}
+
+		if (lastOperatorWasNot()) {
+			throw new InvalidAerospikeDataAccessApiUsageException(
+					"Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
+		}
+
+		if (lastOperatorWasNotRange()) {
+			throw new InvalidAerospikeDataAccessApiUsageException(
+					"Invalid query: cannot combine range with is");
+		}
+		Qualifier qualifier = new Qualifier(propertyName,
+				Qualifier.FilterOperation.EQ, Value.get(o));
+		this.isValue = o;
+		this.criteria.put(Qualifier.FilterOperation.EQ.name(), qualifier);
+		return this;
+	}
 
 	/**
-	 * @param accessor
+	 * @param next
+	 * @param next2
+	 * @param part
+	 * @param criteria2
+	 * @return
 	 */
-	public void updateCriteriaValues(ParametersParameterAccessor accessor) {
-		int i = 0;
-		for (Criteria c : this.criteriaChain) {
-			c.isValue = accessor.getBindableValue(i);
-			c.is(isValue);
-			//c.criteria.replace(c.key, c.isValue);
-			i++;			
-		}
-		
+	public Criteria between(Object o1, Object o2,String propertyName) {
+		Qualifier qualifier = new Qualifier(propertyName,
+				Qualifier.FilterOperation.BETWEEN, Value.get(o1),
+				Value.get(o2));
+		this.criteria.put(Qualifier.FilterOperation.BETWEEN.name(), qualifier);
+		return this;
+
 	}
+
+	/**
+	 * @param next
+	 * @param part
+	 * @param criteria2
+	 * @return
+	 */
+	public Criteria startingWith(Object o,String propertyName) {
+		Qualifier qualifier = new Qualifier(propertyName,
+				Qualifier.FilterOperation.START_WITH, Value.get(o));
+		this.criteria.put(Qualifier.FilterOperation.START_WITH.name(),
+				qualifier);
+		return this;
+
+	}
+
 }

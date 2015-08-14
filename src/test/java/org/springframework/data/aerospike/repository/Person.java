@@ -57,11 +57,11 @@ public class Person extends Contact implements Comparable<Person> {
 
 	User creator;
 
-	User coworker;
+	//User coworker;
 
-	List<User> fans;
+	//List<User> fans;
 
-	ArrayList<User> realFans;
+	//ArrayList<User> realFans;
 
 	Credentials credentials;
 	
@@ -122,19 +122,14 @@ public class Person extends Contact implements Comparable<Person> {
 		int result = super.hashCode();
 		result = prime * result + ((address == null) ? 0 : address.hashCode());
 		result = prime * result + ((age == null) ? 0 : age.hashCode());
-		result = prime * result
-				+ ((coworker == null) ? 0 : coworker.hashCode());
 		result = prime * result + ((creator == null) ? 0 : creator.hashCode());
 		result = prime * result
 				+ ((credentials == null) ? 0 : credentials.hashCode());
 		result = prime * result + ((email == null) ? 0 : email.hashCode());
-		result = prime * result + ((fans == null) ? 0 : fans.hashCode());
 		result = prime * result
 				+ ((firstname == null) ? 0 : firstname.hashCode());
 		result = prime * result
 				+ ((lastname == null) ? 0 : lastname.hashCode());
-		result = prime * result
-				+ ((realFans == null) ? 0 : realFans.hashCode());
 		result = prime * result + ((sex == null) ? 0 : sex.hashCode());
 		result = prime * result + ((shippingAddresses == null) ? 0
 				: shippingAddresses.hashCode());
@@ -167,12 +162,6 @@ public class Person extends Contact implements Comparable<Person> {
 		}
 		else if (!age.equals(other.age))
 			return false;
-		if (coworker == null) {
-			if (other.coworker != null)
-				return false;
-		}
-		else if (!coworker.equals(other.coworker))
-			return false;
 		if (creator == null) {
 			if (other.creator != null)
 				return false;
@@ -191,12 +180,6 @@ public class Person extends Contact implements Comparable<Person> {
 		}
 		else if (!email.equals(other.email))
 			return false;
-		if (fans == null) {
-			if (other.fans != null)
-				return false;
-		}
-		else if (!fans.equals(other.fans))
-			return false;
 		if (firstname == null) {
 			if (other.firstname != null)
 				return false;
@@ -208,12 +191,6 @@ public class Person extends Contact implements Comparable<Person> {
 				return false;
 		}
 		else if (!lastname.equals(other.lastname))
-			return false;
-		if (realFans == null) {
-			if (other.realFans != null)
-				return false;
-		}
-		else if (!realFans.equals(other.realFans))
 			return false;
 		if (sex != other.sex)
 			return false;
@@ -343,44 +320,44 @@ public class Person extends Contact implements Comparable<Person> {
 	}
 
 
-	public User getCoworker() {
-		return coworker;
-	}
+//	public User getCoworker() {
+//		return coworker;
+//	}
+//
+//
+//	public void setCoworker(User coworker) {
+//		this.coworker = coworker;
+//	}
 
 
-	public void setCoworker(User coworker) {
-		this.coworker = coworker;
-	}
-
-
-	public List<User> getFans() {
-		return fans;
-	}
-
-
-	public void setFans(List<User> fans) {
-		this.fans = fans;
-	}
-
-
-	public ArrayList<User> getRealFans() {
-		return realFans;
-	}
-
-
-	public void setRealFans(ArrayList<User> realFans) {
-		this.realFans = realFans;
-	}
-
-
-	public Credentials getCredentials() {
-		return credentials;
-	}
-
-
-	public void setCredentials(Credentials credentials) {
-		this.credentials = credentials;
-	}
+//	public List<User> getFans() {
+//		return fans;
+//	}
+//
+//
+//	public void setFans(List<User> fans) {
+//		this.fans = fans;
+//	}
+//
+//
+//	public ArrayList<User> getRealFans() {
+//		return realFans;
+//	}
+//
+//
+//	public void setRealFans(ArrayList<User> realFans) {
+//		this.realFans = realFans;
+//	}
+//
+//
+//	public Credentials getCredentials() {
+//		return credentials;
+//	}
+//
+//
+//	public void setCredentials(Credentials credentials) {
+//		this.credentials = credentials;
+//	}
 
 
 	/* (non-Javadoc)
@@ -392,9 +369,7 @@ public class Person extends Contact implements Comparable<Person> {
 				+ ", email=" + email + ", age=" + age + ", sex=" + sex
 				+ ", createdAt=" + createdAt + ", skills=" + skills
 				+ ", address=" + address + ", shippingAddresses="
-				+ shippingAddresses + ", creator=" + creator + ", coworker="
-				+ coworker + ", fans=" + fans + ", realFans=" + realFans
-				+ ", credentials=" + credentials + "]";
+				+ shippingAddresses + ", creator=" + creator + "]";
 	}
 
 

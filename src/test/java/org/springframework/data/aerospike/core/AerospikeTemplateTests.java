@@ -24,6 +24,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
+import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -204,8 +205,7 @@ public class AerospikeTemplateTests {
 		template.insert(personSven03);
 		template.insert(personSven04);
 		
-		
-		Query query = new Query(Criteria.where("firstName").is("ALastName"));
+		Query query = new Query(Criteria.where("firstName").is("ALastName","firstName"));
 		
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
@@ -237,7 +237,7 @@ public class AerospikeTemplateTests {
 		template.insert(personSven04);
 		
 		
-		Query query = new Query(Criteria.where("age").is(35));
+		Query query = new Query(Criteria.where("age").is(35,"age"));
 		
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
@@ -524,7 +524,7 @@ public class AerospikeTemplateTests {
 		template.insert(personSven03);
 		template.insert(personSven04);
 		
-		Query query = new Query(Criteria.where("firstName").is("ALastName"));
+		Query query = new Query(Criteria.where("firstName").is("ALastName","firstName"));
 		int qCount = template.count(query, Person.class);
 		assertThat(qCount, is(1));
 		assertThat(template.count(Person.class), is(4L));
@@ -560,8 +560,8 @@ public class AerospikeTemplateTests {
 		template.insert(personSven03);
 		template.insert(personSven04);
 		
-		Query queryExist = new Query(Criteria.where("firstName").is("ALastName"));
-		Query queryNotExist = new Query(Criteria.where("firstName").is("Biff"));
+		Query queryExist = new Query(Criteria.where("firstName").is("ALastName","firstName"));
+		Query queryNotExist = new Query(Criteria.where("firstName").is("Biff","firstName"));
 		assertThat(template.exists(queryExist, Person.class),is(true));
 		assertThat(template.exists(queryNotExist, Person.class),is(false));
 		
@@ -595,7 +595,7 @@ public class AerospikeTemplateTests {
 		template.update(personWithMail);
 		
 
-		Query query = new Query(Criteria.where("firstName").is(personWithMail.getFirstName()));
+		Query query = new Query(Criteria.where("firstName").is(personWithMail.getFirstName(),"firstName"));
 		Iterable<Person> it = template.find(query, Person.class);
 		
 		int count = 0;

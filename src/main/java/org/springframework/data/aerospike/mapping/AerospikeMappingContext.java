@@ -58,7 +58,8 @@ public class AerospikeMappingContext extends
 	 */
 	@Override
 	protected <T> BasicAerospikePersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
-		return new BasicAerospikePersistentEntity<T>(typeInformation);
+		BasicAerospikePersistentEntity<T> entity = new  BasicAerospikePersistentEntity<T>(typeInformation);
+		return entity;
 	}
 
 	/* 

@@ -9,6 +9,8 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.springframework.data.aerospike.core.AerospikeOperations;
+import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.aerospike.repository.query.AerospikePartTreeQuery;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.keyvalue.core.KeyValueOperations;
@@ -16,6 +18,7 @@ import org.springframework.data.keyvalue.repository.support.QuerydslKeyValueRepo
 import org.springframework.data.keyvalue.repository.support.SimpleKeyValueRepository;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.NamedQueries;
@@ -43,7 +46,8 @@ public class AerospikeRepositoryFactory extends RepositoryFactorySupport {
 	private static final Class<AerospikeQueryCreator> DEFAULT_QUERY_CREATOR = AerospikeQueryCreator.class;
 	
 	private final AerospikeOperations aerospikeOperations;
-	private final MappingContext<?, ?> context;
+	//private final MappingContext<?, ?> context;
+	private final MappingContext<? extends AerospikePersistentEntity<?>, AerospikePersistentProperty> context;
 	private final Class<? extends AbstractQueryCreator<?, ?>> queryCreator;
 	
 	/**
@@ -64,7 +68,7 @@ public class AerospikeRepositoryFactory extends RepositoryFactorySupport {
 		
 		this.queryCreator = queryCreator;
 		this.aerospikeOperations = aerospikeOperations;
-		this.context = aerospikeOperations.getMappingContext();
+		this.context = (MappingContext<? extends AerospikePersistentEntity<?>, AerospikePersistentProperty>) aerospikeOperations.getMappingContext();
 
 	}
 
@@ -72,11 +76,17 @@ public class AerospikeRepositoryFactory extends RepositoryFactorySupport {
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
 	 */
 	@Override
-	public <T, ID extends Serializable> EntityInformation<T, ID> getEntityInformation(
-			Class<T> domainClass) {
-		PersistentEntity<T, ?> entity = (PersistentEntity<T, ?>) context.getPersistentEntity(domainClass);
-		PersistentEntityInformation<T, ID> entityInformation = new PersistentEntityInformation<T, ID>(entity);
-		return entityInformation;
+	public <T, ID extends Serializable> EntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+		AerospikePersistentEntity<?> entity = context.getPersistentEntity(domainClass);
+		if (entity == null) {
+			throw new MappingException(
+					String.format("Could not lookup mapping metadata for domain class %s!", domainClass.getName()));
+		}
+		
+//		PersistentEntity<T, ?> entity = (PersistentEntity<T, ?>) context.getPersistentEntity(domainClass);
+		
+		//PersistentEntityInformation<T, ID> entityInformation = new PersistentEntityInformation<T, ID>((AerospikePersistentEntity<T>) entity);
+		return  new PersistentEntityInformation<T, ID>((AerospikePersistentEntity<T>) entity);
 	}
 
 	/* (non-Javadoc)

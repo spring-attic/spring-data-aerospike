@@ -164,6 +164,19 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	/**
 	 * @param string
+	 * @return
+	 */
+	List<Person> findByFirstnameStartsWith(String string);
+
+	/**
+	 * @param i
+	 * @param j
+	 * @return
+	 */
+	Iterable<Person> findByAgeBetweenOrderByLastname(int i, int j);
+
+	/**
+	 * @param string
 	 * @param pageRequest
 	 * @return
 	 */
