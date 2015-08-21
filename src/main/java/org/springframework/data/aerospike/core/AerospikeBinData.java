@@ -18,16 +18,20 @@ public class AerospikeBinData<T> implements Serializable{
 	private String propertyName;
 	private Class<T> propertyType;
 	private Object propertyValue;
+	private boolean simpleType;
 	
 	/**
 	 * @param name
 	 * @param object
-	 * @param aerospikeMetaDataUsingKey
+	 * @param zClass
+	 * @param simpleType
 	 */
-	public AerospikeBinData(String propertyName, Object propertyValue,	Class<T> propertyType) {
+	public AerospikeBinData(String propertyName, Object propertyValue,	Class<T> propertyType, boolean simpleType) {
 		this.propertyName = propertyName;
 		this.propertyValue = propertyValue;
-		this.propertyType = propertyType;		
+		this.propertyType = propertyType;
+		this.simpleType = simpleType;
+
 	}
 	/**
 	 * @return the propertyName
@@ -66,7 +70,18 @@ public class AerospikeBinData<T> implements Serializable{
 	public void setPropertyType(Class<T> propertyType) {
 		this.propertyType = propertyType;
 	}
-	
-	
+	/**
+	 * @return the simpleType
+	 */
+	public boolean isSimpleType() {
+		return simpleType;
+	}
+	/**
+	 * @param simpleType the simpleType to set
+	 */
+	public void setSimpleType(boolean simpleType) {
+		this.simpleType = simpleType;
+	}
+
 
 }

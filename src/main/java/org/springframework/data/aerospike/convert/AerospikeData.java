@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +28,8 @@ import java.util.Map.Entry;
 
 import org.springframework.data.aerospike.core.AerospikeBinData;
 import org.springframework.data.aerospike.mapping.AerospikeMetadataBin;
+import org.springframework.data.convert.TypeMapper;
+import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.Assert;
 
 import com.aerospike.client.Bin;
@@ -45,6 +48,10 @@ public class AerospikeData implements Serializable {
 	 * 
 	 */
 	private static final String AEROSPIKE_BIN_DATA_LIST = "AerospikeBinDataList";
+	/**
+	 * 
+	 */
+	private static final String AEROSPIKE_BIN_RECORD_MAP = "AerospikeBinRecordMap";
 	/**
 	 * 
 	 */
@@ -159,7 +166,6 @@ public class AerospikeData implements Serializable {
 	
 	public void addMetaDataItem(String key, Object value){
 		Assert.notNull(key, "key must not be null");
-		Assert.notNull(value, "value must not be null");
 		getMetaData().addKeyValuetoAerospikeMetaData(key, value);
 	}
 
@@ -210,22 +216,27 @@ public class AerospikeData implements Serializable {
 		this.metaData = metaData;
 	}
 	
-	public static Map convertToMap(AerospikeData aerospikeData){
+	public static Map convertToMap(AerospikeData aerospikeData, SimpleTypeHolder simpleTypeHolder){
 		
 		HashMap<String, Object> map = new HashMap<String, Object>(aerospikeData.bins.size()+2);		
 		map.put(AerospikeMetadataBin.TYPE_BIN_NAME, aerospikeData.getMetaData().getAerospikeMetaDataUsingKey(AerospikeMetadataBin.TYPE_BIN_NAME));
 		map.put(AerospikeMetadataBin.SPRING_ID_BIN, aerospikeData.getMetaData().getAerospikeMetaDataUsingKey(AerospikeMetadataBin.SPRING_ID_BIN));
-		map.put(AerospikeData.AEROSPIKE_KEY, aerospikeData.getKey());
+		
 		List<AerospikeBinData> binDatas =  new ArrayList<AerospikeBinData>();
 		List<Bin> bins = aerospikeData.getBins();
 		AerospikeBinData binData = null;
+		
 		for (Bin bin : bins) {
 			if(!bin.name.equals(AerospikeMetadataBin.AEROSPIKE_META_DATA)){
-				binData = new AerospikeBinData(bin.name,bin.value.getObject(),(Class) aerospikeData.getMetaData().getAerospikeMetaDataUsingKey(bin.name));
-				binDatas.add(binData);		
+				map.put(bin.name, bin.value.getObject());
+//				Class zClass = (Class) aerospikeData.getMetaData().getAerospikeMetaDataUsingKey(bin.name);
+//				binData = new AerospikeBinData(bin.name, bin.value.getObject(), zClass,simpleTypeHolder.isSimpleType(zClass));
+//				binDatas.add(binData);
 			}
 		}
-		map.put(AerospikeData.AEROSPIKE_BIN_DATA_LIST, binDatas);
+		//map.put(AerospikeData.AEROSPIKE_BIN_DATA_LIST, binDatas);
+		//Record record = new Record(recordBins, 0,0 );
+//		map.put(AerospikeData.AEROSPIKE_BIN_RECORD_MAP, recordBins);
 		return map;
 		
 	}
@@ -234,21 +245,56 @@ public class AerospikeData implements Serializable {
 	@SuppressWarnings("unchecked")
 	public static AerospikeData convertToAerospikeData(Map binMap){
 		
+		Record record =  null;
+		List<String> ignore = Arrays.asList(AerospikeMetadataBin.TYPE_BIN_NAME,AerospikeMetadataBin.SPRING_ID_BIN,AerospikeMetadataBin.AEROSPIKE_META_DATA,AerospikeData.AEROSPIKE_BIN_DATA_LIST,AerospikeData.AEROSPIKE_BIN_RECORD_MAP,AerospikeData.SPRING_ID_BIN);
 		HashMap<String, Object> map = (HashMap<String, Object>) binMap;
-
-		AerospikeData aerospikeData = AerospikeData
-				.forRead((Key) map.get(AerospikeData.AEROSPIKE_KEY), null);
-		aerospikeData.addMetaDataItem(AerospikeMetadataBin.TYPE_BIN_NAME,map.get(AerospikeMetadataBin.TYPE_BIN_NAME));
-		aerospikeData.addMetaDataItem(AerospikeMetadataBin.SPRING_ID_BIN,map.get(AerospikeMetadataBin.SPRING_ID_BIN));
-		List<AerospikeBinData> binDatas = (List<AerospikeBinData>) map
-				.get(AerospikeData.AEROSPIKE_BIN_DATA_LIST);
-		for (AerospikeBinData aerospikeBinData : binDatas) {
-			Bin bin = new Bin(aerospikeBinData.getPropertyName(),aerospikeBinData.getPropertyValue());
-			aerospikeData.add(bin);
-			aerospikeData.addMetaDataItem(aerospikeBinData.getPropertyName(), aerospikeBinData.getPropertyType());
+		if(map==null)return null;
+		Key key =  (Key) map.get(AerospikeData.AEROSPIKE_KEY);
+		if(key==null){
+			key = new Key("namespace", "setname", "key");
+		}
+		AerospikeData aerospikeData = AerospikeData.forRead(key,null);
+		HashMap<String, Object> recordBins = new HashMap<String, Object>(aerospikeData.bins.size());
+		for (Map.Entry<String, Object> binEntry : map.entrySet() ) {
+			String property = binEntry.getKey();
+			if(ignore.contains(property)==false){
+				recordBins.put(property, binEntry.getValue());
+			}
+			
 		}
 		
+		record = new Record(recordBins, 0,0 );
+		aerospikeData.setRecord(record);
 		return aerospikeData;
+
+//		if(map.get(AerospikeMetadataBin.TYPE_BIN_NAME)!=null){
+//			aerospikeData.addMetaDataItem(AerospikeMetadataBin.TYPE_BIN_NAME,map.get(AerospikeMetadataBin.TYPE_BIN_NAME));
+//		}
+//		if(map.get(AerospikeMetadataBin.SPRING_ID_BIN)!=null){
+//			aerospikeData.addMetaDataItem(AerospikeMetadataBin.SPRING_ID_BIN,map.get(AerospikeMetadataBin.SPRING_ID_BIN));
+//		}
+//		
+//		if(map.get(AerospikeData.AEROSPIKE_BIN_DATA_LIST)!=null){
+//			List<AerospikeBinData> binDatas = (List<AerospikeBinData>) map.get(AerospikeData.AEROSPIKE_BIN_DATA_LIST);
+//			HashMap<String, Object> recordBins = new HashMap<String, Object>(aerospikeData.bins.size());
+//			for (AerospikeBinData aerospikeBinData : binDatas) {
+//				Bin bin = new Bin(aerospikeBinData.getPropertyName(),aerospikeBinData.getPropertyValue());
+//				if(aerospikeBinData.isSimpleType()){
+//					recordBins.put(aerospikeBinData.getPropertyName(), aerospikeBinData.getPropertyValue());//TODO:duplicates					
+//				} else {
+////					AerospikeData childAerospikeData = AerospikeData.convertToAerospikeData((Map) aerospikeBinData.getPropertyValue());
+////					childAerospikeData.getBins();
+//					recordBins.put(aerospikeBinData.getPropertyName(), aerospikeBinData.getPropertyValue());//TODO:duplicates
+//				}
+//				aerospikeData.addMetaDataItem(aerospikeBinData.getPropertyName(), aerospikeBinData.getPropertyType());
+//			}
+//			record = new Record(recordBins, 0,0 );
+//			aerospikeData.setRecord(record);
+//		}
+//		
+//		
+//		
+//		return aerospikeData;
 		
 	}
 

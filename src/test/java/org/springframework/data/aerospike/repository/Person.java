@@ -20,6 +20,7 @@ package org.springframework.data.aerospike.repository;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -42,6 +43,7 @@ public class Person extends Contact implements Comparable<Person> {
 	}
 
 	private String firstname;
+	private HashMap myHashMap;
 	private String lastname;
 	//@Indexed(unique = true, dropDups = true) 
 	private String email;
@@ -370,6 +372,22 @@ public class Person extends Contact implements Comparable<Person> {
 				+ ", createdAt=" + createdAt + ", skills=" + skills
 				+ ", address=" + address + ", shippingAddresses="
 				+ shippingAddresses + ", creator=" + creator + "]";
+	}
+
+
+	/**
+	 * @return the myHashMap
+	 */
+	public HashMap getMyHashMap() {
+		return myHashMap;
+	}
+
+
+	/**
+	 * @param myHashMap the myHashMap to set
+	 */
+	public void setMyHashMap(HashMap myHashMap) {
+		this.myHashMap = myHashMap;
 	}
 
 

@@ -126,21 +126,29 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		final RecordReadingPropertyValueProvider recordReadingPropertyValueProvider = new RecordReadingPropertyValueProvider(data.getRecord(),getConversionService(),simpleTypeHolder);
 
 		EntityInstantiator instantiator = entityInstantiators.getInstantiatorFor(entity);
-		Object instance = instantiator.createInstance(entity,
-				new PersistentEntityParameterValueProvider<AerospikePersistentProperty>(entity,
-						recordReadingPropertyValueProvider, null));
+		Object instance = instantiator.createInstance(entity,new PersistentEntityParameterValueProvider<AerospikePersistentProperty>(entity,recordReadingPropertyValueProvider, null));
 		if (data.getRecord() != null) {
 
-			final PersistentPropertyAccessor accessor = entity
-					.getPropertyAccessor(instance);
+			final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(instance);
 
 			entity.doWithProperties(new PropertyHandler<AerospikePersistentProperty>() {
 
 				@Override
-				public void doWithPersistentProperty(
-						AerospikePersistentProperty persistentProperty) {
+				public void doWithPersistentProperty(AerospikePersistentProperty persistentProperty) {
 					PreferredConstructor<?, AerospikePersistentProperty> constructor = entity.getPersistenceConstructor();
-
+					Record record = data.getRecord();
+					if(record==null)return;
+					Object propertyObject =  record.getValue(((CachingAerospikePersistentProperty)persistentProperty).getFieldName());
+					if(propertyObject instanceof HashMap<?, ?> && ((Map) propertyObject).containsKey(MappingAerospikeConverter.SPRING_ID_BIN)){
+						AerospikeData aerospikeData = AerospikeData.convertToAerospikeData((Map) propertyObject);
+						if(aerospikeData==null)return;
+						
+						accessor.setProperty(persistentProperty,read(persistentProperty.getType(), aerospikeData));
+						
+						return;
+						
+					}
+					
 					if (constructor.isConstructorParameter(persistentProperty)) {
 						return;
 					}
@@ -273,12 +281,12 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		Class<?> entityType = obj.getClass();
 		
 		if (Map.class.isAssignableFrom(entityType)) {
-			writeMapInternal((Map<Object, Object>) obj, data, ClassTypeInformation.MAP,bins);
+			//writeMapInternal((Map<Object, Object>) obj, data, ClassTypeInformation.MAP,bins);
 			return;
 		}
 		
 		if (Collection.class.isAssignableFrom(entityType)) {
-			writeCollectionInternal((Collection<?>) obj, ClassTypeInformation.LIST, data,bins);
+			//writeCollectionInternal((Collection<?>) obj, ClassTypeInformation.LIST, data,bins);
 			return;
 		}
 		
@@ -316,6 +324,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			Object id = accessor.getProperty(idProperty);
 			data.setID(id!=null?id.toString():null);
 			data.addMetaDataItem(SPRING_ID_BIN, id);
+			data.addMetaDataItem(idProperty.getFieldName(), idProperty.getType());
 			bins.add(new Bin(idProperty.getFieldName(), accessor.getProperty(idProperty)));
 			
 		}
@@ -356,23 +365,25 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		}
 		
 		TypeInformation<?> valueType = ClassTypeInformation.from(propertyObj.getClass());
-		TypeInformation<?> type = persistentProperty.getTypeInformation();
+		//TypeInformation<?> type = persistentProperty.getTypeInformation();
 		String fieldName = ((CachingAerospikePersistentProperty) persistentProperty).getFieldName();
+		data.addMetaDataItem(fieldName, valueType.getType());
+		
 		
 		if (valueType.isCollectionLike()) {
 			List<?> collection = asList(accessor.getProperty(persistentProperty));
-			data.addMetaDataItem(fieldName, propertyObj.getClass());
-			Value value = new ListValue(collection);
-			bins.add(new Bin(fieldName, value));
-			//TODO:private BasicDBList writeCollectionInternal(Collection<?> source, TypeInformation<?> type, BasicDBList sink) {
+			AerospikeData collectionData = AerospikeData.forWrite(data.getNamespace());
+			List propertyList = new ArrayList();
+			writeCollectionInternal(collection, valueType,  propertyList);
+			Bin collectionBin = new Bin(fieldName, propertyList);
+			bins.add(collectionBin);
 		} else if (valueType.isMap()) {
 			data.addMetaDataItem(fieldName, propertyObj.getClass());
 			Value value = new MapValue((Map<?, ?>) accessor.getProperty(persistentProperty));
 			bins.add(new Bin(fieldName, value));
-			//TODO:protected DBObject createMap(Map<Object, Object> map, MongoPersistentProperty property) {
 		} else {
 			
-			AerospikePersistentEntity<?> childEntity = mappingContext.getPersistentEntity(type);
+			AerospikePersistentEntity<?> childEntity = mappingContext.getPersistentEntity(propertyObj.getClass());
 			AerospikeData childData = AerospikeData.forWrite(data.getNamespace());
 			final List<Bin> childBins = new ArrayList<Bin>();
 			writeInternal(propertyObj,childData,childEntity,childBins);
@@ -383,9 +394,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			}
 			childData.add(childBins);
 			childData.addMetaDataToBin();
-			//bins.add(new Bin(fieldName, childData));//This creates serialization error
-			//bins.add(new Bin(fieldName, AerospikeData.convertToMap(childData))); works but does not finnish
-			bins.add(new Bin(fieldName, accessor.getProperty(persistentProperty)));
+			bins.add(new Bin(fieldName, AerospikeData.convertToMap(childData,this.simpleTypeHolder))); //works but does not finnish
 			
 			
 			
@@ -439,14 +448,48 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	}
 
 	/**
+	 * @param <T>
 	 * @param obj
 	 * @param list
 	 * @param data
 	 * @param bins 
 	 */
-	protected void writeCollectionInternal(Collection<?> obj,
-			ClassTypeInformation<List> list, AerospikeData data, List<Bin> bins) {
-		// TODO Auto-generated method stub
+	protected <T> void writeCollectionInternal(Collection<?> collection,   TypeInformation<?> type,  List<T> propertyList) {
+
+		TypeInformation<?> componentType = type == null ? null : type.getComponentType();
+		Map map = null;
+		
+	
+		for (Object element : collection) {
+			if (element == null) {
+				continue;
+			}
+			int count = 0;
+			
+			Class<?> elementType = element == null ? null : element.getClass();
+			AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(elementType);
+			
+			if (elementType == null || simpleTypeHolder.isSimpleType(elementType)) {
+				propertyList.add((T) element);
+			} else if (element instanceof Collection || elementType.isArray()) {
+				//bins.add(writeCollectionInternal(asCollection(element), componentType, new BasicDBList()));
+			} else {
+				AerospikeData childData = AerospikeData.forWrite(entity.getSetName());
+				final List<Bin> childBins = new ArrayList<Bin>();
+				writeInternal(element,childData,entity,childBins);
+				
+				typeMapper.writeType(entity.getTypeInformation(), childData);
+				childData.add(childBins);
+				childData.addMetaDataToBin();
+				map = AerospikeData.convertToMap(childData,simpleTypeHolder);
+				propertyList.add((T) map);
+				//works but does not finnish
+				
+			}
+			
+
+		}
+
 		
 	}
 
@@ -494,13 +537,14 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			T value = null;
 			if (record == null) return value;
 			Object propertyObject =  record.getValue(((CachingAerospikePersistentProperty)property).getFieldName());
-			boolean simpleTypeHolderBoolean = simpleTypeHolder.isSimpleType(property.getType());//TODO:create custum conversion
+			
 			if( propertyObject!=null){
 				value = (T) conversionService.convert(propertyObject,TypeDescriptor.valueOf(propertyObject.getClass()) ,TypeDescriptor.valueOf(property.getType()));				
 			}
 			return value;
 		}
 		
+	
 		/* 
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mapping.model.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
@@ -583,10 +627,9 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		@Override
 		public void writeTypeTo(AerospikeData sink, Object alias) {
 			sink.addMetaDataItem(TYPE_BIN_NAME, alias.toString());
-			//sink.add(new Bin(TYPE_BIN_NAME, alias.toString()));
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.aerospike.core.AerospikeWriter#convertToAerospikeType(java.lang.Object)
 	 */
@@ -615,4 +658,8 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+
+
+
 }
