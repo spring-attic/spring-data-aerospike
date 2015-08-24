@@ -237,28 +237,6 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		TypeInformation<? extends Object> type = ClassTypeInformation.from(entityType);
 		
 		writeInternal(source, data, type, bins);
-
-//		final AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(source.getClass());
-//		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(source);
-//		final List<Bin> bins = new ArrayList<Bin>();
-//		
-//
-//		entity.doWithProperties(new PropertyHandler<AerospikePersistentProperty>() {
-//
-//			@Override
-//			public void doWithPersistentProperty(AerospikePersistentProperty property) {
-//
-//				if (property.isIdProperty()) {
-//
-//					data.setID(accessor.getProperty(property)!=null?accessor.getProperty(property).toString():null);
-//					data.addMetaDataItem(SPRING_ID_BIN, accessor.getProperty(property));
-//					//bins.add(new Bin(SPRING_ID_BIN,accessor.getProperty(property)));
-//					return;
-//				}
-//				bins.add(new Bin(((CachingAerospikePersistentProperty) property).getFieldName(), accessor.getProperty(property)));
-//			}
-//		});
-		
 		
 		data.add(bins);
 		data.addMetaDataToBin();
@@ -295,6 +273,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		writeInternal(obj,data,entity,bins);
 		
 		typeMapper.writeType(entity.getTypeInformation(), data);
+		
 		if(data.getSetName()==null){
 			data.setSetName(entity.getSetName());
 		}		
@@ -464,8 +443,6 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			if (element == null) {
 				continue;
 			}
-			int count = 0;
-			
 			Class<?> elementType = element == null ? null : element.getClass();
 			AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(elementType);
 			
@@ -483,7 +460,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 				childData.addMetaDataToBin();
 				map = AerospikeData.convertToMap(childData,simpleTypeHolder);
 				propertyList.add((T) map);
-				//works but does not finnish
+
 				
 			}
 			
@@ -561,44 +538,6 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	}
 	
 	private static class AerospikeDataToProperty {
-		
-		
-
-		/**
-		 * @param <T>
-		 * @param record
-		 * @param property
-		 * @return
-		 */
-		@SuppressWarnings("unchecked")
-		public static <T> T convertRecordValueToProperty(Record record,AerospikePersistentProperty property) {
-			final ConversionService conversionService = new DefaultConversionService();
-			Assert.notNull(record, "record must not be null");
-			Assert.notNull(property,"AerospikePersistentProperty must not be null");
-			T value = (T) record.getValue(property.getName());
-			if (value != null) {
-				value = (T) conversionService.convert(value,TypeDescriptor.valueOf(value.getClass()) ,TypeDescriptor.valueOf(property.getActualType()));
-//				Class<T> targetClass = (Class<T>) property.getActualType();
-//				if (value.getClass().isAssignableFrom(targetClass) == false) {
-//					if (targetClass.equals(Integer.class)) {
-//						value = (T) (Integer) record.getInt(property.getName());
-//					} else if (targetClass.equals(Double.class)) {
-//						value = (T) (Double) record.getDouble(property.getName());
-//					} else if (targetClass.equals(Byte.class)) {
-//						value = (T) (Byte) record.getByte(property.getName());
-//					} else if (targetClass.equals(Float.class)) {
-//						value = (T) (Float) record.getFloat(property.getName());
-//					} else if (targetClass.equals(Short.class)) {
-//						value = (T) (Short) record.getShort(property.getName());
-//					} else if (targetClass.equals(Long.class)) {
-//						value = (T) (Long) record.getLong(property.getName());
-//					} else
-//						value = (T) record.getValue(property.getName());
-//				}
-			}
-
-			return value;
-		}
 		
 	}
 

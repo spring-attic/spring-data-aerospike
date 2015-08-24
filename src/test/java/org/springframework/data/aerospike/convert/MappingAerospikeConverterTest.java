@@ -362,9 +362,14 @@ public class MappingAerospikeConverterTest {
 		dbObject.setID(AEROSPIKE_KEY);
 		converter.write(person, dbObject);
 		
-		Object object = returnBinPropertyValue(dbObject,"addresses");
+		List<Object> list = (List<Object>) returnBinPropertyValue(dbObject,"addresses");
 		
-		assertThat((HashSet<MappingAerospikeConverterTest.Address>)object,contains(address));
+		HashMap hashMap = (HashMap) list.get(0);
+		String city = (String) hashMap.get("city");
+		assertThat(city, is("London") );
+		
+		
+		
 	}
 
 	@Test
@@ -558,7 +563,7 @@ public class MappingAerospikeConverterTest {
 
 		Object contacts = returnBinPropertyValue(result,"contacts");
 		assertThat(contacts, is(instanceOf(Collection.class)));
-		assertThat(((Collection<?>) contacts).size(), is(2));
+		assertThat(((Collection<?>) contacts).size(), is(1));
 		assertThat((Collection<Object>) contacts, hasItem(nullValue()));
 	}
 	

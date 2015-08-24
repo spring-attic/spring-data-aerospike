@@ -1,0 +1,81 @@
+[[mongo.mongo-3]]
+= Aerospike 3.0 Support
+
+[[mongo.mongo-3.configuration]]
+=== Configuration Options
+
+
+Generally it is recommended to use the `<mongo:mongo-client ... />` and `<mongo:client-options ... />` elements instead of `<mongo:mongo ... />` when doing XML based configuration, since those elements will only provide you with attributes valid for the 3 generation java driver.
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <mongo:mongo-client host="127.0.0.1" port="27017">
+    <mongo:client-options write-concern="NORMAL" />
+  </mongo:mongo-client>
+
+</beans>
+----
+
+[[mongo.mongo-3.write-concern]]
+=== WriteConcern and WriteConcernChecking
+
+The `WriteConcern.NONE`, which had been used as default by Spring Data Aerospike, was removed in 3.0. Therefore in a Aerospike 3 environment the `WriteConcern` will be defaulted to `WriteConcern.UNACKNOWLEGED`. In case `WriteResultChecking.EXCEPTION` is enabled the `WriteConcern` will be altered to `WriteConcern.ACKNOWLEDGED` for write operations, as otherwise errors during execution would not be throw correctly, since simply not raised by the driver.
+
+[[mongo.mongo-3.authentication]]
+=== Authentication
+
+Aerospike Server generation 3 changed the authentication model when connecting to the DB. Therefore some of the configuration options available for authentication are no longer valid. Please use the `MongoClient` specific options for setting credentials via `MongoCredential` to provide authentication data.
+
+[source,java]
+----
+@Configuration
+public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfiguration {
+
+  @Override
+  public String getDatabaseName() {
+    return "database";
+  }
+
+  @Override
+  @Bean
+  public Mongo mongo() throws Exception {
+    return new MongoClient(singletonList(new ServerAddress("127.0.0.1", 27017)),
+      singletonList(MongoCredential.createCredential("name", "db", "pwd".toCharArray())));
+  }
+}
+----
+
+In order to use authentication with XML configuration use the `credentials` attribue on `<mongo-client>`.
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <mongo:mongo-client credentials="user:password@database" />
+
+</beans>
+----
+
+[[mongo.mongo-3.misc]]
+=== Other things to be aware of
+
+This section covers additional things to keep in mind when using the 3.0 driver.
+
+* `IndexOperations.resetIndexCache()` is no longer supported.
+* Any `MapReduceOptions.extraOption` is silently ignored.
+* `WriteResult` does not longer hold error informations but throws an Exception.
+* `MongoOperations.executeInSession(…)` no longer calls `requestStart` / `requestDone`.
+* Index name generation has become a driver internal operations, still we use the 2.x schema to generate names.
+* Some Exception messages differ between the generation 2 and 3 servers as well as between _MMap.v1_ and _WiredTiger_ storage engine.

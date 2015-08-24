@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -8,6 +9,7 @@
 	<version>1.0.0.BUILD-SNAPSHOT</version>
 
 	<name>Spring Data Aerospike</name>
+
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -21,6 +23,10 @@
 		<springdata.commons>1.11.0.BUILD-SNAPSHOT</springdata.commons>
 		<springdata.keyvalue>0.1.0.BUILD-SNAPSHOT</springdata.keyvalue>
 		<dist.key>DATAAERO</dist.key>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<asciidoctor.maven.plugin.version>1.5.2.1</asciidoctor.maven.plugin.version>
+		<jruby.version>1.7.20.1</jruby.version>
+
 	</properties>
 
 	<dependencies>
@@ -74,30 +80,54 @@
 	</dependencies>
 
 	<build>
-		<plugins>
+			<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>wagon-maven-plugin</artifactId>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.1</version>
+					<configuration>
+						<source>1.6</source>
+						<target>1.6</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.asciidoctor</groupId>
+					<artifactId>asciidoctor-maven-plugin</artifactId>
+					<version>${asciidoctor.maven.plugin.version}</version>
+					<configuration>
+						<goalPrefix>asciidoctor</goalPrefix>
+						<backend>html5</backend>
+						<sourceHighlighter>coderay</sourceHighlighter>
+					</configuration>
+					<dependencies>
+						<!-- Comment this section to use the default jruby artifact provided by 
+							the plugin -->
+						<dependency>
+							<groupId>org.jruby</groupId>
+							<artifactId>jruby-complete</artifactId>
+							<version>${jruby.version}</version>
+						</dependency>
+						<!-- Uncomment the following element to override the version of AsciidoctorJ -->
+						<!-- <dependency> <groupId>org.asciidoctor</groupId> <artifactId>asciidoctorj</artifactId> 
+							<version>1.5.3-SNAPSHOT</version> </dependency> -->
+					</dependencies>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>wagon-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.asciidoctor</groupId>
-				<artifactId>asciidoctor-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
-		</plugins>
+
+
+	</plugin>
+
+			</plugins>
+			
+		</pluginManagement>
 		<resources>
 			<resource>
 				<directory>${project.basedir}/src/main/java</directory>
@@ -119,6 +149,10 @@
 		<pluginRepository>
 			<id>spring-plugins-release</id>
 			<url>https://repo.spring.io/plugins-release</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>jcenter</id>
+			<url>https://dl.bintray.com/asciidoctor/maven</url>
 		</pluginRepository>
 	</pluginRepositories>
 
