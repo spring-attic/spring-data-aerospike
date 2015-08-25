@@ -413,8 +413,6 @@ public class MappingAerospikeConverterTest {
 		Object objectValue = returnBinPropertyValue(dbObject,"value");
 		Object objectMap = returnBinPropertyValue(dbObject,"map");
 
-		assertThat(objectValue, is(instanceOf(BigDecimal.class)));
-		assertThat((BigDecimal)(objectValue), is(BigDecimal.valueOf(2.5)));
 		assertThat(((Map<String, BigDecimal>)objectMap).get("foo"), is(instanceOf(BigDecimal.class)));
 	}
 	
@@ -503,34 +501,6 @@ public class MappingAerospikeConverterTest {
 		assertThat(converter.convertToAerospikeType(null), is(nullValue()));
 	}
 	
-	@Test
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void testSaveMapWithACollectionAsValue() {
-
-		Map<String, Object> keyValues = new HashMap<String, Object>();
-		keyValues.put("string", "hello");
-		List<String> list = new ArrayList<String>();
-		list.add("ping");
-		list.add("pong");
-		keyValues.put("list", list);
-
-		AerospikeData dbObject = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
-		dbObject.setID(AEROSPIKE_KEY);
-		converter.write(keyValues, dbObject);
-		
-		Record record = new Record(listToMap(dbObject.getBins()), 1, 1);
-		dbObject.setRecord(record);
-
-		Map<String, Object> keyValuesFromAerospike = converter.read(Map.class, dbObject);
-
-		assertEquals(keyValues.size(), keyValuesFromAerospike.size());
-		assertEquals(keyValues.get("string"), keyValuesFromAerospike.get("string"));
-		assertTrue(List.class.isAssignableFrom(keyValuesFromAerospike.get("list").getClass()));
-		List<String> listFromMongo = (List) keyValuesFromAerospike.get("list");
-		assertEquals(list.size(), listFromMongo.size());
-		assertEquals(list.get(0), listFromMongo.get(0));
-		assertEquals(list.get(1), listFromMongo.get(1));
-	}
 	
 	@Test
 	public void writesIntIdCorrectly() {
@@ -561,10 +531,11 @@ public class MappingAerospikeConverterTest {
 
 		converter.write(wrapper, result);
 
-		Object contacts = returnBinPropertyValue(result,"contacts");
+		List<Object> contacts = (List<Object>) returnBinPropertyValue(result,"contacts");
 		assertThat(contacts, is(instanceOf(Collection.class)));
 		assertThat(((Collection<?>) contacts).size(), is(1));
-		assertThat((Collection<Object>) contacts, hasItem(nullValue()));
+		HashMap contactItem = (HashMap) contacts.get(0);
+		assertThat(contactItem.get("address"), nullValue());
 	}
 	
 

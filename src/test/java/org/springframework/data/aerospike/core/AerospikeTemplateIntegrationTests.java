@@ -63,8 +63,7 @@ import com.aerospike.client.task.IndexTask;
  * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration
-
+@ContextConfiguration(classes = {TestConfiguration.class})
 public class AerospikeTemplateIntegrationTests {
 
 	/**

@@ -35,33 +35,5 @@ public class AerospikePartTreeQueryTest {
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.repository.query.AerospikePartTreeQuery#AerospikePartTreeQuery(org.springframework.data.repository.query.QueryMethod, org.springframework.data.repository.query.EvaluationContextProvider, org.springframework.data.aerospike.core.AerospikeOperations, java.lang.Class)}.
 	 */
-	@Test
-	public void testAerospikePartTreeQuery() {
-		fail("Not yet implemented");
-	}
-
-	/**
-	 * Test method for {@link org.springframework.data.aerospike.repository.query.AerospikePartTreeQuery#getQueryMethod()}.
-	 */
-	@Test
-	public void testGetQueryMethod() {
-		fail("Not yet implemented");
-	}
-
-	/**
-	 * Test method for {@link org.springframework.data.aerospike.repository.query.AerospikePartTreeQuery#execute(java.lang.Object[])}.
-	 */
-	@Test
-	public void testExecute() {
-		fail("Not yet implemented");
-	}
-
-	/**
-	 * Test method for {@link org.springframework.data.aerospike.repository.query.AerospikePartTreeQuery#createQuery(org.springframework.data.repository.query.ParametersParameterAccessor)}.
-	 */
-	@Test
-	public void testCreateQuery() {
-		fail("Not yet implemented");
-	}
 
 }
