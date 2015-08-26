@@ -151,6 +151,7 @@
 					<configuration>
 						<goalPrefix>asciidoctor</goalPrefix>
 						<backend>html5</backend>
+						<doctype>book</doctype>
 						<sourceHighlighter>coderay</sourceHighlighter>
 					</configuration>
 					<dependencies>

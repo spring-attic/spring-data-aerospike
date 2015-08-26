@@ -4,7 +4,7 @@ Peter Milne Jean Mercier;
 :revdate: {localdate}
 :toc:
 :toc-placement!:
-:spring-data-commons-docs: ../../../../spring-data-commons/src/main/asciidoc
+:spring-data-commons-docs: ../../../../../git/spring-data-commons/src/main/asciidoc
 
 (C) 2015 The original authors.
 
@@ -13,17 +13,19 @@ NOTE: Copies of this document may be made for your own use and for distribution 
 toc::[]
 
 include::preface.adoc[]
-:leveloffset: +1
-include::new-features.adoc[]
 
-[[reference]]
-Reference Documentation
+:leveloffset: +1
+include::{spring-data-commons-docs}/dependencies.adoc[]
+include::{spring-data-commons-docs}/repositories.adoc[]
+:leveloffset: -1
+
+[[reference-documentation]]
+= Reference documentation
 
 :leveloffset: +1
 include::reference/introduction.adoc[]
 include::reference/aerospike.adoc[]
 include::reference/aerospike-repositories.adoc[]
-include::{spring-data-commons-docs}/auditing.adoc[]
 include::reference/mapping.adoc[]
 include::reference/logging.adoc[]
 :leveloffset: -1

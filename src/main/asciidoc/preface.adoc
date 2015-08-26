@@ -1,11 +1,11 @@
 [[preface]]
 Preface
 
-The Spring Data Aerospike project applies core Spring concepts to the development of solutions using the Aerospike document style data store.  We provide a "template" as a high-level abstraction for storing and querying documents. You will notice similarities to the JDBC support in the Spring Framework.
+The Spring Data Aerospike project applies core Spring concepts to the development of solutions using the Aerospike key-value style data store.  We provide a "template" as a high-level abstraction for storing and querying data. You will notice similarities to the JDBC support in the Spring Framework.
 
-This document is the reference guide for Spring Data - Document Support. It explains Document module concepts and semantics and the syntax for various stores namespaces.
+This document is the reference guide for Spring Data - Aerospike Support. It explains Aerospike module concepts and semantics and the syntax for various stores namespaces.
 
-This section provides some basic introduction to Spring and Document database. The rest of the document refers only to Spring Data Document features and assumes the user is familiar with Aerospike as well as Spring concepts.
+This section provides some basic introduction to Spring and the Aerospike database. The rest of the document refers only to Spring Data Aerospike features and assumes the user is familiar with Aerospike as well as Spring concepts.
 
 [[get-started:first-steps:spring]]
 == Knowing Spring
@@ -16,8 +16,8 @@ The core functionality of the Aerospike and CouchDB support can be used directly
 To learn more about Spring, you can refer to the comprehensive (and sometimes disarming) documentation that explains in detail the Spring Framework. There are a lot of articles, blog entries and books on the matter - take a look at the Spring framework http://spring.io/docs[home page ] for more information.
 
 [[get-started:first-steps:nosql]]
-== Knowing NoSQL and Document databases
-NoSQL stores have taken the storage world by storm. It is a vast domain with a plethora of solutions, terms and patterns (to make things worth even the term itself has multiple http://www.google.com/search?q=nosoql+acronym[meanings]). While some of the principles are common, it is crucial that the user is familiar to some degree with the stores supported by DATADOC. The best way to get acquainted to this solutions is to read their documentation and follow their examples - it usually doesn't take more then 5-10 minutes to go through them and if you are coming from an RDMBS-only background many times these exercises can be an eye opener.
+== Knowing NoSQL and Aerospike
+NoSQL stores have taken the storage world by storm. It is a vast domain with a plethora of solutions, terms and patterns (to make things worth even the term itself has multiple http://www.google.com/search?q=nosoql+acronym[meanings]). While some of the principles are common, it is crucial that the user is familiar to some degree with Aerospike key-value store operations that supply the mechanism for associating keys with a set of named values, similar to a row in standard RDBMS terminology.  The data layer in Aerospike Database is optimized to store data in solid state drives, RAM, or traditional rotational media. The database indices are stored in RAM for quick availability, and data writes are optimized through large block writes to reduce latency. The software also employs two sub-programs that are codenamed Defragmenter and Evictor. Defragmenter removes data blocks that have been deleted, and Evictor frees RAM space by removing references to expired records.
 
 The jumping off ground for learning about Aerospike is http://www.aerospike.com/[www.aerospike.com]. Here is a list of other useful resources:
 
@@ -30,11 +30,11 @@ The jumping off ground for learning about Aerospike is http://www.aerospike.com/
 
 Spring Data Aerospike 3.1.x binaries requires JDK level 6.0 and above, and http://spring.io/docs[Spring Framework] 4.0.x and above.
 
-In terms of document stores, http://www.aerospike.com/download/server/[Aerospike] at least 3.5
+In terms of servers, http://www.aerospike.com/download/server/[Aerospike] at least 3.5
 
 == Additional Help Resources
 
-Learning a new framework is not always straight forward. In this section, we try to provide what we think is an easy to follow guide for starting with Spring Data Document module. However, if you encounter issues or you are just looking for an advice, feel free to use one of the links below:
+Learning a new framework is not always straight forward. In this section, we try to provide what we think is an easy to follow guide for starting with Spring Data Aerospike module. However, if you encounter issues or you are just looking for an advice, feel free to use one of the links below:
 
 [[get-started:help]]
 === Support
@@ -42,9 +42,12 @@ Learning a new framework is not always straight forward. In this section, we try
 There are a few support options available:
 
 [[get-started:help:community]]
-==== Community Forum
+==== Questions & Answers
 
-Spring Data on Stackoverflow http://stackoverflow.com/questions/tagged/spring-data[Stackoverflow] is a tag for all Spring Data (not just Document) users to share information and help each other. Note that registration is needed *only* for posting.
+Developers post questions and answers on Stack Overflow. The two key tags to search for related answers to this project are:
+
+* http://stackoverflow.com/questions/tagged/spring-data[spring-data]
+* http://stackoverflow.com/questions/tagged/spring-data-aerospike[spring-data-aerospike]
 
 [[get-started:help:professional]]
 ==== Professional Support
@@ -52,6 +55,10 @@ Spring Data on Stackoverflow http://stackoverflow.com/questions/tagged/spring-da
 Professional, from-the-source support, with guaranteed response time, is available from http://pivotal.io/[Pivotal Sofware, Inc.], the company behind Spring Data and Spring.
 
 [[get-started:up-to-date]]
-=== Following Development
+==== Following Development
 
-For information on the Spring Data Mongo source code repository, nightly builds and snapshot artifacts please see the http://projects.spring.io/spring-data-mongodb/[Spring Data Mongo homepage]. You can help make Spring Data best serve the needs of the Spring community by interacting with developers through the Community on http://stackoverflow.com/questions/tagged/spring-data[Stackoverflow]. To follow developer activity look for the mailing list information on the Spring Data Mongo homepage. If you encounter a bug or want to suggest an improvement, please create a ticket on the Spring Data issue https://jira.spring.io/browse/DATAMONGO[tracker]. To stay up to date with the latest news and announcements in the Spring eco system, subscribe to the Spring Community http://spring.io[Portal]. Lastly, you can follow the SpringSource Data http://spring.io/blog[blog ]or the project team on Twitter (http://twitter.com/SpringData[SpringData]).
+For information on the Spring Data Aerospike source code repository, nightly builds and snapshot artifacts please see the http://projects.spring.io/spring-data-aerospike/[Spring Data Aerospike homepage].
+
+To follow developer activity look for the mailing list information on the Spring Data Aerospike homepage.
+
+If you encounter a bug or want to suggest an improvement, please create a ticket on the Spring Data issue https://jira.spring.io/browse/DATAAEROSPIKE[tracker].

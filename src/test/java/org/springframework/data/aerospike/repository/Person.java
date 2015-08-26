@@ -34,7 +34,6 @@ import org.springframework.data.aerospike.mapping.Field;
  * @author Jean Mercier
  *
  */
-@Document
 public class Person extends Contact implements Comparable<Person> {
 
 
