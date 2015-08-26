@@ -13,9 +13,6 @@ import org.springframework.data.aerospike.core.AerospikeOperations;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.example.config.TestRepositoryConfig;
 import org.springframework.data.aerospike.example.data.Person;
-import org.springframework.data.aerospike.repository.ContactRepository;
-import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
-import org.springframework.test.context.ContextConfiguration;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.query.IndexType;
@@ -27,7 +24,6 @@ import com.aerospike.client.query.IndexType;
  * @author Jean Mercier
  *
  */
-@ContextConfiguration(classes = TestRepositoryConfig.class)
 public class RepositoryExample {
 
 	@Autowired

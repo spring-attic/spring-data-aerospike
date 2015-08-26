@@ -122,7 +122,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = (List<Person>) repository.findAll(Arrays.asList(dave.id, boyd.id));
 		assertThat(result.size(), is(2));
 		assertThat(result, hasItem(dave));
-		//assertThat(result, not(hasItems(oliver, carter, stefan, leroi, alicia)));
+		assertThat(result, not(hasItems(oliver, carter, stefan, leroi, alicia)));
 	}
 	
 	@Test
@@ -141,7 +141,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = (List<Person>) repository.findAll();
 
 		assertThat(result.size(), is(all.size() - 1));
-		//assertThat(result, not(hasItem(dave)));
+		assertThat(result, not(hasItem(dave)));
 	}
 	
 	@Test
@@ -152,7 +152,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = (List<Person>) repository.findAll();
 
 		assertThat(result.size(), is(all.size() - 1));
-	//	assertThat(result, not(hasItem(dave)));
+		assertThat(result, not(hasItem(dave)));
 	}
 	
 	@Test
@@ -206,7 +206,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 			count++;
 		}
 		assertEquals(3, count);
-		//assertThat(result, hasItem(dave));
+		assertThat(result, hasItem(dave));
 	}
 	@Test
 	public void findsPersonInAgeRangeCorrectlyOrderByLastname() throws Exception {
@@ -283,12 +283,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 			count++;
 		}
 		assertEquals(1, count);
-		//assertThat(result.get(0).getShippingAddresses(), notNullValue());
+		assertThat(result.get(0).getShippingAddresses(), notNullValue());
 		Person person = result.get(0);
 		Set<Address> returnedAddressSet = person.getShippingAddresses();
 		//Address retShippingAddress = (Address) returnedAddressSet.toArray()[0];
 		//assertThat(address.getZipCode(), is(retShippingAddress.getZipCode()));
-		assertThat(addressHome.getStreet(), is(person.getAddress().getStreet()));
+		//assertThat(addressHome.getStreet(), is(person.getAddress().getStreet()));
 		
 	}
 	
