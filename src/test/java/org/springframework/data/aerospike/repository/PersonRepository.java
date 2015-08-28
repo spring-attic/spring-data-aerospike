@@ -31,6 +31,8 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 	List<Person> findByLastnameEndsWith(String postfix);
 
 	List<Person> findByLastnameOrderByFirstnameAsc(String lastname);
+	
+	List<Person> findByLastnameOrderByFirstnameDesc(String lastname);
 
 	List<Person> findByFirstnameLike(String firstname);
 
