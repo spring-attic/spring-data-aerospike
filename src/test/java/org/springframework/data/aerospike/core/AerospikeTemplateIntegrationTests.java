@@ -258,49 +258,50 @@ public class AerospikeTemplateIntegrationTests {
 	
 
 	}
-	@Ignore("Currently do not support multiple queries")
 	@Test 
 	public void testFindWithFilterEqualOrderBy() throws NoSuchMethodException, Exception{
 		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);
 		task.waitTillComplete();
+		IndexTask task2 = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "last_name_index", "lastname", IndexType.STRING);
+		task2.waitTillComplete();
 		
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"firstname", "Jean"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 21));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"firstname", "Ashley"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 22));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-003"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"firstname", "Beatrice"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 23));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-004"), new Bin(
 				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 24));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-005"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"firstname", "Zaipper"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 25));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-006"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"firstname", "knowlen"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 26));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-007"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"firstname", "Xylophone"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 27));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-008"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"firstname", "Mitch"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 28));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-009"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"firstname", "Alister"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 29));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
+				"firstname", "Aabbbt"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 30));
 		
-		Query query = createQueryForMethodWithArgs("findCustomerByLastnameOrderByFirstnameAsc","Matthews");
+		Query query = createQueryForMethodWithArgs("findByLastnameOrderByFirstnameAsc","Matthews");
 		
-		Iterable<Customer> it = template.find(query, Customer.class);
+		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
-		for (Customer customer : it){
-			System.out.print(customer+"\n");
+		for (Person person : it){
+			System.out.print(person+"\n");
 			count++;
 		}
 		Assert.assertEquals(10, count);

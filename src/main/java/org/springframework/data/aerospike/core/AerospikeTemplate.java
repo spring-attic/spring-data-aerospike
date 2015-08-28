@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -41,13 +43,16 @@ import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.keyvalue.core.IterableConverter;
 import org.springframework.data.keyvalue.core.KeyValueCallback;
+import org.springframework.data.keyvalue.core.SpelPropertyComparator;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.comparator.CompoundComparator;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
@@ -559,28 +564,32 @@ public class AerospikeTemplate implements AerospikeOperations {
 			}
 		}
 
-		final Iterable<T> results = findAllUsingQuery(type, secondaryFilter,query.getSort(),qualifiers.toArray(new Qualifier[qualifiers.size()]));
-//		PropertyComparator.sort(IterableConverter.toList(results), new SortDefinition() {
-//			
-//			@Override
-//			public boolean isIgnoreCase() {
-//				// TODO Auto-generated method stub
-//				return false;
-//			}
-//			
-//			@Override
-//			public boolean isAscending() {
-//				// TODO Auto-generated method stub
-//				return false;
-//			}
-//			
-//			@Override
-//			public String getProperty() {
-//				// TODO Auto-generated method stub
-//				return null;
-//			}
-//		});
-		return IterableConverter.toList(results);
+		final Iterable<T> results = findAllUsingQuery(type, secondaryFilter, qualifiers.toArray(new Qualifier[qualifiers.size()]));
+		List<?> returnedList = IterableConverter.toList(results);
+		if(results!=null && query.getSort()!=null){
+			Comparator comparator = aerospikePropertyComparator(query);
+			Collections.sort(returnedList, comparator);
+		}
+		return (Iterable<T>) returnedList;
+	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public Comparator<?> aerospikePropertyComparator(Query<?> query ) {
+
+		if (query == null || query.getSort() == null) {
+			return null;
+		}
+
+		CompoundComparator compoundComperator = new CompoundComparator();
+		for (Order order : query.getSort()) {
+
+			if (Direction.DESC.equals(order.getDirection())) {
+				compoundComperator.addComparator(new PropertyComparator(order.getProperty(), true, false));
+			}else {
+				compoundComperator.addComparator(new PropertyComparator(order.getProperty(), true, true));
+			}
+		}
+
+		return compoundComperator;
 	}
 
 	/*
@@ -700,8 +709,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return (nodeCount > 1) ? n_objects / replicationCount : n_objects;
 	}
 
-	protected <T> Iterable<T> findAllUsingQuery(Class<T> type, Filter filter,
-			Qualifier... qualifiers) {
+	protected <T> Iterable<T> findAllUsingQuery(Class<T> type, Filter filter, Qualifier... qualifiers) {
 		final Class<T> classType = type;
 		Statement stmt = new Statement();
 		stmt.setNamespace(this.namespace);
@@ -722,42 +730,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return results;
 	}
 
-	/**
-	 * @param type
-	 * @param secondaryFilter
-	 * @param array
-	 * @param sort
-	 * @return
-	 */
-	protected <T> Iterable<T> findAllUsingQuery(Class<T> type, Filter filter, Sort sort, Qualifier... qualifiers) {
-		final Class<T> classType = type;
-		Statement stmt = new Statement();
-		stmt.setNamespace(this.namespace);
-		stmt.setSetName(this.getSetName(type));
-		Map<String, String> sortMap = null;
-		if (sort != null) {
-			Iterator<Order> sorts = sort.iterator();
-			sortMap = new LinkedHashMap<String, String>();
-			for (Iterator iterator = sort.iterator(); iterator.hasNext();) {
-				Order order = (Order) iterator.next();
-				sortMap.put(order.getProperty(), order.getDirection().name());
-
-			}
-		}
-		Iterable<T> results = null;
-
-		final KeyRecordIterator recIterator = this.queryEngine.select(this.namespace, this.getSetName(type), filter, sortMap, qualifiers);
-
-		results = new Iterable<T>() {
-
-			@Override
-			public Iterator<T> iterator() {
-				return new EntityIterator<T>(classType, converter, recIterator);
-			}
-
-		};
-		return results;
-	}
 
 	public class EntityIterator<T> implements CloseableIterator<T> {
 
@@ -766,7 +738,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		private MappingAerospikeConverter converter;
 
 		private Class<T> type;
-
+		
 		public EntityIterator(Class<T> type,
 				MappingAerospikeConverter converter,
 				KeyRecordIterator keyRecordIterator) {

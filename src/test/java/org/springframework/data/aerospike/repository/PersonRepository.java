@@ -25,16 +25,12 @@ import org.springframework.data.domain.Sort;
 public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	List<Person> findByLastname(String lastname);
-
+	
 	List<Person> findByLastnameStartsWith(String prefix);
 
 	List<Person> findByLastnameEndsWith(String postfix);
 
 	List<Person> findByLastnameOrderByFirstnameAsc(String lastname);
-
-//	List<Person> findByThePersonsFirstname(String firstname);
-//
-//	Person[] findByThePersonsFirstnameAsArray(String firstname);
 
 	List<Person> findByFirstnameLike(String firstname);
 
