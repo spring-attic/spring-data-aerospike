@@ -138,12 +138,6 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 	 */
 	List<Person> findByFirstname(String string);
 
-	/**
-	 * @param string
-	 * @param i
-	 * @return
-	 */
-	List<Person> findByFirstnameAndByAge(String string, int age);
 
 	/**
 	 * @param string
