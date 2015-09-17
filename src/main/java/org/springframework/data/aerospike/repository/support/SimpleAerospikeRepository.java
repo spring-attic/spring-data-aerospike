@@ -155,8 +155,8 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	 */
 	@Override
 	public long count() {
-		//return operations.count(entityInformation.getJavaType());
-		return 0;
+		return operations.count(entityInformation.getJavaType());
+		//return 0;
 	}
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#delete(java.io.Serializable)
