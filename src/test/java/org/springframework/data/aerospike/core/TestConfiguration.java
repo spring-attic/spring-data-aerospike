@@ -28,7 +28,7 @@ public class TestConfiguration {
 		ClientPolicy policy = new ClientPolicy();
 		policy.failIfNotConnected = true;
 
-		return new AerospikeClient(policy, "127.0.0.1", 3000);
+		return new AerospikeClient(policy, "54.210.113.72", 3000); //AWS us-east
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {
