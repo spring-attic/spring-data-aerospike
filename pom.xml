@@ -154,7 +154,7 @@
 		</pluginManagement>
 		<resources>
 			<resource>
-				<directory>${project.basedir}/src/main/lua</directory>
+				<directory>${project.basedir}/src/main/java</directory>
 				<includes>
 					<include>**/*.lua</include>
 				</includes>
