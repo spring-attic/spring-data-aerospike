@@ -132,20 +132,6 @@
 						<doctype>book</doctype>
 						<sourceHighlighter>coderay</sourceHighlighter>
 					</configuration>
-					<dependencies>
-						<!-- Comment this section to use the default jruby artifact provided 
-							by the plugin -->
-						<dependency>
-							<groupId>org.jruby</groupId>
-							<artifactId>jruby-complete</artifactId>
-							<version>${jruby.version}</version>
-						</dependency>
-						<!-- Uncomment the following element to override the version of AsciidoctorJ -->
-						<!-- <dependency> <groupId>org.asciidoctor</groupId> <artifactId>asciidoctorj</artifactId> 
-							<version>1.5.3-SNAPSHOT</version> </dependency> -->
-					</dependencies>
-
-
 
 				</plugin>
 
@@ -154,7 +140,7 @@
 		</pluginManagement>
 		<resources>
 			<resource>
-				<directory>${project.basedir}/src/main/java</directory>
+				<directory>${project.basedir}/src/main/lua</directory>
 				<includes>
 					<include>**/*.lua</include>
 				</includes>
