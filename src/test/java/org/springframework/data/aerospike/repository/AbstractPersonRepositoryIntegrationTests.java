@@ -229,14 +229,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 			System.out.print(person+"\n");
 			count++;
 		}
-		assertEquals(1, count);
+		assertEquals(2, count);
 		
 		count = 0;
 		for (Person person : result){
 			System.out.print(person+"\n");
 			count++;
 		}
-		assertEquals(1, count);
+		assertEquals(2, count);
 
 	}
 

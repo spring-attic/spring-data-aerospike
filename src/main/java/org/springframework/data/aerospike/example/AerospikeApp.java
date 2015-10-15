@@ -33,7 +33,7 @@ public class AerospikeApp {
 
 		try {
 			// String localhost = "127.0.0.1";
-			String localhost = "carosys1";
+			String localhost = "52.23.205.208";
 			AerospikeClient client = new AerospikeClient(null, localhost, 3000);
 			AerospikeTemplate aerospikeTemplate = new AerospikeTemplate(client,
 					"test");

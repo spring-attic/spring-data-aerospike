@@ -28,7 +28,7 @@ public class TestConfiguration {
 		ClientPolicy policy = new ClientPolicy();
 		policy.failIfNotConnected = true;
 
-		return new AerospikeClient(policy, "127.0.0.1", 3000);
+		return new AerospikeClient(policy, "52.23.205.208", 3000);
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {
