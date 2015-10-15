@@ -25,6 +25,7 @@ public class TestConfigPerson {
 
 		ClientPolicy policy = new ClientPolicy();
 		policy.failIfNotConnected = true;
+		policy.timeout = 2000;
 
 		return new AerospikeClient(policy, "52.23.205.208", 3000);
 	}

@@ -29,6 +29,8 @@ public class TestConfiguration {
 
 		ClientPolicy policy = new ClientPolicy();
 		policy.failIfNotConnected = true;
+		policy.timeout = 2000;
+		
 		Log.Callback mycallback = new MyLogCallback();
 		Log.setCallback(mycallback);
 		Log.setLevel(Log.Level.DEBUG);
