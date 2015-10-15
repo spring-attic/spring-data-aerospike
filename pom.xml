@@ -66,13 +66,13 @@
 			</exclusions>
 		</dependency>
 
-		<dependency>
-			<groupId>com.aerospike</groupId>
-			<artifactId>aerospike-helper-java</artifactId>
-			<scope>system</scope>
-			<version>1.0.0</version>
-			<systemPath>${basedir}/src/lib/aerospike-helper-java-1.0.0.jar</systemPath>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.aerospike</groupId> -->
+<!-- 			<artifactId>aerospike-helper-java</artifactId> -->
+<!-- 			<scope>system</scope> -->
+<!-- 			<version>1.0.0</version> -->
+<!-- 			<systemPath>${basedir}/src/lib/aerospike-helper-java-1.0.0.jar</systemPath> -->
+<!-- 		</dependency> -->
 
 		<dependency>
 			<groupId>com.aerospike</groupId>

@@ -15,6 +15,15 @@ For a comprehensive treatment of all the Spring Data Aerospike features, please 
 
 If you are new to Spring as well as to Spring Data, look for information about [Spring projects](http://projects.spring.io/).
 
+# Aerospike helper
+Unofficial helper functions and classes for Aerospike DB
+
+It includes
+- Query Engine 
+- UDF utility functions
+
+## Query Engine
+The Query Enginer is a multi-filter query engine in Java using Aerospike Aggregations. A query will automatically choose an index if wone is available to qualify the results, and then use Stream UDFs to further qualify the results.
 
 ## Quick Start
 
