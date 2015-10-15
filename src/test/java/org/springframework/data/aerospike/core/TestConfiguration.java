@@ -16,8 +16,10 @@
 package org.springframework.data.aerospike.core;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.aerospike.MyLogCallback;
 
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Log;
 import com.aerospike.client.policy.ClientPolicy;
 
 
@@ -27,6 +29,9 @@ public class TestConfiguration {
 
 		ClientPolicy policy = new ClientPolicy();
 		policy.failIfNotConnected = true;
+		Log.Callback mycallback = new MyLogCallback();
+		Log.setCallback(mycallback);
+		Log.setLevel(Log.Level.DEBUG);
 
 		return new AerospikeClient(policy, "52.23.205.208", 3000);
 	}
