@@ -32,7 +32,10 @@ public class AerospikeApp {
 	public static void main(String[] args) {
 
 		try {
+<<<<<<< HEAD
 			// String localhost = "127.0.0.1";
+=======
+>>>>>>> f5d11a27ce0f7dc9dbf0ca5446224e8ba471a1e5
 			String localhost = "52.23.205.208";
 			AerospikeClient client = new AerospikeClient(null, localhost, 3000);
 			AerospikeTemplate aerospikeTemplate = new AerospikeTemplate(client,
