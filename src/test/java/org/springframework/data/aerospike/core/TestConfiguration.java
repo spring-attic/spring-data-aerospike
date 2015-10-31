@@ -16,12 +16,12 @@
 package org.springframework.data.aerospike.core;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.aerospike.Constants;
 import org.springframework.data.aerospike.MyLogCallback;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Log;
 import com.aerospike.client.policy.ClientPolicy;
-
 
 public class TestConfiguration {
 
@@ -29,17 +29,13 @@ public class TestConfiguration {
 
 		ClientPolicy policy = new ClientPolicy();
 		policy.failIfNotConnected = true;
-		policy.timeout = 2000;
+		policy.timeout = Constants.AS_TIMEOUT;
 		
 		Log.Callback mycallback = new MyLogCallback();
 		Log.setCallback(mycallback);
 		Log.setLevel(Log.Level.DEBUG);
 
-<<<<<<< HEAD
-		return new AerospikeClient(policy, "52.23.205.208", 3000);
-=======
-		return new AerospikeClient(policy, "52.23.205.208", 3000); //AWS us-east
->>>>>>> f5d11a27ce0f7dc9dbf0ca5446224e8ba471a1e5
+		return new AerospikeClient(policy, Constants.AS_CLUSTER, Constants.AS_PORT); //AWS us-east
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {

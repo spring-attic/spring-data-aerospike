@@ -3,14 +3,9 @@
  */
 package org.springframework.data.keyvalue.repository.query;
 
-import java.lang.reflect.Method;
+import static org.springframework.data.aerospike.repository.query.StubParameterAccessor.getAccessor;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.aerospike.repository.query.Criteria.*;
-import static org.springframework.data.aerospike.repository.query.StubParameterAccessor.*;
+import java.lang.reflect.Method;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +18,6 @@ import org.springframework.data.aerospike.core.Person;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
-import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.parser.PartTree;

@@ -4,6 +4,7 @@
 package org.springframework.data.aerospike;
 
 import java.util.Date;
+
 import com.aerospike.client.Log;
 
 /**

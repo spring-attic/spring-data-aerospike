@@ -15,8 +15,8 @@
  */
 package org.springframework.data.aerospike.sample;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import junit.framework.AssertionFailedError;
 
 import org.springframework.data.aerospike.convert.AerospikeData;

@@ -18,7 +18,6 @@ package org.springframework.data.aerospike.sample;
 import java.util.List;
 
 import org.springframework.data.aerospike.repository.AerospikeRepository;
-import org.springframework.data.aerospike.repository.Person;
 
 /**
  * @author Oliver Gierke

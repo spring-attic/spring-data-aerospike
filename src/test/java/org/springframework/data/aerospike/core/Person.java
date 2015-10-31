@@ -6,7 +6,6 @@ package org.springframework.data.aerospike.core;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.data.aerospike.mapping.Field;
 import org.springframework.data.annotation.Id;

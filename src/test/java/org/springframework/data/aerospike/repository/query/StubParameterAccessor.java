@@ -7,13 +7,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import org.springframework.data.aerospike.core.AerospikeWriter;
-import org.springframework.data.convert.EntityWriter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
-import org.springframework.data.repository.query.Parameters;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
 
 /**
  *
