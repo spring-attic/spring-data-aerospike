@@ -5,7 +5,7 @@ package org.springframework.data.aerospike.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.aerospike.Constants;
+import org.springframework.data.aerospike.TestConstants;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.repository.ContactRepository;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
@@ -31,9 +31,9 @@ public class TestConfig {
 
 		ClientPolicy policy = new ClientPolicy();
 		policy.failIfNotConnected = true;
-		policy.timeout = Constants.AS_TIMEOUT;
+		policy.timeout = TestConstants.AS_TIMEOUT;
 
-		return new AerospikeClient(policy, Constants.AS_CLUSTER, Constants.AS_PORT); //AWS us-east
+		return new AerospikeClient(policy, TestConstants.AS_CLUSTER, TestConstants.AS_PORT); //AWS us-east
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {

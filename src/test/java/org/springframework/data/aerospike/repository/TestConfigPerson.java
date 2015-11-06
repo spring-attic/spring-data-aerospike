@@ -5,7 +5,7 @@ package org.springframework.data.aerospike.repository;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.aerospike.Constants;
+import org.springframework.data.aerospike.TestConstants;
 import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
@@ -29,7 +29,7 @@ public class TestConfigPerson {
 		policy.failIfNotConnected = true;
 		policy.timeout = 2000;
 
-		return new AerospikeClient(policy, Constants.AS_CLUSTER, Constants.AS_PORT);
+		return new AerospikeClient(policy, TestConstants.AS_CLUSTER, TestConstants.AS_PORT);
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {

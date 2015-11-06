@@ -66,26 +66,18 @@
 			</exclusions>
 		</dependency>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>com.aerospike</groupId> -->
-<!-- 			<artifactId>aerospike-helper-java</artifactId> -->
-<!-- 			<scope>system</scope> -->
-<!-- 			<version>1.0.0</version> -->
-<!-- 			<systemPath>${basedir}/src/lib/aerospike-helper-java-1.0.0.jar</systemPath> -->
-<!-- 		</dependency> -->
-
 		<dependency>
 			<groupId>com.aerospike</groupId>
 			<artifactId>aerospike-client</artifactId>
 			<version>${aerospike}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.jruby</groupId>
-			<artifactId>jruby-complete</artifactId>
-			<version>1.7.20.1</version>
-			<scope>test</scope>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.jruby</groupId> -->
+<!-- 			<artifactId>jruby-complete</artifactId> -->
+<!-- 			<version>1.7.20.1</version> -->
+<!-- 			<scope>test</scope> -->
+<!-- 		</dependency> -->
 
 
 		<!-- Logging -->
@@ -94,6 +86,7 @@
 			<artifactId>log4j</artifactId>
 			<version>1.2.17</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>

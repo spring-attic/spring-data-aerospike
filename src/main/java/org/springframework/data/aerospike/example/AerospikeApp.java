@@ -5,7 +5,6 @@ package org.springframework.data.aerospike.example;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.Constants;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.example.data.Person;
 import org.springframework.data.aerospike.repository.query.Criteria;
@@ -32,8 +31,8 @@ public class AerospikeApp {
 	public static void main(String[] args) {
 
 		try {
-			String localhost = org.springframework.data.aerospike.Constants.AS_CLUSTER;
-			AerospikeClient client = new AerospikeClient(null, localhost, org.springframework.data.aerospike.Constants.AS_PORT);
+			String localhost = "127.0.0.1"; // make sure you change this to the correct address
+			AerospikeClient client = new AerospikeClient(null, localhost, 3000);
 			AerospikeTemplate aerospikeTemplate = new AerospikeTemplate(client,
 					"test");
 			aerospikeTemplate.createIndex(Person.class,
