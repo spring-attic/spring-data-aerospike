@@ -42,7 +42,6 @@ public class Person extends Contact implements Comparable<Person> {
 	private String firstname;
 	private HashMap myHashMap;
 	private String lastname;
-	//@Indexed(unique = true, dropDups = true) 
 	private String email;
 	private Integer age;
 	@SuppressWarnings("unused") private Sex sex;

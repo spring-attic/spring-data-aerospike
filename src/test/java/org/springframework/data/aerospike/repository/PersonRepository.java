@@ -101,78 +101,24 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	Slice<Person> findByAgeGreaterThan(int age, Pageable pageable);
 
-//	Page<Person> findByHavingCreator(Pageable page);
-
 	List<Person> deleteByLastname(String lastname);
 
 	Long deletePersonByLastname(String lastname);
 
-//	List<Person> removeByLastnameUsingAnnotatedQuery(String lastname);
-
-//	Long removePersonByLastnameUsingAnnotatedQuery(String lastname);
-
 	Page<Person> findByAddressIn(List<Address> address, Pageable page);
-
-//	@Query("{firstname:{$in:?0}, lastname:?1}")
-//	Page<Person> findByCustomQueryFirstnamesAndLastname(List<String> firstnames, String lastname, Pageable page);
-
-//	@Query("{lastname:?0, address.street:{$in:?1}}")
-//	Page<Person> findByCustomQueryLastnameAndAddressStreetInList(String lastname, List<String> streetNames, Pageable page);
 
 	List<Person> findTop3ByLastnameStartingWith(String lastname);
 
 	Page<Person> findTop3ByLastnameStartingWith(String lastname, Pageable pageRequest);
 
-//	List<Person> findByKeyValue(String key, String value);
-//
-//	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
-//
-//	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly(String firstname);
-//	
-//	List<Person> findWithSpelByFirstnameAndCurrentUserWithCustomQuery(String firstname);
-
-	/**
-	 * @param string
-	 * @return
-	 */
 	List<Person> findByFirstname(String string);
 
-
-	/**
-	 * @param string
-	 * @param i
-	 * @return
-	 */
 	List<Person> findByFirstnameAndAge(String string, int i);
 
-	/**
-	 * @param i
-	 * @param j
-	 * @param string
-	 * @return
-	 */
 	Iterable<Person> findByAgeBetweenAndLastname(int from, int to, String lastname);
 
-	/**
-	 * @param string
-	 * @return
-	 */
 	List<Person> findByFirstnameStartsWith(String string);
 
-	/**
-	 * @param i
-	 * @param j
-	 * @return
-	 */
 	Iterable<Person> findByAgeBetweenOrderByLastname(int i, int j);
 
-	/**
-	 * @param string
-	 * @param pageRequest
-	 * @return
-	 */
-//	Page<Person> findByLastnameLike(String string, PageRequest pageRequest);
-	
-//	@Query("{ firstname : :#{#firstname}}")
-//	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterVariableOnly(@Param("firstname") String firstname);
 }
