@@ -34,6 +34,7 @@ public class TestConfig {
 		policy.timeout = TestConstants.AS_TIMEOUT;
 
 		AerospikeClient client = new AerospikeClient(policy, TestConstants.AS_CLUSTER, TestConstants.AS_PORT); //AWS us-east
+		client.writePolicyDefault.expiration = -1;
 		return client;
 	}
 
