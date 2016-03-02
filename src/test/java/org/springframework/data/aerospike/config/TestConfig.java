@@ -33,7 +33,8 @@ public class TestConfig {
 		policy.failIfNotConnected = true;
 		policy.timeout = TestConstants.AS_TIMEOUT;
 
-		return new AerospikeClient(policy, TestConstants.AS_CLUSTER, TestConstants.AS_PORT); //AWS us-east
+		AerospikeClient client = new AerospikeClient(policy, TestConstants.AS_CLUSTER, TestConstants.AS_PORT); //AWS us-east
+		return client;
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {

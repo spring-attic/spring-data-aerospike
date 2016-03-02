@@ -35,7 +35,9 @@ public class TestConfiguration {
 		Log.setCallback(mycallback);
 		Log.setLevel(Log.Level.DEBUG);
 
-		return new AerospikeClient(policy, TestConstants.AS_CLUSTER, TestConstants.AS_PORT); //AWS us-east
+		AerospikeClient client = new AerospikeClient(policy, TestConstants.AS_CLUSTER, TestConstants.AS_PORT); //AWS us-east
+		client.writePolicyDefault.expiration = -1;
+		return client;
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {
