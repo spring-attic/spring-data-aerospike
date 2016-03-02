@@ -244,16 +244,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	}
 
-	@Ignore("Searching by association not Supported Yet!" )@Test
-	public void findsPersonByShippingAddressesCorrectly() throws Exception {
-
-		Address address = new Address("Foo Street 1", "C0123", "Bar");
-		dave.setShippingAddresses(new HashSet<Address>(asList(address)));
-
-		repository.save(dave);
-		Person person = repository.findByShippingAddresses(address);
-		assertThat(repository.findByShippingAddresses(address), is(dave));
-	}
+//	@Ignore("Searching by association not Supported Yet!" )@Test
+//	public void findsPersonByShippingAddressesCorrectly() throws Exception {
+//
+//		Address address = new Address("Foo Street 1", "C0123", "Bar");
+//		dave.setShippingAddresses(new HashSet<Address>(asList(address)));
+//
+//		repository.save(dave);
+//		Person person = repository.findByShippingAddresses(address);
+//		assertThat(repository.findByShippingAddresses(address), is(dave));
+//	}
 	
 	@Test
 	public void findsPersonByNameRetriveShippingAddressesCorrectly() throws Exception {
