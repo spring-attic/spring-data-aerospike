@@ -82,6 +82,8 @@ public class Module {
 		}
 		try {
 			String code = values.get("recordContent");
+			if (code == null || code.isEmpty())
+				values.get("content");
 			//code = code.substring(0, code.length()-2);
 			if (code != null)
 				setSource(new String(Base64.decode(code)));
