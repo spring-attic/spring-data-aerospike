@@ -10,6 +10,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.cache.Cache;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
@@ -80,7 +81,7 @@ public class AerospikeCacheMangerTests {
 	
 	@Test
 	public void testCacheable() {
-		cleanupForTestCacheableTest();
+		cleanupForCacheableTest();
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CachingConfiguration.class);
 		try {
 			CachingComponent cachingComponent = ctx.getBean(CachingComponent.class);
@@ -90,11 +91,28 @@ public class AerospikeCacheMangerTests {
 		}
 		finally {
 			ctx.close();
-			cleanupForTestCacheableTest();
+			cleanupForCacheableTest();
+		}
+	}
+	
+	@Test
+	public void testCacheEviction() {
+		cleanupForCacheableTest();
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CachingConfiguration.class);
+		try {
+			CachingComponent cachingComponent = ctx.getBean(CachingComponent.class);
+			cachingComponent.cachingMethod("foo");
+			cachingComponent.cacheEvictingMethod("foo");
+			cachingComponent.cachingMethod("foo");
+			assertEquals("Component didn't evict cached entry", cachingComponent.getNoOfCalls(), 2);
+		}
+		finally {
+			ctx.close();
+			cleanupForCacheableTest();
 		}
 	}
 
-	private void cleanupForTestCacheableTest() {
+	private void cleanupForCacheableTest() {
 		client.delete(null, new Key("test", AerospikeCacheManager.DEFAULT_SET_NAME, "foo"));
 	}
 	
@@ -106,6 +124,11 @@ public class AerospikeCacheMangerTests {
 		public String cachingMethod(String param) {
 			noOfCalls ++;
 			return "bar";
+		}
+		
+		@CacheEvict("test")
+		public void cacheEvictingMethod(String param) {
+			
 		}
 
 		public int getNoOfCalls() {
@@ -120,8 +143,7 @@ public class AerospikeCacheMangerTests {
 		
 		@Bean
 		public AerospikeCacheManager cacheManager() {
-			AerospikeCacheManager cacheManager = new AerospikeCacheManager(client);
-			return cacheManager;
+			return new AerospikeCacheManager(client);
 		}
 		
 		@Bean
