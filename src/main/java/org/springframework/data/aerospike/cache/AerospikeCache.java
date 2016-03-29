@@ -12,6 +12,10 @@ import com.aerospike.client.Record;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
 
+/**
+ * 
+ * @author Venil Noronha
+ */
 public class AerospikeCache implements Cache{
 	private static final String VALUE = "value";
 	private final AerospikeClient client;
@@ -31,8 +35,9 @@ public class AerospikeCache implements Cache{
 	private Key getKey(Object key){
 		return new Key(namespace, set, key.toString());
 	}
-	private ValueWrapper toWrapper(Object value) {
-		return (value != null ? new SimpleValueWrapper(value) : null);
+
+	private ValueWrapper toWrapper(Record record) {
+		return (record != null ? new SimpleValueWrapper(record.getValue(VALUE)) : null);
 	}
 	
 	@Override
@@ -50,7 +55,7 @@ public class AerospikeCache implements Cache{
 	@Override
 	public ValueWrapper get(Object key) {
 		Record record =  client.get(null, getKey(key));
-		ValueWrapper vr = toWrapper(record.getValue(VALUE));
+		ValueWrapper vr = toWrapper(record);
 		return vr;
 	}
 
@@ -78,7 +83,7 @@ public class AerospikeCache implements Cache{
 	@Override
 	public ValueWrapper putIfAbsent(Object key, Object value) {
 		Record record = client.operate(this.createOnly, getKey(key), Operation.put(new Bin(VALUE, value)), Operation.get(VALUE));
-		return toWrapper(record.getValue(VALUE));
+		return toWrapper(record);
 	}
 
 }
