@@ -16,13 +16,15 @@ import com.aerospike.client.policy.WritePolicy;
  * 
  * @author Venil Noronha
  */
-public class AerospikeCache implements Cache{
+public class AerospikeCache implements Cache {
+
 	private static final String VALUE = "value";
-	private final AerospikeClient client;
-	private String namespace;
-	private String set;
-	private WritePolicy createOnly;
-	
+
+	protected AerospikeClient client;
+	protected String namespace;
+	protected String set;
+	protected WritePolicy createOnly;
+
 	public AerospikeCache(String namespace, String set, AerospikeClient client,
 			long expiration){
 		this.client = client;
@@ -32,7 +34,7 @@ public class AerospikeCache implements Cache{
 		this.createOnly.recordExistsAction = RecordExistsAction.CREATE_ONLY;
 	}
 	
-	private Key getKey(Object key){
+	protected Key getKey(Object key){
 		return new Key(namespace, set, key.toString());
 	}
 
@@ -77,7 +79,6 @@ public class AerospikeCache implements Cache{
 	@Override
 	public void put(Object key, Object value) {
 		client.put(null, getKey(key), new Bin(VALUE, value));
-		
 	}
 
 	@Override

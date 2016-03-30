@@ -101,9 +101,13 @@ public class AerospikeCacheMangerTests {
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CachingConfiguration.class);
 		try {
 			CachingComponent cachingComponent = ctx.getBean(CachingComponent.class);
-			cachingComponent.cachingMethod("foo");
-			cachingComponent.cachingMethod("foo");
-			assertEquals("Component didn't cache result", cachingComponent.getNoOfCalls(), 1);
+			CachedObject response1 = cachingComponent.cachingMethod("foo");
+			CachedObject response2 = cachingComponent.cachingMethod("foo");
+			assertNotNull("Component returned null", response1);
+			assertEquals("Response didn't match", "bar", response1.getValue());
+			assertNotNull("Component returned null", response2);
+			assertEquals("Response didn't match", "bar", response2.getValue());
+			assertEquals("Component didn't cache result", 1, cachingComponent.getNoOfCalls());
 		}
 		finally {
 			ctx.close();
@@ -117,10 +121,14 @@ public class AerospikeCacheMangerTests {
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CachingConfiguration.class);
 		try {
 			CachingComponent cachingComponent = ctx.getBean(CachingComponent.class);
-			cachingComponent.cachingMethod("foo");
+			CachedObject response1 = cachingComponent.cachingMethod("foo");
 			cachingComponent.cacheEvictingMethod("foo");
-			cachingComponent.cachingMethod("foo");
-			assertEquals("Component didn't evict cached entry", cachingComponent.getNoOfCalls(), 2);
+			CachedObject response2 = cachingComponent.cachingMethod("foo");
+			assertNotNull("Component returned null", response1);
+			assertEquals("Response didn't match", "bar", response1.getValue());
+			assertNotNull("Component returned null", response2);
+			assertEquals("Response didn't match", "bar", response2.getValue());
+			assertEquals("Component didn't evict cached entry", 2, cachingComponent.getNoOfCalls());
 		}
 		finally {
 			ctx.close();
@@ -132,14 +140,28 @@ public class AerospikeCacheMangerTests {
 		client.delete(null, new Key("test", AerospikeCacheManager.DEFAULT_SET_NAME, "foo"));
 	}
 	
+	public static class CachedObject {
+		
+		private String value;
+
+		public CachedObject(String value) {
+			this.value = value;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+	}
+	
 	public static class CachingComponent {
 		
 		private int noOfCalls = 0;
 		
 		@Cacheable("test")
-		public String cachingMethod(String param) {
+		public CachedObject cachingMethod(String param) {
 			noOfCalls ++;
-			return "bar";
+			return new CachedObject("bar");
 		}
 		
 		@CacheEvict("test")
