@@ -117,7 +117,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 * @param client must not be {@literal null}.
 	 */
 	public AerospikeTemplate(AerospikeClient client, String namespace) {
-
 		Assert.notNull(client, "Aerospike client must not be null!");
 		Assert.notNull(namespace, "Namespace cannot be null");
 		Assert.hasLength(namespace);
@@ -701,10 +700,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 					infoString.indexOf("=") + 1, infoString.indexOf(":"));
 			n_objects = Integer.parseInt(n_objectsString);
 		}
-		// System.out.println(String.format("Total Master and Replica objects
-		// %d", n_objects));
-		// System.out.println(String.format("Total Master objects %d",
-		// (nodeCount > 1) ? n_objects/replicationCount : n_objects));
 
 		return (nodeCount > 1) ? n_objects / replicationCount : n_objects;
 	}
