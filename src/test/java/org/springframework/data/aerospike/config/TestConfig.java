@@ -24,9 +24,6 @@ import com.aerospike.client.policy.ClientPolicy;
 @EnableAerospikeRepositories(basePackageClasses = ContactRepository.class)
 public class TestConfig {
 	
-	
-	
-	
 	public @Bean(destroyMethod = "close") AerospikeClient aerospikeClient() {
 
 		ClientPolicy policy = new ClientPolicy();
@@ -39,7 +36,7 @@ public class TestConfig {
 	}
 
 	public @Bean AerospikeTemplate aerospikeTemplate() {
-		return new AerospikeTemplate(aerospikeClient(), "bar"); // TODO verify correct place for namespace
+		return new AerospikeTemplate(aerospikeClient(), TestConstants.AS_NAMESPACE); // TODO verify correct place for namespace
 	}
 
 }
