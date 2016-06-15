@@ -69,7 +69,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
     @Before
     public void setUp() throws InterruptedException {
-        
+
         repository.deleteAll();
 
         dave = new Person("Dave-01", "Dave", "Matthews", 42);
