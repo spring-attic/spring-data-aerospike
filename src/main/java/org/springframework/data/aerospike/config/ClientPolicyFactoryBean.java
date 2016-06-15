@@ -41,12 +41,12 @@ public class ClientPolicyFactoryBean implements FactoryBean<ClientPolicy> {
 	}
 
 	/**
-	 * Configures the maximum number of worker threads for operation processing.
+	 * Configures the maximum number of connections for operation processing.
 	 * This value is used to size the synchronous connection pool for each server node.
-	 * @param maxThreads
+	 * @param maxConnsPerNode
 	 */
-	public void setMaxThreads(int maxThreads) {
-		this.policy.maxThreads = maxThreads;
+	public void setMaxConnsPerNode(int maxConnsPerNode) {
+		this.policy.maxConnsPerNode = maxConnsPerNode;
 	}
 	/**
 	 * Configures the timeout for a client connection when opening a connection 
