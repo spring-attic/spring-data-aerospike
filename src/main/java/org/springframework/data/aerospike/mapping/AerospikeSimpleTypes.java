@@ -17,6 +17,7 @@ package org.springframework.data.aerospike.mapping;
 
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
+import java.lang.annotation.Annotation;
 import java.util.*;
 
 /**
@@ -75,6 +76,13 @@ public abstract class AerospikeSimpleTypes {
 	private static final Set<Class<?>> AEROSPIKE_SIMPLE_TYPES;
 	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(AEROSPIKE_SIMPLE_TYPES, Boolean.FALSE);
 
-	private AerospikeSimpleTypes() {
-	}
+	private AerospikeSimpleTypes() {}
+
+    public static String getColletionName(Class clazz){
+        Document annotation = (Document)clazz.getAnnotation(Document.class);
+        if(annotation != null && ! annotation.collection().isEmpty()){
+            return annotation.collection();
+        }
+        return clazz.getSimpleName();
+    }
 }

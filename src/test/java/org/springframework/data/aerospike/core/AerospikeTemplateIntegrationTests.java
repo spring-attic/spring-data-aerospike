@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.aerospike.repository.AnnotatedPerson;
 import org.springframework.data.aerospike.repository.ContactRepository;
 import org.springframework.data.aerospike.repository.Person;
 import org.springframework.data.aerospike.repository.PersonRepository;
@@ -68,6 +69,8 @@ public class AerospikeTemplateIntegrationTests {
 	 * 
 	 */
 	protected static final String SET_NAME_PERSON = "Person";
+
+	protected static final String SET_NAME_ANNOTATED_PERSON = "person";
 	/**
 	 * 
 	 */
@@ -110,7 +113,26 @@ public class AerospikeTemplateIntegrationTests {
 					
 				}
 			   }, new String[] {});
-			System.out.println("Deleted "+ count + " records from set " + AerospikeTemplateIntegrationTests.SET_NAME_PERSON);
+        System.out.println("Deleted "+ count + " records from set " + AerospikeTemplateIntegrationTests.SET_NAME_PERSON);
+        client.scanAll(	scanPolicy, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_ANNOTATED_PERSON,  new ScanCallback() {
+
+
+            @Override
+            public void scanCallback(Key key, Record record)
+                    throws AerospikeException {
+
+
+                if (client.delete(null, key))
+                    count.addAndGet(1);
+			           /*
+			            * after 25,000 records delete, return print the count.
+			            */
+                if (count.get() % 10000 == 0){
+                    System.out.println("Deleted "+ count.get());
+                }
+
+            }
+        }, new String[] {});
 	}
 	
 	
@@ -451,6 +473,15 @@ public class AerospikeTemplateIntegrationTests {
 
 	}
 
+
+	@Test
+	public void testAnnotatedInsertWithKey(){
+		AnnotatedPerson customer = new AnnotatedPerson("dave-100", "Dave", "Matthews");
+		template.insert("dave-100", customer);
+		Record result = client.get(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_ANNOTATED_PERSON, "dave-100"));
+		Assert.assertEquals("Dave", result.getString("firstname"));
+		Assert.assertEquals("Matthews", result.getString("lastname"));
+	}
 }
 
 
