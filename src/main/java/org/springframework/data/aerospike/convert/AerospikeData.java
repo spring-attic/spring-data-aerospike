@@ -232,8 +232,7 @@ public class AerospikeData implements Serializable {
 		return map;
 		
 	}
-	
-	
+
 	@SuppressWarnings("unchecked")
 	public static AerospikeData convertToAerospikeData(Map binMap){
 		

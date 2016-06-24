@@ -35,10 +35,6 @@ abstract class AerospikeConverters {
 	 */
 	private AerospikeConverters() {}
 
-
-
-
-
 	public static enum LongToValueConverter implements Converter<Long, Value> {
 		INSTANCE;
 

@@ -23,14 +23,13 @@ import org.springframework.data.aerospike.repository.AerospikeRepository;
  * @author Oliver Gierke
  */
 public interface CustomerRepository extends AerospikeRepository<Customer, String> {
-	
 
 	List<Customer> findByLastname(String lastname);
 	List<Customer> findByFirstname(String firstname);
 	List<Customer> findCustomerByFirstname(String firstname);
 	List<Customer> findCustomerByAgeBetween(Integer from,Integer to);
 	List<Customer> findCustomerByFirstnameStartingWithIgnoreCase(String firstname);
-	
+
 	List<Customer> findCustomerByLastnameOrderByFirstnameAsc(String lastname);
 
 }

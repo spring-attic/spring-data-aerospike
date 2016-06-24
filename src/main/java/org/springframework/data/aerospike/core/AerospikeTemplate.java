@@ -17,6 +17,7 @@ package org.springframework.data.aerospike.core;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,10 +37,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.aerospike.convert.AerospikeData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
-import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
-import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
-import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
-import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.*;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
@@ -117,7 +115,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 * @param client must not be {@literal null}.
 	 */
 	public AerospikeTemplate(AerospikeClient client, String namespace) {
-
 		Assert.notNull(client, "Aerospike client must not be null!");
 		Assert.notNull(namespace, "Namespace cannot be null");
 		Assert.hasLength(namespace);
@@ -209,7 +206,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToInsert, data);
 			data.setID(id);
-			data.setSetName(domainType.getSimpleName());
+            data.setSetName(AerospikeSimpleTypes.getColletionName(domainType));
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
 			client.put(null, key, bins);
@@ -362,7 +359,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			data.setID(id);
-			data.setSetName(type.getSimpleName());
+			data.setSetName(AerospikeSimpleTypes.getColletionName(type));
 			// converter.write(type, data);
 			// data.setID(id);
 			this.client.delete(null, data.getKey());
@@ -701,10 +698,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 					infoString.indexOf("=") + 1, infoString.indexOf(":"));
 			n_objects = Integer.parseInt(n_objectsString);
 		}
-		// System.out.println(String.format("Total Master and Replica objects
-		// %d", n_objects));
-		// System.out.println(String.format("Total Master objects %d",
-		// (nodeCount > 1) ? n_objects/replicationCount : n_objects));
 
 		return (nodeCount > 1) ? n_objects / replicationCount : n_objects;
 	}
