@@ -18,7 +18,7 @@ final class EnumToStringConverterFactory<E extends Enum> implements ConverterFac
         private Class<T> enumType;
 
         public EnumToStringConverter(Class<T> targetType) {
-            this.enumType = enumType;
+            this.enumType = targetType;
         }
 
         @Override
