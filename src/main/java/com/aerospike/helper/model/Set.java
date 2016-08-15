@@ -75,12 +75,12 @@ public class Set {
                     storedValue.value = value;
                 }
             }
-            this.name = (String) values.get("set_name").value;
+            this.name = values.get("set") == null ? (String)values.get("set_name").value : (String)values.get("set").value;
         }
     }
 
     public void mergeSetInfo(String info) {
-        //ns_name=test:set_name=demo:n_objects=1:set-stop-write-count=0:set-evict-hwm-count=0:set-enable-xdr=use-default:set-delete=false
+	//ns=test:set=selector:objects=1000:memory_data_bytes=0:deleting=false:stop-writes-count=0:set-enable-xdr=use-default:disable-eviction=false
         if (!info.isEmpty()) {
             String[] parts = info.split(":");
             if (values == null) {
