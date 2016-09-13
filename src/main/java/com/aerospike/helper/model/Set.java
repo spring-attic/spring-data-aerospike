@@ -75,7 +75,7 @@ public class Set {
                     storedValue.value = value;
                 }
             }
-            this.name = values.get("set") == null ? (String)values.get("set_name").value : (String)values.get("set").value;
+            applySetName();
         }
     }
 
@@ -105,7 +105,7 @@ public class Set {
                     }
                 }
             }
-            this.name = (String) values.get("set_name").value;
+            applySetName();
         }
     }
 
@@ -131,4 +131,7 @@ public class Set {
         }
     }
 
+    private void applySetName(){
+        this.name = values.get("set") == null ? (String)values.get("set_name").value : (String)values.get("set").value;
+    }
 }
