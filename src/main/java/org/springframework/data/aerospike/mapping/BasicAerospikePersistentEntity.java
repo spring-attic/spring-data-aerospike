@@ -48,7 +48,7 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 	 */
 	@Override
 	public String getSetName() {
-		return typeInformation.getType().getSimpleName();
+		return AerospikeSimpleTypes.getColletionName(typeInformation.getType());
 	}
 
 	@Override

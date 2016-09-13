@@ -16,35 +16,38 @@
  */
 package com.aerospike.helper.model;
 
-public class NameValuePair{
-	public String name;
-	public Object value;
-	public NameValuePair(Object parent, String name, Object value) {
-		super();
-		this.name = name;
-		this.value = value;
-	}
-	public String getName() {
-		return name;
-	}
-	public Object getValue() {
-		return value;
-	}
-	
-	@Override
-	public String toString() {
-		return name + "|" + value.toString();
-	}
-	
-	public void clear(){
-		if (this.value != null && (this.value instanceof Long)){
-			this.value = 0L;
-		} else if (this.value != null && (this.value instanceof String)){
-			this.value = "";
-		} else if (this.value != null && (this.value instanceof Integer)){
-			this.value = 0;
-		} else if (this.value != null && (this.value instanceof Float)){
-			this.value = 0.0;
-		}
-	}
+public class NameValuePair {
+    public String name;
+    public Object value;
+
+    public NameValuePair(Object parent, String name, Object value) {
+        super();
+        this.name = name;
+        this.value = value;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return name + "|" + value.toString();
+    }
+
+    public void clear() {
+        if (this.value != null && (this.value instanceof Long)) {
+            this.value = 0L;
+        } else if (this.value != null && (this.value instanceof String)) {
+            this.value = "";
+        } else if (this.value != null && (this.value instanceof Integer)) {
+            this.value = 0;
+        } else if (this.value != null && (this.value instanceof Float)) {
+            this.value = 0.0;
+        }
+    }
 }

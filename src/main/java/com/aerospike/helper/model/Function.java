@@ -15,27 +15,27 @@
  * the License.
  */
 package com.aerospike.helper.model;
+
 /**
  * This class represents a User Defined Function
  * registered with a cluster
- * @author peter
  *
+ * @author peter
  */
-public class Function
-{
-	private String name;
+public class Function {
+    private String name;
 
-	public Function(Module parent, String name) {
-		super();
-		this.name = name;
-	}
+    public Function(Module parent, String name) {
+        super();
+        this.name = name;
+    }
 
-	public String getName() {
-		return this.name;
-	}
+    public String getName() {
+        return this.name;
+    }
 
-	@Override
-	public String toString() {
-		return getName();
-	}
+    @Override
+    public String toString() {
+        return getName();
+    }
 }
