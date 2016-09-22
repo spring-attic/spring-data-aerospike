@@ -15,9 +15,9 @@ import com.aerospike.client.Log;
  *
  */
 public final class MyLogCallback implements Log.Callback {
-    @Override
-    public void log(Log.Level level, String message) {
-        Date date = new Date();
-        System.out.println(date.toString() + ' ' + level + ' ' + message);
-    }
+	@Override
+	public void log(Log.Level level, String message) {
+		Date date = new Date();
+		System.out.println(date.toString() + ' ' + level + ' ' + message);
+	}
 }

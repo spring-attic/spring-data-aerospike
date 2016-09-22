@@ -24,24 +24,20 @@ import org.springframework.data.aerospike.core.Person;
  *
  */
 public class CachingAerospikePersistentPropertyTest {
-	
+
 	@Mock ApplicationContext applicationContext;
 
 	@Rule public ExpectedException exception = ExpectedException.none();
-	
-	AerospikeMappingContext context = null;
-	
 
+	AerospikeMappingContext context = null;
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		
 		context = new AerospikeMappingContext();
 		context.setApplicationContext(applicationContext);
-
 	}
 
 	/**
@@ -67,7 +63,6 @@ public class CachingAerospikePersistentPropertyTest {
 	public void testIsAssociation() {
 		AerospikePersistentEntity<?> entity = context.getPersistentEntity(Person.class);
 		assertFalse(entity.getIdProperty().isAssociation());
-
 	}
 
 	/**
@@ -77,7 +72,6 @@ public class CachingAerospikePersistentPropertyTest {
 	public void testUsePropertyAccess() {
 		AerospikePersistentEntity<?> entity = context.getPersistentEntity(Person.class);
 		assertFalse(entity.getIdProperty().usePropertyAccess());
-
 	}
 
 	/**
@@ -87,7 +81,6 @@ public class CachingAerospikePersistentPropertyTest {
 	public void testIsIdProperty() {
 		AerospikePersistentEntity<?> entity = context.getPersistentEntity(Person.class);
 		assertTrue(entity.getIdProperty().isIdProperty());
-
 	}
 
 	/**

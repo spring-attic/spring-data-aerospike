@@ -56,7 +56,6 @@ public class SpelQueryCreatorUnitTests {
 	RepositoryMetadata metadataMock;
 
 	static class Evaluation {
-
 		SpelExpression expression;
 		Object candidate;
 
@@ -73,11 +72,9 @@ public class SpelQueryCreatorUnitTests {
 			expression.getEvaluationContext().setVariable("it", candidate);
 			return expression.getValue(Boolean.class);
 		}
-
 	}
 
 	static class Person {
-
 		private @Id String id;
 		private String firstname, lastname;
 		private int age;
@@ -155,6 +152,7 @@ public class SpelQueryCreatorUnitTests {
 			return this;
 		}
 	}
+	
 	static interface PersonRepository {
 
 		// Type.SIMPLE_PROPERTY
@@ -210,8 +208,8 @@ public class SpelQueryCreatorUnitTests {
 
 		// Type.REGEX
 		Person findByLastnameMatches(String lastname);
-
 	}
+	
 	private Evaluation evaluate(String methodName, Object... args) throws Exception {
 		return new Evaluation((SpelExpression) createQueryForMethodWithArgs(methodName, args).getCritieria());
 	}
@@ -221,7 +219,6 @@ public class SpelQueryCreatorUnitTests {
 
 		Class<?>[] argTypes = new Class<?>[args.length];
 		if (!ObjectUtils.isEmpty(args)) {
-
 			for (int i = 0; i < args.length; i++) {
 				argTypes[i] = args[i].getClass();
 			}
@@ -238,10 +235,10 @@ public class SpelQueryCreatorUnitTests {
 		return q;
 	}
 	
-	   @Before
-	    public void setUp() {
-	        MockitoAnnotations.initMocks(this);
-	    }
+	@Before
+	public void setUp() {
+		MockitoAnnotations.initMocks(this);
+	}
 	
 	@Test
 	public void equalsReturnsTrueWhenMatching() throws Exception {

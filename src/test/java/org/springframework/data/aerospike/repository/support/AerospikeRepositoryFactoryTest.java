@@ -43,23 +43,24 @@ import org.springframework.data.repository.core.support.PersistentEntityInformat
  */
 @RunWith(MockitoJUnitRunner.class)
 public class AerospikeRepositoryFactoryTest {
-	
+
 	@Mock ApplicationContext applicationContext;
 	@Mock AerospikeTemplate template;
 	@Mock RepositoryInformation repositoryInformation;
 	@Mock AerospikeConverter converter;
+	@SuppressWarnings("rawtypes")
 	@Mock MappingContext context;
 	@Mock AerospikeRepositoryFactory aerospikeRepositoryFactoryMock;
+	@SuppressWarnings("rawtypes")
 	@Mock AerospikePersistentEntity entity;
 	@Mock AerospikeOperations aerospikeOperations;
 
-
 	@Rule public ExpectedException exception = ExpectedException.none();
-
 
 	/**
 	 * @throws java.lang.Exception
 	 */
+	@SuppressWarnings("unchecked")
 	@Before
 	public void setUp() throws Exception {
 			when(aerospikeOperations.getMappingContext()).thenReturn(context);
@@ -73,24 +74,24 @@ public class AerospikeRepositoryFactoryTest {
 	public void tearDown() throws Exception {
 	}
 
-
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.repository.support.AerospikeRepositoryFactory#getEntityInformation(java.lang.Class)}.
 	 */
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetEntityInformationClassOfT() {
 		when(context.getPersistentEntity(Person.class)).thenReturn(entity);
-		when(entity.getType()).thenReturn(Person.class);		
-		
+		when(entity.getType()).thenReturn(Person.class);
+
 		AerospikeRepositoryFactory factory = new AerospikeRepositoryFactory(aerospikeOperations);
 		EntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
 		assertTrue(entityInformation instanceof PersistentEntityInformation);
-
 	}
 
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.repository.support.AerospikeRepositoryFactory#getTargetRepository(org.springframework.data.repository.core.RepositoryInformation)}.
 	 */
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetTargetRepositoryRepositoryInformation() {
 		when(context.getPersistentEntity(Person.class)).thenReturn(entity);
@@ -98,13 +99,11 @@ public class AerospikeRepositoryFactoryTest {
 		Mockito.<Class<?>>when(repositoryInformation.getDomainType()).thenReturn(Person.class);
 		Mockito.<Class<?>>when(repositoryInformation.getRepositoryBaseClass()).thenReturn(Person.class);
 		when(aerospikeRepositoryFactoryMock.getTargetRepository(repositoryInformation)).thenReturn(new Object());
-		
+
 		Person.class.getDeclaredConstructors();
-		
+
 			Object repository = aerospikeRepositoryFactoryMock.getTargetRepository(repositoryInformation);
 		assertThat(repository, is(notNullValue()));
-
-
 	}
 
 	/**
@@ -117,9 +116,6 @@ public class AerospikeRepositoryFactoryTest {
 		AerospikeRepositoryFactory factory = new AerospikeRepositoryFactory(aerospikeOperations);
 		Class<?> repbaseClass = factory.getRepositoryBaseClass(metadata);
 		assertTrue(repbaseClass.getSimpleName().equals(SimpleKeyValueRepository.class.getSimpleName()));
-		
-		
-		
 	}
 
 }

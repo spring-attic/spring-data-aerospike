@@ -38,36 +38,20 @@ import com.aerospike.client.Value.StringValue;
  *
  */
 public class AerospikeDataTest {
-
-	/**
-	 * 
-	 */
 	private static final String AEROSPIKE_KEY = "AerospikeKey";
-	/**
-	 * 
-	 */
-	private static final long AEROSPIKE_KEY_LONG = 100L;
-	/**
-	 * 
-	 */
+	private static final long   AEROSPIKE_KEY_LONG = 100L;
 	private static final String AEROSPIKE_SET_NAME = "AerospikeSetName";
-	/**
-	 * 
-	 */
 	private static final String AEROSPIKE_NAME_SPACE = "AerospikeNameSpace";
+
 	@Mock AerospikeTemplate mockTtemplate;
 	@Mock AerospikeClient mockClient;
 	@Mock AerospikeData mockAerospikeData;
-	
-	
-	//@Mock Key key;
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		
 		MockitoAnnotations.initMocks(this);
 	}
 
@@ -83,7 +67,6 @@ public class AerospikeDataTest {
 	 */
 	@Test
 	public void testForRead() {
-		
 		Key key = new Key(AerospikeDataTest.AEROSPIKE_NAME_SPACE, AerospikeDataTest.AEROSPIKE_SET_NAME, AerospikeDataTest.AEROSPIKE_KEY);
 		AerospikeData data = AerospikeData.forRead(key, null);
 		assertEquals(key,  data.getKey());
@@ -102,7 +85,6 @@ public class AerospikeDataTest {
 		assertNull(data.getRecord());
 		assertEquals(AerospikeDataTest.AEROSPIKE_NAME_SPACE, data.getNamespace());
 		assertEquals( new ArrayList<Bin>(), data.getBins());
-		
 	}
 
 	/**
@@ -126,7 +108,6 @@ public class AerospikeDataTest {
 		data.setID(AEROSPIKE_KEY.getBytes());
 		Key key = new Key(data.getNamespace(), data.getSetName(), AEROSPIKE_KEY.getBytes());
 		assertEquals(key, data.getKey());
-		
 	}
 
 	/**
@@ -138,7 +119,6 @@ public class AerospikeDataTest {
 		data.setID(AEROSPIKE_KEY);
 		Key key = new Key(data.getNamespace(), data.getSetName(), AEROSPIKE_KEY);
 		assertEquals(key, data.getKey());
-
 	}
 
 	/**
@@ -162,7 +142,6 @@ public class AerospikeDataTest {
 		data.setID(ID);
 		Key key = new Key(data.getNamespace(), data.getSetName(), ID);
 		assertEquals(key, data.getKey());
-
 	}
 
 	/**
@@ -171,12 +150,11 @@ public class AerospikeDataTest {
 	@Test
 	public void testSetIDValue() {
 		StringValue ID = new StringValue(AEROSPIKE_KEY);
-		
+
 		AerospikeData data = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
 		data.setID(ID);
 		Key key = new Key(data.getNamespace(), data.getSetName(), ID);
 		assertEquals(key, data.getKey());
-
 	}
 
 	/**
@@ -189,15 +167,14 @@ public class AerospikeDataTest {
 		data.setID(ID);
 		Key key = new Key(data.getNamespace(), data.getSetName(), (String) ID);
 		assertEquals(key, data.getKey());
-
 	}
 
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#getRecord()}.
 	 */
+	@SuppressWarnings("serial")
 	@Test
 	public void testGetRecord() {
-		
 		int expiration = 200;
 		int generation = 200;
 
@@ -210,7 +187,7 @@ public class AerospikeDataTest {
 		Record record = new Record(bins, generation, expiration);
 
 		when(mockAerospikeData.getRecord()).thenReturn(record);
-		
+
 		assertEquals(record, mockAerospikeData.getRecord());
 	}
 
@@ -230,29 +207,28 @@ public class AerospikeDataTest {
 	public void testGetSetName() {
 		when(mockAerospikeData.getSetName()).thenReturn(AEROSPIKE_SET_NAME);
 		assertEquals(AEROSPIKE_SET_NAME, mockAerospikeData.getSetName());
-
 	}
 
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#getBins()}.
 	 */
+	@SuppressWarnings("serial")
 	@Test
 	public void testGetBins() {
-		
 		List<Bin> bins = new ArrayList<Bin>(){{
 			add(new Bin("lastname", "Weiver"));
 			add(new Bin("firstname", "Sigourney "));
 			add(new Bin("profession", "Actor"));
 		}};
-		
+
 		when(mockAerospikeData.getBins()).thenReturn(bins);
 		assertEquals(bins, mockAerospikeData.getBins());
-
 	}
 
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#getBinsAsArray()}.
 	 */
+	@SuppressWarnings("serial")
 	@Test
 	public void testGetBinsAsArray() {
 		List<Bin> bins = new ArrayList<Bin>(){{
@@ -260,19 +236,18 @@ public class AerospikeDataTest {
 			add(new Bin("firstname", "Sigourney "));
 			add(new Bin("profession", "Actor"));
 		}};
-		
+
 		when(mockAerospikeData.getBinsAsArray()).thenReturn(bins.toArray(new Bin[bins.size()]));
-		
+
 		assertArrayEquals(bins.toArray(new Bin[bins.size()]), mockAerospikeData.getBinsAsArray());
-		
 	}
 
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#add(java.util.List)}.
 	 */
+	@SuppressWarnings("serial")
 	@Test
 	public void testAddListOfBin() {
-		
 		List<Bin> bins = new ArrayList<Bin>(){{
 			add(new Bin("lastname", "Weiver"));
 			add(new Bin("firstname", "Sigourney "));
@@ -281,15 +256,14 @@ public class AerospikeDataTest {
 
 		AerospikeData data = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
 		data.add(bins);
-	
+
 		assertEquals(bins, data.getBins());
-
-
 	}
 
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#add(com.aerospike.client.Bin)}.
 	 */
+	@SuppressWarnings("serial")
 	@Test
 	public void testAddBin() {
 		List<Bin> bins = new ArrayList<Bin>(){{
@@ -299,18 +273,18 @@ public class AerospikeDataTest {
 		}};
 
 		AerospikeData data = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
-		for (Iterator iterator = bins.iterator(); iterator.hasNext();) {
-			Bin bin = (Bin) iterator.next();
-			data.add(bin);			
+		for (Iterator<Bin> iterator = bins.iterator(); iterator.hasNext();) {
+			Bin bin = iterator.next();
+			data.add(bin);
 		}
-		
-		assertEquals(bins, data.getBins());
 
+		assertEquals(bins, data.getBins());
 	}
 
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#getBinNames()}.
 	 */
+	@SuppressWarnings("serial")
 	@Test
 	public void testGetBinNames() {
 		int i = 0;
@@ -322,9 +296,9 @@ public class AerospikeDataTest {
 		String[] binNames =  new String[bins.size()];
 
 		AerospikeData data = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
-		for (Iterator iterator = bins.iterator(); iterator.hasNext();) {
-			Bin bin = (Bin) iterator.next();
-			data.add(bin);	
+		for (Iterator<Bin> iterator = bins.iterator(); iterator.hasNext();) {
+			Bin bin = iterator.next();
+			data.add(bin);
 			binNames[i++]= bin.name;
 		}
 		assertNotNull(binNames);
@@ -334,6 +308,7 @@ public class AerospikeDataTest {
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#setRecord(com.aerospike.client.Record)}.
 	 */
+	@SuppressWarnings("serial")
 	@Test
 	public void testSetRecord() {
 		int expiration = 200;
@@ -357,8 +332,7 @@ public class AerospikeDataTest {
 	@Test
 	public void testSetSetName() {
 		AerospikeData data = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
-		Serializable ID = AEROSPIKE_KEY;
-		data.setID(AEROSPIKE_KEY);		
+		data.setID(AEROSPIKE_KEY);
 		data.setSetName(AEROSPIKE_SET_NAME);
 		assertEquals(AEROSPIKE_SET_NAME, data.getKey().setName);
 		assertEquals(AEROSPIKE_KEY, data.getKey().userKey.toString());
@@ -368,6 +342,7 @@ public class AerospikeDataTest {
 	/**
 	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#getSpringId()}.
 	 */
+	@SuppressWarnings("serial")
 	@Test
 	public void testGetSpringId() {
 		int expiration = 200;

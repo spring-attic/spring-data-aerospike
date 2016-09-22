@@ -62,7 +62,7 @@ public class AerospikeCacheMangerTests {
 		assertNotNull("Cache instance was null", cache);
 		assertTrue("Cache was not an instance of AerospikeCache", cache instanceof AerospikeCache);
 	}
-	
+
 	@Test
 	public void testDefaultCache() {
 		AerospikeCacheManager manager = new AerospikeCacheManager(client,
@@ -72,7 +72,7 @@ public class AerospikeCacheMangerTests {
 		assertNotNull("Cache instance was null", cache);
 		assertTrue("Cache was not an instance of AerospikeCache", cache instanceof AerospikeCache);
 	}
-	
+
 	@Test
 	public void testDefaultCacheWithCustomizedSet() {
 		AerospikeCacheManager manager = new AerospikeCacheManager(client,
@@ -82,7 +82,7 @@ public class AerospikeCacheMangerTests {
 		assertNotNull("Cache instance was null", cache);
 		assertTrue("Cache was not an instance of AerospikeCache", cache instanceof AerospikeCache);
 	}
-	
+
 	@Test
 	public void testTransactionAwareCache() {
 		AerospikeCacheManager manager = new AerospikeCacheManager(client);
@@ -92,7 +92,7 @@ public class AerospikeCacheMangerTests {
 		assertNotNull("Cache instance was null", cache);
 		assertTrue("Cache was not an instance of TransactionAwareCacheDecorator", cache instanceof TransactionAwareCacheDecorator);
 	}
-	
+
 	@Test
 	public void testCacheable() {
 		cleanupForCacheableTest();
@@ -112,7 +112,7 @@ public class AerospikeCacheMangerTests {
 			cleanupForCacheableTest();
 		}
 	}
-	
+
 	@Test
 	public void testCacheEviction() {
 		cleanupForCacheableTest();
@@ -137,7 +137,7 @@ public class AerospikeCacheMangerTests {
 	private void cleanupForCacheableTest() {
 		client.delete(null, new Key("test", AerospikeCacheManager.DEFAULT_SET_NAME, "foo"));
 	}
-	
+
 	public static class CachedObject {
 		private String value;
 
@@ -149,19 +149,19 @@ public class AerospikeCacheMangerTests {
 			return value;
 		}
 	}
-	
+
 	public static class CachingComponent {
 		private int noOfCalls = 0;
-		
+
 		@Cacheable("test")
 		public CachedObject cachingMethod(String param) {
 			noOfCalls ++;
 			return new CachedObject("bar");
 		}
-		
+
 		@CacheEvict("test")
 		public void cacheEvictingMethod(String param) {
-			
+
 		}
 
 		public int getNoOfCalls() {

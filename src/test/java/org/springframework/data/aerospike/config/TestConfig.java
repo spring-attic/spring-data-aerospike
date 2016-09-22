@@ -28,7 +28,7 @@ import com.aerospike.client.policy.ClientPolicy;
 @EnableAerospikeRepositories(basePackageClasses = ContactRepository.class)
 @EnableCaching
 public class TestConfig extends CachingConfigurerSupport {
-	
+
 	public @Bean(destroyMethod = "close") AerospikeClient aerospikeClient() {
 
 		ClientPolicy policy = new ClientPolicy();
@@ -47,7 +47,7 @@ public class TestConfig extends CachingConfigurerSupport {
 	public @Bean AerospikeCacheManager cacheManager() {
 		return new AerospikeCacheManager(aerospikeClient());
 	}
-	
+
 	public @Bean CachingComponent cachingComponent() {
 		return new CachingComponent();
 	}

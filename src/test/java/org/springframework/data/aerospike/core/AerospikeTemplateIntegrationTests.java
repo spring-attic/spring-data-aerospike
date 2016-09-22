@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *	  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,17 +43,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
 
-import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.AerospikeException;
-import com.aerospike.client.Bin;
-import com.aerospike.client.Key;
-import com.aerospike.client.Record;
-import com.aerospike.client.ScanCallback;
+import com.aerospike.client.*;
 import com.aerospike.client.policy.ScanPolicy;
-import com.aerospike.client.query.Filter;
-import com.aerospike.client.query.IndexType;
-import com.aerospike.client.query.RecordSet;
-import com.aerospike.client.query.Statement;
+import com.aerospike.client.query.*;
 import com.aerospike.client.task.IndexTask;
 
 /**
@@ -65,30 +57,19 @@ import com.aerospike.client.task.IndexTask;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {TestConfig.class})
 public class AerospikeTemplateIntegrationTests {
-
-	/**
-	 * 
-	 */
+	
 	protected static final String SET_NAME_PERSON = "Person";
-
 	protected static final String SET_NAME_ANNOTATED_PERSON = "person";
-	/**
-	 * 
-	 */
 	protected static final String NAME_SPACE_TEST = "test";
+
 	@Configuration
 	@EnableAerospikeRepositories(basePackageClasses = AerospikeTemplate.class)
-	static class Config extends TestConfig {
-
-	}
-	//@Autowired AerospikeOperations operations;
+	static class Config extends TestConfig { }
 
 	@Autowired AerospikeTemplate template;
 	@Autowired AerospikeClient client;
-	
+
 	DefaultRepositoryMetadata  repositoryMetaData =  new DefaultRepositoryMetadata(ContactRepository.class);
-	
-	
 
 	@Before
 	public void cleanUp(){
@@ -96,47 +77,40 @@ public class AerospikeTemplateIntegrationTests {
 		scanPolicy.includeBinData = false;
 		final AtomicLong count = new AtomicLong();
 		client.scanAll(	scanPolicy, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON,  new ScanCallback() {
-
-				
 				@Override
 				public void scanCallback(Key key, Record record)
 						throws AerospikeException {
 
-
 					if (client.delete(null, key)) 
 						count.addAndGet(1);
-			           /*
-			            * after 25,000 records delete, return print the count.
-			            */
-			           if (count.get() % 10000 == 0){
-			               System.out.println("Deleted "+ count.get());
-			           }
-					
+						/*
+						 * after 10,000 records delete, return print the count.
+						 */
+						if (count.get() % 10000 == 0){
+							System.out.println("Deleted "+ count.get());
+						}
+
 				}
-			   }, new String[] {});
-        System.out.println("Deleted "+ count + " records from set " + AerospikeTemplateIntegrationTests.SET_NAME_PERSON);
-        client.scanAll(	scanPolicy, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_ANNOTATED_PERSON,  new ScanCallback() {
+		}, new String[] {});
+		System.out.println("Deleted "+ count + " records from set " + AerospikeTemplateIntegrationTests.SET_NAME_PERSON);
+		client.scanAll(	scanPolicy, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_ANNOTATED_PERSON,  new ScanCallback() {
+			@Override
+			public void scanCallback(Key key, Record record)
+					throws AerospikeException {
 
 
-            @Override
-            public void scanCallback(Key key, Record record)
-                    throws AerospikeException {
+				if (client.delete(null, key))
+					count.addAndGet(1);
+					   /*
+						* after 10,000 records delete, return print the count.
+						*/
+				if (count.get() % 10000 == 0){
+					System.out.println("Deleted "+ count.get());
+				}
 
-
-                if (client.delete(null, key))
-                    count.addAndGet(1);
-			           /*
-			            * after 25,000 records delete, return print the count.
-			            */
-                if (count.get() % 10000 == 0){
-                    System.out.println("Deleted "+ count.get());
-                }
-
-            }
-        }, new String[] {});
+			}
+		}, new String[] {});
 	}
-	
-	
 
 	@Test
 	public void testInsertWithKey(){
@@ -146,6 +120,7 @@ public class AerospikeTemplateIntegrationTests {
 		Assert.assertEquals("Dave", result.getString("firstname"));
 		Assert.assertEquals("Matthews", result.getString("lastname"));
 	}
+
 	@Test
 	public void testUpdateWithKey(){
 		Person customer = new Person("dave-001", "Dave", "Matthews");
@@ -156,6 +131,7 @@ public class AerospikeTemplateIntegrationTests {
 		customer = template.findById("dave-001", Person.class);
 		Assert.assertEquals("Matthewsxx", customer.getLastname());
 	}
+
 	@Test
 	public void testInsert(){
 		Person customer = new Person("dave-002", "Dave", "Matthews");
@@ -164,6 +140,7 @@ public class AerospikeTemplateIntegrationTests {
 		Assert.assertEquals("Dave", result.getString("firstname"));
 		Assert.assertEquals("Matthews", result.getString("lastname"));
 	}
+
 	@Test
 	public void testFindByKey(){
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-003"), new Bin("firstname", "Dave"), 
@@ -171,8 +148,8 @@ public class AerospikeTemplateIntegrationTests {
 		Person result = template.findById("dave-003", Person.class);
 		Assert.assertEquals("Matthews", result.getLastname());
 		Assert.assertEquals("Dave", result.getFirstname());
-
 	}
+
 	@Test
 	public void testSingleIncrement(){
 		Person customer = new Person("dave-002", "Dave", "Matthews");
@@ -182,6 +159,7 @@ public class AerospikeTemplateIntegrationTests {
 		Assert.assertEquals(1, result.getInt("age"));
 		Assert.assertEquals((Integer)result.getInt("age"), customer.getAge());
 	}
+
 	@Test
 	public void testMultipleIncrement(){
 		Person customer = new Person("dave-002", "Dave", "Matthews");
@@ -194,6 +172,7 @@ public class AerospikeTemplateIntegrationTests {
 		Assert.assertEquals(1, result.getInt("age"));
 		Assert.assertEquals((Integer)result.getInt("age"), customer.getAge());
 	}
+
 	@Test
 	public void testDelete(){
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin("firstname", "Dave"), 
@@ -203,6 +182,7 @@ public class AerospikeTemplateIntegrationTests {
 		if ( client.exists(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001")))
 			Assert.fail("dave-001 was not deleted");
 	}
+
 	@Test
 	public void testFindAll(){
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin("firstname", "Dave"), 
@@ -227,9 +207,9 @@ public class AerospikeTemplateIntegrationTests {
 				new Bin ("lastname", "Matthews"));
 		List<Person> list = template.findAll(Person.class);
 		Assert.assertEquals(10, list.size());
-
 	}
-	
+
+	@SuppressWarnings("unchecked")
 	private <T> Query<T> createQueryForMethodWithArgs(String methodName, Object... args)
 			throws NoSuchMethodException, SecurityException {
 
@@ -246,16 +226,17 @@ public class AerospikeTemplateIntegrationTests {
 		PartTree partTree = new PartTree(method.getName(), Person.class);
 		AerospikeQueryCreator creator = new AerospikeQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,repositoryMetaData).getParameters(), args));
 
-		Query q = creator.createQuery();
-		
+		Query<T> q = creator.createQuery();
 
 		return q;
 	}
+
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void testFindWithFilterEqual() throws NoSuchMethodException, Exception{
 		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "first_name_index", "firstname", IndexType.STRING);
 		task.waitTillComplete();
-		
+
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-003"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
@@ -266,9 +247,9 @@ public class AerospikeTemplateIntegrationTests {
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-008"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-009"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
-		
+
 		Query query = createQueryForMethodWithArgs("findPersonByFirstname", "Dave");
-		
+
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
 		for (Person customer : it){
@@ -276,16 +257,16 @@ public class AerospikeTemplateIntegrationTests {
 			count++;
 		}
 		Assert.assertEquals(10, count);
-	
-
 	}
+
+	@SuppressWarnings("rawtypes")
 	@Test 
 	public void testFindWithFilterEqualOrderBy() throws NoSuchMethodException, Exception{
 		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);
 		task.waitTillComplete();
 		IndexTask task2 = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "last_name_index", "lastname", IndexType.STRING);
 		task2.waitTillComplete();
-		
+
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
 				"firstname", "Jean"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 21));
@@ -316,9 +297,9 @@ public class AerospikeTemplateIntegrationTests {
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin(
 				"firstname", "Aabbbt"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 30));
-		
+
 		Query query = createQueryForMethodWithArgs("findByLastnameOrderByFirstnameAsc","Matthews");
-		
+
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
 		for (Person person : it){
@@ -326,16 +307,16 @@ public class AerospikeTemplateIntegrationTests {
 			count++;
 		}
 		Assert.assertEquals(10, count);
-	
-
 	}
+
+	@SuppressWarnings("rawtypes")
 	@Test 
 	public void testFindWithFilterEqualOrderByDesc() throws NoSuchMethodException, Exception{
 		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);
 		task.waitTillComplete();
 		IndexTask task2 = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "last_name_index", "lastname", IndexType.STRING);
 		task2.waitTillComplete();
-		
+
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
 				"firstname", "Jean"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 21));
@@ -366,9 +347,9 @@ public class AerospikeTemplateIntegrationTests {
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin(
 				"firstname", "Aabbbt"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 30));
-		
+
 		Query query = createQueryForMethodWithArgs("findByLastnameOrderByFirstnameDesc","Matthews");
-		
+
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
 		for (Person person : it){
@@ -376,14 +357,14 @@ public class AerospikeTemplateIntegrationTests {
 			count++;
 		}
 		Assert.assertEquals(10, count);
-	
+	}
 
-	}	
+	@SuppressWarnings("rawtypes")
 	@Test
 	public void testFindWithFilterRange() throws NoSuchMethodException, Exception{
 		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);
 		task.waitTillComplete();
-		
+
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
 				"firstname", "Dave01"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 21));
@@ -414,9 +395,9 @@ public class AerospikeTemplateIntegrationTests {
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin(
 				"firstname", "Dave10"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 30));
-		
+
 		Query query = createQueryForMethodWithArgs("findCustomerByAgeBetween", 25,30);
-		
+
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
 		for (Person person : it){
@@ -424,14 +405,13 @@ public class AerospikeTemplateIntegrationTests {
 			count++;
 		}
 		Assert.assertEquals(6, count);
-	
-
 	}
+
 	@Test
 	public void testFindWithStatement(){
 		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "first_name_index", "firstname", IndexType.STRING);
 		task.waitTillComplete();
-		
+
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin("firstname", "Dave"), 
 				new Bin ("lastname", "Matthews"));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"), new Bin("firstname", "Dave"), 
@@ -452,28 +432,24 @@ public class AerospikeTemplateIntegrationTests {
 				new Bin ("lastname", "Matthews"));
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin("firstname", "Dave"), 
 				new Bin ("lastname", "Matthews"));
-		
-	Statement aerospikeQuery = new Statement();
-	String[] bins = {"firstname","lastname"}; //fields we want retrieved
-	aerospikeQuery.setNamespace(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST); // Database
-	aerospikeQuery.setSetName(AerospikeTemplateIntegrationTests.SET_NAME_PERSON); //Table
-	aerospikeQuery.setBinNames(bins);
-	aerospikeQuery.setFilters(Filter.equal("firstname","Dave")); //Query
-	
 
-	RecordSet rs =  client.query(null, aerospikeQuery);
-	int count = 0;
-	while (rs.next()) {		
-		Record r = rs.getRecord();
-		System.out.print(r.getValue("lastname")+ ","+r.getValue("firstname"));
-		count++;
-	}
+		Statement aerospikeQuery = new Statement();
+		String[] bins = {"firstname","lastname"}; //fields we want retrieved
+		aerospikeQuery.setNamespace(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST); // Database
+		aerospikeQuery.setSetName(AerospikeTemplateIntegrationTests.SET_NAME_PERSON); //Table
+		aerospikeQuery.setBinNames(bins);
+		aerospikeQuery.setFilters(Filter.equal("firstname","Dave")); //Query
 
+		RecordSet rs =  client.query(null, aerospikeQuery);
+		int count = 0;
+		while (rs.next()) {
+			Record r = rs.getRecord();
+			System.out.print(r.getValue("lastname")+ ","+r.getValue("firstname"));
+			count++;
+		}
 
 		Assert.assertEquals(10, count);
-
 	}
-
 
 	@Test
 	public void testAnnotatedInsertWithKey(){
@@ -484,5 +460,4 @@ public class AerospikeTemplateIntegrationTests {
 		Assert.assertEquals("Matthews", result.getString("lastname"));
 	}
 }
-
 

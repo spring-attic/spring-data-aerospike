@@ -19,25 +19,16 @@ import org.springframework.data.annotation.Id;
  */
 public class Person {
 	private @Id String id;
-
 	private String firstName;
-
 	private int age;
-	
 	private Map<String, String> map;
-
 	private Person friend;
-
 	private boolean active = true;
-	
 	private Date dateOfBirth;
-	
 	private ArrayList<String> list;
-	
+
 	@Field("email") 
 	private String emailAddress;
-
-
 
 	@Override
 	public String toString() {
@@ -47,13 +38,10 @@ public class Person {
 				+ ", emailAddress=" + emailAddress + "]";
 	}
 
-	/**
-	 * 
-	 */
 	public Person() {
 		super();
 	}
-	
+
 	public Person(String id, String firstname) {
 		this.id = id;
 		this.firstName = firstname;
@@ -64,8 +52,6 @@ public class Person {
 		this.firstName = firstname;
 		this.age = age;
 	}
-
-
 
 	public String getId() {
 		return id;
@@ -207,6 +193,5 @@ public class Person {
 	public void setEmailAddress(String emailAddress) {
 		this.emailAddress = emailAddress;
 	}
-	
-	
+
 }

@@ -57,16 +57,16 @@ public class AerospikeMetadataBinTest {
 	@Test
 	public void testSetAerospikeMetaDataBin() {
 		HashMap<String, Object> myMap;
-	    {
-	        myMap = new HashMap<String, Object>();
-	        myMap.put("one", "1");
-	        myMap.put("two", "2");
-	    };
+		{
+			myMap = new HashMap<String, Object>();
+			myMap.put("one", "1");
+			myMap.put("two", "2");
+		};
 
 		AerospikeMetadataBin aerospikeMetadataBin = new AerospikeMetadataBin();
 		Bin bin = new Bin("biff", myMap);
 		aerospikeMetadataBin.setAerospikeMetaDataBin(bin);
-		
+	
 		assertThat(((Bin)aerospikeMetadataBin.getAerospikeMetaDataBin()).value.getObject(), instanceOf(Map.class));
 	}
 
@@ -76,16 +76,15 @@ public class AerospikeMetadataBinTest {
 	@Test
 	public void testGetAerospikeMetaDataBin() {
 		HashMap<String, Object> myMap;
-	    {
-	        myMap = new HashMap<String, Object>();
-	        myMap.put("one", "1");
-	        myMap.put("two", "2");
-	    };
+		{
+			myMap = new HashMap<String, Object>();
+			myMap.put("one", "1");
+			myMap.put("two", "2");
+		};
 
 		AerospikeMetadataBin aerospikeMetadataBin = new AerospikeMetadataBin();
 		aerospikeMetadataBin.setAerospikeMetaDataBin(new Bin(AerospikeMetadataBin.AEROSPIKE_META_DATA,myMap));
 		assertThat((Bin)aerospikeMetadataBin.getAerospikeMetaDataBin(),is(new Bin(AerospikeMetadataBin.AEROSPIKE_META_DATA,myMap)));
-
 	}
 
 	/**
@@ -96,7 +95,6 @@ public class AerospikeMetadataBinTest {
 		AerospikeMetadataBin aerospikeMetadataBin = new AerospikeMetadataBin();
 		aerospikeMetadataBin.addKeyValuetoAerospikeMetaData("biff", "biffer");
 		assertThat((String)aerospikeMetadataBin.getAerospikeMetaDataUsingKey("biff"), is("biffer"));
-		
 	}
 
 	/**
@@ -107,7 +105,6 @@ public class AerospikeMetadataBinTest {
 		AerospikeMetadataBin aerospikeMetadataBin = new AerospikeMetadataBin();
 		aerospikeMetadataBin.addKeyValuetoAerospikeMetaData("biff", "Aerospike");
 		assertThat((String)aerospikeMetadataBin.getAerospikeMetaDataUsingKey("biff"), is("Aerospike"));
-
 	}
 
 	/**
@@ -116,18 +113,14 @@ public class AerospikeMetadataBinTest {
 	@Test
 	public void testAddMap() {
 		HashMap<String, Object> myMap;
-	    {
-	        myMap = new HashMap<String, Object>();
-	        myMap.put("one", "1");
-	        myMap.put("two", "2");
-	    };
-	    AerospikeMetadataBin aerospikeMetadataBin = new AerospikeMetadataBin();
-	    aerospikeMetadataBin.addMap(myMap);
-	    assertThat((String)aerospikeMetadataBin.getAerospikeMetaDataUsingKey("one"), is("1"));
-	    
+		{
+			myMap = new HashMap<String, Object>();
+			myMap.put("one", "1");
+			myMap.put("two", "2");
+		};
+		AerospikeMetadataBin aerospikeMetadataBin = new AerospikeMetadataBin();
+		aerospikeMetadataBin.addMap(myMap);
+		assertThat((String)aerospikeMetadataBin.getAerospikeMetaDataUsingKey("one"), is("1"));
 	}
-	
-	
-
 
 }
