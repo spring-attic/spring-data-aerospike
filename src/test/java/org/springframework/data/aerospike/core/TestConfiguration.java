@@ -15,18 +15,22 @@
  */
 package org.springframework.data.aerospike.core;
 
+import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.aerospike.TestConstants;
 import org.springframework.data.aerospike.MyLogCallback;
+import org.springframework.data.aerospike.TestConstants;
+import org.springframework.data.aerospike.cache.AerospikeCacheManager;
+import org.springframework.data.aerospike.cache.AerospikeCacheMangerTests.CachingComponent;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Log;
 import com.aerospike.client.policy.ClientPolicy;
 
-public class TestConfiguration {
+@EnableCaching
+public class TestConfiguration extends CachingConfigurerSupport {
 
 	public @Bean(destroyMethod = "close") AerospikeClient aerospikeClient() {
-
 		ClientPolicy policy = new ClientPolicy();
 		policy.failIfNotConnected = true;
 		policy.timeout = TestConstants.AS_TIMEOUT;
@@ -44,4 +48,11 @@ public class TestConfiguration {
 		return new AerospikeTemplate(aerospikeClient(), "test"); // TODO verify correct place for namespace
 	}
 	
+	public @Bean AerospikeCacheManager cacheManager() {
+		return new AerospikeCacheManager(aerospikeClient());
+	}
+	
+	public @Bean CachingComponent cachingComponent() {
+		return new CachingComponent();
+	}
 }
