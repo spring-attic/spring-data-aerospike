@@ -26,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.aerospike.core.TestConfiguration;
+import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 import org.springframework.data.aerospike.sample.Customer;
 import org.springframework.data.aerospike.sample.CustomerRepository;
@@ -44,7 +44,7 @@ public class CustomerRepositoriesIntegrationTests {
 
 	@Configuration
 	@EnableAerospikeRepositories(basePackageClasses = CustomerRepository.class)
-	static class Config extends TestConfiguration {
+	static class Config extends TestConfig {
 
 	}
 

@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.repository.AnnotatedPerson;
 import org.springframework.data.aerospike.repository.ContactRepository;
 import org.springframework.data.aerospike.repository.Person;
@@ -62,7 +63,7 @@ import com.aerospike.client.task.IndexTask;
  * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestConfiguration.class})
+@ContextConfiguration(classes = {TestConfig.class})
 public class AerospikeTemplateIntegrationTests {
 
 	/**
@@ -77,7 +78,7 @@ public class AerospikeTemplateIntegrationTests {
 	protected static final String NAME_SPACE_TEST = "test";
 	@Configuration
 	@EnableAerospikeRepositories(basePackageClasses = AerospikeTemplate.class)
-	static class Config extends TestConfiguration {
+	static class Config extends TestConfig {
 
 	}
 	//@Autowired AerospikeOperations operations;
