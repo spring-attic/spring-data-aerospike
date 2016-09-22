@@ -22,18 +22,20 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.CachingConfigurerSupport;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.transaction.TransactionAwareCacheDecorator;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.aerospike.core.AerospikeTemplate;
+import org.springframework.data.aerospike.core.TestConfiguration;
+import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Key;
@@ -42,20 +44,16 @@ import com.aerospike.client.Key;
  * 
  * @author Venil Noronha
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = {TestConfiguration.class})
 public class AerospikeCacheMangerTests {
 
-	private static AerospikeClient client;
+	@Configuration
+	@EnableAerospikeRepositories(basePackageClasses = AerospikeTemplate.class)
+	static class Config extends TestConfiguration { }
 
-	@BeforeClass
-	public static void setUp() {
-		client = new AerospikeClient("localhost", 3000);
-	}
-	
-	@AfterClass
-	public static void tearDown() {
-		client.close();
-	}
-	
+	@Autowired AerospikeClient client;
+
 	@Test
 	public void testMissingCache() {
 		AerospikeCacheManager manager = new AerospikeCacheManager(client);
@@ -98,7 +96,7 @@ public class AerospikeCacheMangerTests {
 	@Test
 	public void testCacheable() {
 		cleanupForCacheableTest();
-		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CachingConfiguration.class);
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(TestConfiguration.class);
 		try {
 			CachingComponent cachingComponent = ctx.getBean(CachingComponent.class);
 			CachedObject response1 = cachingComponent.cachingMethod("foo");
@@ -118,7 +116,7 @@ public class AerospikeCacheMangerTests {
 	@Test
 	public void testCacheEviction() {
 		cleanupForCacheableTest();
-		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(CachingConfiguration.class);
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(TestConfiguration.class);
 		try {
 			CachingComponent cachingComponent = ctx.getBean(CachingComponent.class);
 			CachedObject response1 = cachingComponent.cachingMethod("foo");
@@ -141,7 +139,6 @@ public class AerospikeCacheMangerTests {
 	}
 	
 	public static class CachedObject {
-		
 		private String value;
 
 		public CachedObject(String value) {
@@ -151,11 +148,9 @@ public class AerospikeCacheMangerTests {
 		public String getValue() {
 			return value;
 		}
-
 	}
 	
 	public static class CachingComponent {
-		
 		private int noOfCalls = 0;
 		
 		@Cacheable("test")
@@ -172,23 +167,6 @@ public class AerospikeCacheMangerTests {
 		public int getNoOfCalls() {
 			return noOfCalls;
 		}
-		
 	}
-	
-	@Configuration
-	@EnableCaching
-	public static class CachingConfiguration extends CachingConfigurerSupport {
-		
-		@Bean
-		public AerospikeCacheManager cacheManager() {
-			return new AerospikeCacheManager(client);
-		}
-		
-		@Bean
-		public CachingComponent cachingComponent() {
-			return new CachingComponent();
-		}
-		
-	}
-	
+
 }
