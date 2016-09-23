@@ -51,6 +51,7 @@ public class CachingAerospikePersistentProperty extends BasicAerospikePersistent
 			FieldNamingStrategy fieldNamingStrategy) {
 		super(field, propertyDescriptor, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
+
 	@Override
 	public boolean isIdProperty() {
 
@@ -60,6 +61,7 @@ public class CachingAerospikePersistentProperty extends BasicAerospikePersistent
 
 		return this.isIdProperty;
 	}
+
 	@Override
 	public boolean isAssociation() {
 		if (this.isAssociation == null) {
@@ -67,6 +69,7 @@ public class CachingAerospikePersistentProperty extends BasicAerospikePersistent
 		}
 		return this.isAssociation;
 	}
+
 	@Override
 	public String getFieldName() {
 
@@ -76,6 +79,7 @@ public class CachingAerospikePersistentProperty extends BasicAerospikePersistent
 
 		return this.fieldName;
 	}
+
 	@Override
 	public boolean usePropertyAccess() {
 
@@ -85,6 +89,7 @@ public class CachingAerospikePersistentProperty extends BasicAerospikePersistent
 
 		return this.usePropertyAccess;
 	}
+
 	@Override
 	public boolean isTransient() {
 

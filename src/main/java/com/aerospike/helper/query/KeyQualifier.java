@@ -24,34 +24,36 @@ import com.aerospike.client.Value;
  * @author peter
  */
 public class KeyQualifier extends Qualifier {
-    boolean hasDigest = false;
 
-    public KeyQualifier(Value value) {
-        super(QueryEngine.Meta.KEY.toString(), FilterOperation.EQ, value);
-    }
+	private static final long serialVersionUID = 2430949321378171078L;
+	
+	boolean hasDigest = false;
 
-    public KeyQualifier(byte[] digest) {
-        super(QueryEngine.Meta.KEY.toString(), FilterOperation.EQ, null);
-        this.internalMap.put("digest", digest);
-        this.hasDigest = true;
-    }
+	public KeyQualifier(Value value) {
+		super(QueryEngine.Meta.KEY.toString(), FilterOperation.EQ, value);
+	}
 
-    @Override
-    protected String luaFieldString(String field) {
-        return "digest";
-    }
+	public KeyQualifier(byte[] digest) {
+		super(QueryEngine.Meta.KEY.toString(), FilterOperation.EQ, null);
+		this.internalMap.put("digest", digest);
+		this.hasDigest = true;
+	}
 
-    public byte[] getDigest() {
-        return (byte[]) this.internalMap.get("digest");
-    }
+	@Override
+	protected String luaFieldString(String field) {
+		return "digest";
+	}
 
-    public Key makeKey(String namespace, String set) {
-        if (hasDigest) {
-            byte[] digest = getDigest();
-            return new Key(namespace, digest, null, null);
-        } else {
-            return new Key(namespace, set, getValue1());
-        }
+	public byte[] getDigest() {
+		return (byte[]) this.internalMap.get("digest");
+	}
 
-    }
+	public Key makeKey(String namespace, String set) {
+		if (hasDigest) {
+			byte[] digest = getDigest();
+			return new Key(namespace, digest, null, null);
+		} else {
+			return new Key(namespace, set, getValue1());
+		}
+	}
 }

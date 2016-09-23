@@ -43,7 +43,6 @@ public class BatchPolicyFactoryBean extends ReadPolicyFactoryBean {
 		this.policy.maxConcurrentThreads = maxConcurrentThreads;
 	}
 	
-
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()

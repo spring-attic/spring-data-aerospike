@@ -5,7 +5,6 @@ package org.springframework.data.aerospike.repository.support;
 import java.io.Serializable;
 
 import org.springframework.data.aerospike.core.AerospikeOperations;
-import org.springframework.data.keyvalue.core.KeyValueOperations;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
@@ -25,7 +24,6 @@ RepositoryFactoryBeanSupport<T, S, ID> {
 	private AerospikeOperations operations;
 	private Class<? extends AbstractQueryCreator<?, ?>> queryCreator;
 
-
 	@Override
 	public void setMappingContext(MappingContext<?, ?> mappingContext) {
 		super.setMappingContext(mappingContext);
@@ -34,7 +32,6 @@ RepositoryFactoryBeanSupport<T, S, ID> {
 	public void setOperations(AerospikeOperations operations) {
 		this.operations = operations;
 	}
-
 
 	public void setQueryCreator(
 			Class<? extends AbstractQueryCreator<?, ?>> queryCreator) {

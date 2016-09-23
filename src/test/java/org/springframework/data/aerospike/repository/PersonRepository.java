@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 //import java.util.stream.Stream;
+import java.util.Set;
 
 import org.springframework.data.aerospike.repository.Person.Sex;
 import org.springframework.data.domain.Page;
@@ -47,7 +48,8 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	List<Person> findByAgeBetween(int from, int to);
 
-	Person findByShippingAddresses(Address address);
+	@SuppressWarnings("rawtypes")
+	Person findByShippingAddresses(Set address);
 
 	List<Person> findByAddress(Address address);
 

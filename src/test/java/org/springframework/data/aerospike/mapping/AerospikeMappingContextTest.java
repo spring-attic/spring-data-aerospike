@@ -55,7 +55,6 @@ public class AerospikeMappingContextTest {
 		
 		AerospikePersistentEntity<?> entity = context.getPersistentEntity(Person.class);
 		assertThat(entity.getPersistentProperty("firstName").getField().getName(), is("firstName"));
-		
 	}
 
 	/**
@@ -69,9 +68,6 @@ public class AerospikeMappingContextTest {
 		
 		AerospikePersistentEntity<?> entity = context.getPersistentEntity(Person.class);
 		assertThat(entity.getTypeInformation().getType().getSimpleName(), is(Person.class.getSimpleName()));
-		
 	}
-
-
 
 }

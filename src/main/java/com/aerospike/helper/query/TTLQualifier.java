@@ -24,13 +24,16 @@ import com.aerospike.client.Value;
  */
 @Deprecated
 public class TTLQualifier extends Qualifier {
-    public TTLQualifier(Value value) {
-        super(QueryEngine.Meta.TTL.toString(), FilterOperation.EQ, value);
-    }
 
-    @Override
-    protected String luaFieldString(String field) {
-        return "expiry";
-    }
+	private static final long serialVersionUID = 6046689757998013095L;
+
+	public TTLQualifier(Value value) {
+		super(QueryEngine.Meta.TTL.toString(), FilterOperation.EQ, value);
+	}
+
+	@Override
+	protected String luaFieldString(String field) {
+		return "expiry";
+	}
 
 }

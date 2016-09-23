@@ -23,12 +23,14 @@ import com.aerospike.client.Value;
  * @author peter
  */
 public class ExpiryQualifier extends Qualifier {
-    public ExpiryQualifier(FilterOperation op, Value value) {
-        super(QueryEngine.Meta.EXPIRATION.toString(), op, value);
-    }
+	private static final long serialVersionUID = 13172814137477042L;
 
-    @Override
-    protected String luaFieldString(String field) {
-        return "expiry";
-    }
+	public ExpiryQualifier(FilterOperation op, Value value) {
+		super(QueryEngine.Meta.EXPIRATION.toString(), op, value);
+	}
+
+	@Override
+	protected String luaFieldString(String field) {
+		return "expiry";
+	}
 }

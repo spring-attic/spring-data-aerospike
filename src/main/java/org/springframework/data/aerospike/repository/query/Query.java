@@ -3,8 +3,6 @@
  */
 package org.springframework.data.aerospike.repository.query;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,8 +10,8 @@ import java.util.Map;
 import org.springframework.data.aerospike.InvalidAerospikeDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 
-import com.aerospike.client.query.Filter;
 import com.aerospike.helper.query.Qualifier;
 
 /**
@@ -27,11 +25,8 @@ import com.aerospike.helper.query.Qualifier;
 public class Query<T> {
 
 	private Sort sort;
-
 	private int offset = -1;
-
 	private int rows = -1;
-
 	private final Map<String, CriteriaDefinition> criteria = new LinkedHashMap<String, CriteriaDefinition>();
 
 	/**
@@ -57,7 +52,7 @@ public class Query<T> {
 	 * @return
 	 * @since 1.6
 	 */
-	public Query addCriteria(CriteriaDefinition criteriaDefinition) {
+	public Query<?> addCriteria(CriteriaDefinition criteriaDefinition) {
 
 		CriteriaDefinition existing = this.criteria
 				.get(criteriaDefinition.getKey());
@@ -93,7 +88,6 @@ public class Query<T> {
 	 */
 	@SuppressWarnings("unchecked")
 	public T getCritieria() {
-
 		T value = null;
 		for (Map.Entry<String, CriteriaDefinition> entry : this.criteria
 				.entrySet()) {
@@ -164,7 +158,6 @@ public class Query<T> {
 	 * @return
 	 */
 	public Query<T> orderBy(Sort sort) {
-
 		if (sort == null) {
 			return this;
 		}
@@ -202,7 +195,7 @@ public class Query<T> {
 	 * @param sort
 	 * @return
 	 */
-	public Query with(Sort sort) {
+	public Query<?> with(Sort sort) {
 		if (sort == null) {
 			return this;
 		}

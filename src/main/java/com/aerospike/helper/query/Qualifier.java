@@ -59,284 +59,282 @@ import com.aerospike.client.query.IndexCollectionType;
  * @author Peter Milne
  */
 public class Qualifier implements Map<String, Object>, Serializable {
-    private static final long serialVersionUID = -2689196529952712849L;
-    private static final String FIELD = "field";
-    private static final String VALUE2 = "value2";
-    private static final String VALUE1 = "value1";
-    private static final String OPERATION = "operation";
-    private static final String COLLECTION_OPERATION = "collection-operation";
-    protected Map<String, Object> internalMap;
+	private static final long serialVersionUID = -2689196529952712849L;
+	private static final String FIELD = "field";
+	private static final String VALUE2 = "value2";
+	private static final String VALUE1 = "value1";
+	private static final String OPERATION = "operation";
+	protected Map<String, Object> internalMap;
 
-    public enum FilterOperation {
-        EQ, GT, GTEQ, LT, LTEQ, NOTEQ, BETWEEN, START_WITH, ENDS_WITH,
-        LIST_CONTAINS, MAP_KEYS_CONTAINS, MAP_VALUES_CONTAINS,
-        LIST_BETWEEN, MAP_KEYS_BETWEEN, MAP_VALUES_BETWEEN
-    }
+	public enum FilterOperation {
+		EQ, GT, GTEQ, LT, LTEQ, NOTEQ, BETWEEN, START_WITH, ENDS_WITH,
+		LIST_CONTAINS, MAP_KEYS_CONTAINS, MAP_VALUES_CONTAINS,
+		LIST_BETWEEN, MAP_KEYS_BETWEEN, MAP_VALUES_BETWEEN
+	}
 
-    public Qualifier() {
-        super();
-        internalMap = new HashMap<String, Object>();
-    }
+	public Qualifier() {
+		super();
+		internalMap = new HashMap<String, Object>();
+	}
 
-    public Qualifier(String field, FilterOperation operation, Value value1) {
-        this();
-        internalMap.put(FIELD, field);
-        internalMap.put(OPERATION, operation);
-        internalMap.put(VALUE1, value1);
-    }
+	public Qualifier(String field, FilterOperation operation, Value value1) {
+		this();
+		internalMap.put(FIELD, field);
+		internalMap.put(OPERATION, operation);
+		internalMap.put(VALUE1, value1);
+	}
 
-    public Qualifier(String field, FilterOperation operation, Value value1, Value value2) {
-        this(field, operation, value1);
-        internalMap.put(VALUE2, value2);
-    }
-
-
-    public FilterOperation getOperation() {
-        return (FilterOperation) internalMap.get(OPERATION);
-    }
-
-    public String getField() {
-        return (String) internalMap.get(FIELD);
-    }
-
-    public Value getValue1() {
-        return (Value) internalMap.get(VALUE1);
-    }
-
-    public Value getValue2() {
-        return (Value) internalMap.get(VALUE2);
-    }
-
-    @SuppressWarnings("deprecation")
-    public Filter asFilter() {
-        FilterOperation op = getOperation();
-        switch (op) {
-            case EQ:
-                if (getValue1().getType() == ParticleType.INTEGER)
-                    return Filter.equal(getField(), getValue1().toLong());
-                else
-                    return Filter.equal(getField(), getValue1().toString());
-            case BETWEEN:
-                return Filter.range(getField(), getValue1().toLong(), getValue2().toLong());
-            case LIST_CONTAINS:
-                return collectionContains(IndexCollectionType.LIST);
-            case MAP_KEYS_CONTAINS:
-                return collectionContains(IndexCollectionType.MAPKEYS);
-            case MAP_VALUES_CONTAINS:
-                return collectionContains(IndexCollectionType.MAPVALUES);
-            case LIST_BETWEEN:
-                return collectionRange(IndexCollectionType.LIST);
-            case MAP_KEYS_BETWEEN:
-                return collectionRange(IndexCollectionType.MAPKEYS);
-            case MAP_VALUES_BETWEEN:
-                return collectionRange(IndexCollectionType.MAPKEYS);
-            default:
-                return null;
-        }
-    }
-
-    private Filter collectionContains(IndexCollectionType collectionType) {
-        Value val = getValue1();
-        int valType = val.getType();
-        switch (valType) {
-            case ParticleType.INTEGER:
-                return Filter.contains(getField(), collectionType, val.toLong());
-            case ParticleType.STRING:
-                return Filter.contains(getField(), collectionType, val.toString());
-        }
-        return null;
-    }
-
-    private Filter collectionRange(IndexCollectionType collectionType) {
-        return Filter.range(getField(), collectionType, getValue1().toLong(), getValue2().toLong());
-    }
-
-    public String luaFilterString() {
-        String value1 = luaValueString(getValue1());
-        FilterOperation op = getOperation();
-        switch (op) {
-            case EQ:
-                return String.format("%s == %s", luaFieldString(getField()), value1);
-            case LIST_CONTAINS:
-                return String.format("containsValue(%s, %s)", luaFieldString(getField()), value1);
-            case MAP_KEYS_CONTAINS:
-                return String.format("containsKey(%s, %s)", luaFieldString(getField()), value1);
-            case MAP_VALUES_CONTAINS:
-                return String.format("containsValue(%s, %s)", luaFieldString(getField()), value1);
-            case NOTEQ:
-                return String.format("%s ~= %s", luaFieldString(getField()), value1);
-            case GT:
-                return String.format("%s > %s", luaFieldString(getField()), value1);
-            case GTEQ:
-                return String.format("%s >= %s", luaFieldString(getField()), value1);
-            case LT:
-                return String.format("%s < %s", luaFieldString(getField()), value1);
-            case LTEQ:
-                return String.format("%s <= %s", luaFieldString(getField()), value1);
-            case BETWEEN:
-                String value2 = luaValueString(getValue2());
-                String fieldString = luaFieldString(getField());
-                return String.format("%s >= %s and %s <= %s  ", fieldString, value1, luaFieldString(getField()), value2);
-            case LIST_BETWEEN:
-                value2 = luaValueString(getValue2());
-                return String.format("rangeValue(%s, %s, %s)", luaFieldString(getField()), value1, value2);
-            case MAP_KEYS_BETWEEN:
-                value2 = luaValueString(getValue2());
-                return String.format("rangeKey(%s, %s, %s)", luaFieldString(getField()), value1, value2);
-            case MAP_VALUES_BETWEEN:
-                value2 = luaValueString(getValue2());
-                return String.format("rangeValue(%s, %s, %s)", luaFieldString(getField()), value1, value2);
-            case START_WITH:
-                return String.format("string.sub(%s,1,string.len(%s))==%s", luaFieldString(getField()), value1, value1);
-            case ENDS_WITH:
-                return String.format("%s=='' or string.sub(%s,-string.len(%s))==%s",
-                        value1,
-                        luaFieldString(getField()),
-                        value1,
-                        value1);
-        }
-        return "";
-    }
-
-    protected String luaFieldString(String field) {
-        return String.format("rec['%s']", field);
-    }
-
-    protected String luaValueString(Value value) {
-        String res = null;
-        int type = value.getType();
-        switch (type) {
-            //		case ParticleType.LIST:
-            //			res = value.toString();
-            //			break;
-            //		case ParticleType.MAP:
-            //			res = value.toString();
-            //			break;
-            //		case ParticleType.DOUBLE:
-            //			res = value.toString();
-            //			break;
-            case ParticleType.STRING:
-                res = String.format("'%s'", value.toString());
-                break;
-            default:
-                res = value.toString();
-                break;
-        }
-        return res;
-    }
+	public Qualifier(String field, FilterOperation operation, Value value1, Value value2) {
+		this(field, operation, value1);
+		internalMap.put(VALUE2, value2);
+	}
 
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#size()
-     */
-    @Override
-    public int size() {
-        return internalMap.size();
-    }
+	public FilterOperation getOperation() {
+		return (FilterOperation) internalMap.get(OPERATION);
+	}
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#isEmpty()
-     */
-    @Override
-    public boolean isEmpty() {
-        return internalMap.isEmpty();
-    }
+	public String getField() {
+		return (String) internalMap.get(FIELD);
+	}
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#containsKey(java.lang.Object)
-     */
-    @Override
-    public boolean containsKey(java.lang.Object key) {
-        return internalMap.containsKey(key);
-    }
+	public Value getValue1() {
+		return (Value) internalMap.get(VALUE1);
+	}
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#containsValue(java.lang.Object)
-     */
-    @Override
-    public boolean containsValue(java.lang.Object value) {
-        return internalMap.containsValue(value);
-    }
+	public Value getValue2() {
+		return (Value) internalMap.get(VALUE2);
+	}
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#get(java.lang.Object)
-     */
-    @Override
-    public Object get(java.lang.Object key) {
-        return internalMap.get(key);
-    }
+	public Filter asFilter() {
+		FilterOperation op = getOperation();
+		switch (op) {
+			case EQ:
+				if (getValue1().getType() == ParticleType.INTEGER)
+					return Filter.equal(getField(), getValue1().toLong());
+				else
+					return Filter.equal(getField(), getValue1().toString());
+			case BETWEEN:
+				return Filter.range(getField(), getValue1().toLong(), getValue2().toLong());
+			case LIST_CONTAINS:
+				return collectionContains(IndexCollectionType.LIST);
+			case MAP_KEYS_CONTAINS:
+				return collectionContains(IndexCollectionType.MAPKEYS);
+			case MAP_VALUES_CONTAINS:
+				return collectionContains(IndexCollectionType.MAPVALUES);
+			case LIST_BETWEEN:
+				return collectionRange(IndexCollectionType.LIST);
+			case MAP_KEYS_BETWEEN:
+				return collectionRange(IndexCollectionType.MAPKEYS);
+			case MAP_VALUES_BETWEEN:
+				return collectionRange(IndexCollectionType.MAPKEYS);
+			default:
+				return null;
+		}
+	}
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#put(java.lang.Object, java.lang.Object)
-     */
-    @Override
-    public Object put(String key, Object value) {
-        return internalMap.put(key, value);
-    }
+	private Filter collectionContains(IndexCollectionType collectionType) {
+		Value val = getValue1();
+		int valType = val.getType();
+		switch (valType) {
+			case ParticleType.INTEGER:
+				return Filter.contains(getField(), collectionType, val.toLong());
+			case ParticleType.STRING:
+				return Filter.contains(getField(), collectionType, val.toString());
+		}
+		return null;
+	}
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#remove(java.lang.Object)
-     */
-    @Override
-    public Object remove(java.lang.Object key) {
-        return internalMap.remove(key);
-    }
+	private Filter collectionRange(IndexCollectionType collectionType) {
+		return Filter.range(getField(), collectionType, getValue1().toLong(), getValue2().toLong());
+	}
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#putAll(java.util.Map)
-     */
-    @Override
-    public void putAll(Map<? extends String, ? extends Object> m) {
-        internalMap.putAll(m);
-    }
+	public String luaFilterString() {
+		String value1 = luaValueString(getValue1());
+		FilterOperation op = getOperation();
+		switch (op) {
+			case EQ:
+				return String.format("%s == %s", luaFieldString(getField()), value1);
+			case LIST_CONTAINS:
+				return String.format("containsValue(%s, %s)", luaFieldString(getField()), value1);
+			case MAP_KEYS_CONTAINS:
+				return String.format("containsKey(%s, %s)", luaFieldString(getField()), value1);
+			case MAP_VALUES_CONTAINS:
+				return String.format("containsValue(%s, %s)", luaFieldString(getField()), value1);
+			case NOTEQ:
+				return String.format("%s ~= %s", luaFieldString(getField()), value1);
+			case GT:
+				return String.format("%s > %s", luaFieldString(getField()), value1);
+			case GTEQ:
+				return String.format("%s >= %s", luaFieldString(getField()), value1);
+			case LT:
+				return String.format("%s < %s", luaFieldString(getField()), value1);
+			case LTEQ:
+				return String.format("%s <= %s", luaFieldString(getField()), value1);
+			case BETWEEN:
+				String value2 = luaValueString(getValue2());
+				String fieldString = luaFieldString(getField());
+				return String.format("%s >= %s and %s <= %s  ", fieldString, value1, luaFieldString(getField()), value2);
+			case LIST_BETWEEN:
+				value2 = luaValueString(getValue2());
+				return String.format("rangeValue(%s, %s, %s)", luaFieldString(getField()), value1, value2);
+			case MAP_KEYS_BETWEEN:
+				value2 = luaValueString(getValue2());
+				return String.format("rangeKey(%s, %s, %s)", luaFieldString(getField()), value1, value2);
+			case MAP_VALUES_BETWEEN:
+				value2 = luaValueString(getValue2());
+				return String.format("rangeValue(%s, %s, %s)", luaFieldString(getField()), value1, value2);
+			case START_WITH:
+				return String.format("string.sub(%s,1,string.len(%s))==%s", luaFieldString(getField()), value1, value1);
+			case ENDS_WITH:
+				return String.format("%s=='' or string.sub(%s,-string.len(%s))==%s",
+						value1,
+						luaFieldString(getField()),
+						value1,
+						value1);
+		}
+		return "";
+	}
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#clear()
-     */
-    @Override
-    public void clear() {
-        internalMap.clear();
-    }
+	protected String luaFieldString(String field) {
+		return String.format("rec['%s']", field);
+	}
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#keySet()
-     */
-    @Override
-    public Set<String> keySet() {
-        return internalMap.keySet();
-    }
+	protected String luaValueString(Value value) {
+		String res = null;
+		int type = value.getType();
+		switch (type) {
+			//		case ParticleType.LIST:
+			//			res = value.toString();
+			//			break;
+			//		case ParticleType.MAP:
+			//			res = value.toString();
+			//			break;
+			//		case ParticleType.DOUBLE:
+			//			res = value.toString();
+			//			break;
+			case ParticleType.STRING:
+				res = String.format("'%s'", value.toString());
+				break;
+			default:
+				res = value.toString();
+				break;
+		}
+		return res;
+	}
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#values()
-     */
-    @Override
-    public Collection<Object> values() {
-        return internalMap.values();
-    }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Map#entrySet()
-     */
-    @Override
-    public Set<java.util.Map.Entry<String, Object>> entrySet() {
-        return internalMap.entrySet();
-    }
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#size()
+	 */
+	@Override
+	public int size() {
+		return internalMap.size();
+	}
 
-    @Override
-    public String toString() {
-        String output = String.format("%s:%s:%s:%s", getField(), getOperation(), getValue1(), getValue2());
-        return output;
-    }
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#isEmpty()
+	 */
+	@Override
+	public boolean isEmpty() {
+		return internalMap.isEmpty();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#containsKey(java.lang.Object)
+	 */
+	@Override
+	public boolean containsKey(java.lang.Object key) {
+		return internalMap.containsKey(key);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#containsValue(java.lang.Object)
+	 */
+	@Override
+	public boolean containsValue(java.lang.Object value) {
+		return internalMap.containsValue(value);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#get(java.lang.Object)
+	 */
+	@Override
+	public Object get(java.lang.Object key) {
+		return internalMap.get(key);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#put(java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	public Object put(String key, Object value) {
+		return internalMap.put(key, value);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#remove(java.lang.Object)
+	 */
+	@Override
+	public Object remove(java.lang.Object key) {
+		return internalMap.remove(key);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#putAll(java.util.Map)
+	 */
+	@Override
+	public void putAll(Map<? extends String, ? extends Object> m) {
+		internalMap.putAll(m);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#clear()
+	 */
+	@Override
+	public void clear() {
+		internalMap.clear();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#keySet()
+	 */
+	@Override
+	public Set<String> keySet() {
+		return internalMap.keySet();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#values()
+	 */
+	@Override
+	public Collection<Object> values() {
+		return internalMap.values();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Map#entrySet()
+	 */
+	@Override
+	public Set<java.util.Map.Entry<String, Object>> entrySet() {
+		return internalMap.entrySet();
+	}
+
+	@Override
+	public String toString() {
+		String output = String.format("%s:%s:%s:%s", getField(), getOperation(), getValue1(), getValue2());
+		return output;
+	}
 }

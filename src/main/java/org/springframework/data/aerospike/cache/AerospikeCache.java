@@ -33,7 +33,7 @@ public class AerospikeCache implements Cache {
 		this.createOnly = new WritePolicy(client.writePolicyDefault);
 		this.createOnly.recordExistsAction = RecordExistsAction.CREATE_ONLY;
 	}
-	
+
 	protected Key getKey(Object key){
 		return new Key(namespace, set, key.toString());
 	}
@@ -41,17 +41,16 @@ public class AerospikeCache implements Cache {
 	private ValueWrapper toWrapper(Record record) {
 		return (record != null ? new SimpleValueWrapper(record.getValue(VALUE)) : null);
 	}
-	
+
 	@Override
 	public void clear() {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void evict(Object key) {
 		this.client.delete(null, getKey(key));
-		
+
 	}
 
 	@Override
@@ -61,6 +60,7 @@ public class AerospikeCache implements Cache {
 		return vr;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T get(Object key, Class<T> type) {
 		return (T) client.get(null, getKey(key));

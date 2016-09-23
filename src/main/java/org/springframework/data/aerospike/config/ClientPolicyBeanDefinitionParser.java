@@ -45,7 +45,6 @@ public class ClientPolicyBeanDefinitionParser extends AbstractSingleBeanDefiniti
 	 */
 	@Override
 	protected void doParse(Element element, BeanDefinitionBuilder builder) {
-
 		ParsingUtils.setPropertyValue(builder, element, "maxThreads");
 		ParsingUtils.setPropertyValue(builder, element, "timeOut");
 		// TODO: set all properties of the XML element on the builder

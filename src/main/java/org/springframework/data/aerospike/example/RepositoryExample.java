@@ -64,9 +64,8 @@ public class RepositoryExample {
 		repository.createIndex(Person.class, "person_name_index", "name",
 				IndexType.STRING);
 
-		List<Person> all = (List<Person>) repository.save(Arrays.asList(oliver,
+		repository.save(Arrays.asList(oliver,
 				dave, donny, carter, boyd, stefan, leroi, leroi2, alicia));
-
 	}
 
 	/**
@@ -102,7 +101,6 @@ public class RepositoryExample {
 		repositoryExample.setUp();
 		repositoryExample.executeRepositoryCall();
 		repositoryExample.cleanUp();
-
 	}
 
 }

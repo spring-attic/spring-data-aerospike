@@ -17,7 +17,6 @@ package org.springframework.data.aerospike.core;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.data.keyvalue.core.UncategorizedKeyValueException;
 

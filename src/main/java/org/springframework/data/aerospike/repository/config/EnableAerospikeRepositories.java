@@ -25,9 +25,10 @@ import java.lang.annotation.Target;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.support.AerospikeRepositoryFactoryBean;
 import org.springframework.data.aerospike.repository.support.SimpleAerospikeRepository;
+import org.springframework.data.keyvalue.core.KeyValueOperations;
+import org.springframework.data.keyvalue.repository.support.KeyValueRepositoryFactoryBean;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 

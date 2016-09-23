@@ -31,8 +31,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.transaction.TransactionAwareCacheDecorator;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
-import org.springframework.data.aerospike.core.TestConfiguration;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -45,12 +45,12 @@ import com.aerospike.client.Key;
  * @author Venil Noronha
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestConfiguration.class})
+@ContextConfiguration(classes = {TestConfig.class})
 public class AerospikeCacheMangerTests {
 
 	@Configuration
 	@EnableAerospikeRepositories(basePackageClasses = AerospikeTemplate.class)
-	static class Config extends TestConfiguration { }
+	static class Config extends TestConfig { }
 
 	@Autowired AerospikeClient client;
 
@@ -62,7 +62,7 @@ public class AerospikeCacheMangerTests {
 		assertNotNull("Cache instance was null", cache);
 		assertTrue("Cache was not an instance of AerospikeCache", cache instanceof AerospikeCache);
 	}
-	
+
 	@Test
 	public void testDefaultCache() {
 		AerospikeCacheManager manager = new AerospikeCacheManager(client,
@@ -72,7 +72,7 @@ public class AerospikeCacheMangerTests {
 		assertNotNull("Cache instance was null", cache);
 		assertTrue("Cache was not an instance of AerospikeCache", cache instanceof AerospikeCache);
 	}
-	
+
 	@Test
 	public void testDefaultCacheWithCustomizedSet() {
 		AerospikeCacheManager manager = new AerospikeCacheManager(client,
@@ -82,7 +82,7 @@ public class AerospikeCacheMangerTests {
 		assertNotNull("Cache instance was null", cache);
 		assertTrue("Cache was not an instance of AerospikeCache", cache instanceof AerospikeCache);
 	}
-	
+
 	@Test
 	public void testTransactionAwareCache() {
 		AerospikeCacheManager manager = new AerospikeCacheManager(client);
@@ -92,11 +92,11 @@ public class AerospikeCacheMangerTests {
 		assertNotNull("Cache instance was null", cache);
 		assertTrue("Cache was not an instance of TransactionAwareCacheDecorator", cache instanceof TransactionAwareCacheDecorator);
 	}
-	
+
 	@Test
 	public void testCacheable() {
 		cleanupForCacheableTest();
-		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(TestConfiguration.class);
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(TestConfig.class);
 		try {
 			CachingComponent cachingComponent = ctx.getBean(CachingComponent.class);
 			CachedObject response1 = cachingComponent.cachingMethod("foo");
@@ -112,11 +112,11 @@ public class AerospikeCacheMangerTests {
 			cleanupForCacheableTest();
 		}
 	}
-	
+
 	@Test
 	public void testCacheEviction() {
 		cleanupForCacheableTest();
-		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(TestConfiguration.class);
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(TestConfig.class);
 		try {
 			CachingComponent cachingComponent = ctx.getBean(CachingComponent.class);
 			CachedObject response1 = cachingComponent.cachingMethod("foo");
@@ -137,7 +137,7 @@ public class AerospikeCacheMangerTests {
 	private void cleanupForCacheableTest() {
 		client.delete(null, new Key("test", AerospikeCacheManager.DEFAULT_SET_NAME, "foo"));
 	}
-	
+
 	public static class CachedObject {
 		private String value;
 
@@ -149,19 +149,19 @@ public class AerospikeCacheMangerTests {
 			return value;
 		}
 	}
-	
+
 	public static class CachingComponent {
 		private int noOfCalls = 0;
-		
+
 		@Cacheable("test")
 		public CachedObject cachingMethod(String param) {
 			noOfCalls ++;
 			return new CachedObject("bar");
 		}
-		
+
 		@CacheEvict("test")
 		public void cacheEvictingMethod(String param) {
-			
+
 		}
 
 		public int getNoOfCalls() {

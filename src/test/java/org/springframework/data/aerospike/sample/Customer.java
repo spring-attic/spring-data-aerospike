@@ -37,7 +37,6 @@ public class Customer {
 	 * @param lastname
 	 */
 	public Customer(String firstname, String lastname) {
-
 		this(UUID.randomUUID().toString(), firstname, lastname);
 	}
 
@@ -68,17 +67,19 @@ public class Customer {
 	public String getLastname() {
 		return lastname;
 	}
+
 	public void setLastName(String lastname) {
 		this.lastname = lastname;
 	}
+
 	public long getAge() {
 		return this.age;
 	}
+
 	@Override
 	public String toString() {
 		return "Customer [id=" + id + ", firstname=" + firstname
 				+ ", lastname=" + lastname + ", age=" + age + "]";
 	}
-	
-	
+
 }

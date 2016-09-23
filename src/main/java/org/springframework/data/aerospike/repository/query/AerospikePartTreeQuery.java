@@ -10,8 +10,6 @@ import org.springframework.data.aerospike.core.AerospikeOperations;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.keyvalue.core.IterableConverter;
-import org.springframework.data.keyvalue.core.KeyValueOperations;
-import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -55,6 +53,7 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 	public QueryMethod getQueryMethod() {
 		return queryMethod;
 	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java.lang.Object[])
 	 */
@@ -94,12 +93,11 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 	 * @param parameters
 	 * @return
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings("rawtypes")
 	private Query<?> prepareQuery(Object[] parameters) {
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(getQueryMethod().getParameters(), parameters);
 
 		this.query = createQuery(accessor);
-
 
 		Criteria criteria = (Criteria) query.getCritieria();
 		Query<?> q = new Query(criteria);
@@ -136,6 +134,5 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 				.getConstructorIfAvailable(queryCreator, PartTree.class, ParameterAccessor.class);
 		return (Query<?>) BeanUtils.instantiateClass(constructor, tree, accessor).createQuery();
 	}
-
 
 }

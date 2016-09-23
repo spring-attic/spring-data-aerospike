@@ -23,19 +23,19 @@ package com.aerospike.helper.model;
  * @author peter
  */
 public class Function {
-    private String name;
+	private String name;
 
-    public Function(Module parent, String name) {
-        super();
-        this.name = name;
-    }
+	public Function(Module parent, String name) {
+		super();
+		this.name = name;
+	}
 
-    public String getName() {
-        return this.name;
-    }
+	public String getName() {
+		return this.name;
+	}
 
-    @Override
-    public String toString() {
-        return getName();
-    }
+	@Override
+	public String toString() {
+		return getName();
+	}
 }

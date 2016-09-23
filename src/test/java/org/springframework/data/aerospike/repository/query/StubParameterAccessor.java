@@ -22,6 +22,8 @@ import org.springframework.data.geo.Distance;
 public class StubParameterAccessor implements AerospikeParameterAccessor {
 	
 	private final Object[] values;
+	
+	@SuppressWarnings("unused")
 	private Range<Distance> range = new Range<Distance>(null, null);
 	
 	/**

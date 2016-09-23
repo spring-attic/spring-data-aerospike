@@ -43,7 +43,6 @@ public class AerospikeDataTester {
 	}
 
 	public void assertBinHasValue(String name, Object value) {
-
 		for (Bin bin : data.getBins()) {
 			if (bin.name.equals(name)) {
 				assertThat(bin.value.getObject(), is(value));

@@ -40,6 +40,7 @@ public class AerospikeMappingContext extends
 	private static final FieldNamingStrategy DEFAULT_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
 
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
+	@SuppressWarnings("unused")
 	private ApplicationContext context;
 
 	/**
@@ -81,5 +82,4 @@ public class AerospikeMappingContext extends
 		this.context = applicationContext;
 	}
 	
-
 }

@@ -15,7 +15,6 @@
  *******************************************************************************/
 package org.springframework.data.aerospike.mapping;
 
-import org.springframework.data.keyvalue.core.mapping.KeyValuePersistentProperty;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 

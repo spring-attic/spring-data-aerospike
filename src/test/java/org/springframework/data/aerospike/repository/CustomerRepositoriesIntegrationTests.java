@@ -6,7 +6,7 @@
  * You may obtain a copy of the License at
  *  
  * 		http://www.apache.org/licenses/LICENSE-2.0
- *  	
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.aerospike.core.TestConfiguration;
+import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 import org.springframework.data.aerospike.sample.Customer;
 import org.springframework.data.aerospike.sample.CustomerRepository;
@@ -44,49 +44,36 @@ public class CustomerRepositoriesIntegrationTests {
 
 	@Configuration
 	@EnableAerospikeRepositories(basePackageClasses = CustomerRepository.class)
-	static class Config extends TestConfiguration {
-
-	}
+	static class Config extends TestConfig { }
 
 	@Autowired CustomerRepository repository;
 	@Mock
 	private Customer customerMock;
 
-//	@Test
-//	public void testname() {
-//
-//		Customer customer = repository.save(new Customer("Dave", "Matthews"));
-//		List<Customer> findByLastname = repository.findByLastname("Matthews");
-//
-//		assertThat(findByLastname, hasSize(1));
-//		assertThat(findByLastname, hasItem(customer));
-//	}
-	   @Before
-	    public void setUp() {
-	        MockitoAnnotations.initMocks(this);
-	    }
+	@Before
+	public void setUp() {
+		MockitoAnnotations.initMocks(this);
+	}
+
 	@Test
 	public void testCreate() {
-
 		repository.save(new Customer("dave-001", "Dave", "Matthews"));
-		
 	}
+
 	@Test
 	public void testExists() {
-
 		repository.save(new Customer("dave-001", "Dave", "Matthews"));
 		boolean exists = repository.exists("dave-001");
 		assertTrue(exists);
 	}
+
 	@Test
 	public void testDelete() {
-
 		repository.delete(new Customer("dave-001", "Dave", "Matthews"));
-		
 	}
+
 	@Test
 	public void testReadById() {
-
 		Customer customer = repository.save(new Customer("dave-001", "Dave", "Matthews"));
 		Customer findById = repository.findOne("dave-001");
 

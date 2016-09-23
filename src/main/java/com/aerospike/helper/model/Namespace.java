@@ -31,100 +31,96 @@ import java.util.Map;
  * @author peter
  */
 public class Namespace {
-    protected String name;
-    protected Map<String, Set> sets;
-    protected Map<String, NameValuePair> values;
-    protected java.util.Set<String> dontMerge = new HashSet<String>(Arrays.asList("available-bin-names",
-            "cold-start-evict-ttl",
-            "current-time",
-            "default-ttl",
-            "evict-tenths-pct",
-            "free-pct-memory",
-            "high-water-disk-pct",
-            "high-water-memory-pct",
-            "max-ttl",
-            "max-void-time",
-            "nsup-cycle-duration",
-            "nsup-cycle-sleep-pct",
-            "repl-factor",
-            "stop-writes-pct"));
+	protected String name;
+	protected Map<String, Set> sets;
+	protected Map<String, NameValuePair> values;
+	protected java.util.Set<String> dontMerge = new HashSet<String>(Arrays.asList("available-bin-names",
+			"cold-start-evict-ttl",
+			"current-time",
+			"default-ttl",
+			"evict-tenths-pct",
+			"free-pct-memory",
+			"high-water-disk-pct",
+			"high-water-memory-pct",
+			"max-ttl",
+			"max-void-time",
+			"nsup-cycle-duration",
+			"nsup-cycle-sleep-pct",
+			"repl-factor",
+			"stop-writes-pct"));
 
-    public Namespace(String name) {
-        this.name = name;
-        values = new HashMap<String, NameValuePair>();
-    }
+	public Namespace(String name) {
+		this.name = name;
+		values = new HashMap<String, NameValuePair>();
+	}
 
-    @Override
-    public String toString() {
-        return this.name;
-    }
+	@Override
+	public String toString() {
+		return this.name;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        return ((obj instanceof Namespace) &&
-                (obj.toString().equals(toString())));
-    }
+	@Override
+	public boolean equals(Object obj) {
+		return ((obj instanceof Namespace) &&
+				(obj.toString().equals(toString())));
+	}
 
+	public void addSet(String setData) {
+		if (sets == null)
+			sets = new HashMap<String, Set>();
+		Set newSet = new Set(this, setData);
+		Set existingSet = sets.get(newSet.getName());
+		if (existingSet == null) {
+			sets.put(newSet.getName(), newSet);
+		} else {
+			existingSet.setInfo(setData);
+		}
+	}
 
-    public void addSet(String setData) {
-        if (sets == null)
-            sets = new HashMap<String, Set>();
-        Set newSet = new Set(this, setData);
-        Set existingSet = sets.get(newSet.getName());
-        if (existingSet == null) {
-            sets.put(newSet.getName(), newSet);
-        } else {
-            existingSet.setInfo(setData);
-        }
-    }
+	public void mergeSet(String setData) {
+		if (sets == null)
+			sets = new HashMap<String, Set>();
+		Set newSet = new Set(this, setData);
+		Set existingSet = sets.get(newSet.getName());
+		if (existingSet == null) {
+			sets.put(newSet.getName(), newSet);
+		} else {
+			existingSet.mergeSetInfo(setData);
+		}
+	}
 
-    public void mergeSet(String setData) {
-        if (sets == null)
-            sets = new HashMap<String, Set>();
-        Set newSet = new Set(this, setData);
-        Set existingSet = sets.get(newSet.getName());
-        if (existingSet == null) {
-            sets.put(newSet.getName(), newSet);
-        } else {
-            existingSet.mergeSetInfo(setData);
-        }
-    }
+	public Collection<Set> getSets() {
+		if (sets == null)
+			sets = new HashMap<String, Set>();
+		return sets.values();
+	}
 
-    public Collection<Set> getSets() {
-        if (sets == null)
-            sets = new HashMap<String, Set>();
-        return sets.values();
-    }
+	public String getName() {
+		return toString();
+	}
 
-    public String getName() {
-        return toString();
-    }
+	public void clear() {
+		if (this.sets != null) {
+			for (Set set : this.sets.values()) {
+				set.clear();
+			}
+		}
+	}
 
-    public void clear() {
-        if (this.sets != null) {
-            for (Set set : this.sets.values()) {
-                set.clear();
-            }
-        }
-    }
-//	public void setValues(Map<String, NameValuePair> newValues){
-//		this.values = newValues;
-//	}
+	public List<NameValuePair> getValues() {
+		List<NameValuePair> result = new ArrayList<NameValuePair>();
+		if (this.values != null) {
+			java.util.Set<String> keys = this.values.keySet();
+			for (String key : keys) {
+				NameValuePair nvp = this.values.get(key);
+				result.add(nvp);
+			}
+		}
+		return result;
+	}
 
-    public List<NameValuePair> getValues() {
-        List<NameValuePair> result = new ArrayList<NameValuePair>();
-        if (this.values != null) {
-            java.util.Set<String> keys = this.values.keySet();
-            for (String key : keys) {
-                NameValuePair nvp = this.values.get(key);
-                result.add(nvp);
-            }
-        }
-        return result;
-    }
-
-    public void setInfo(String info, Map<String, NameValuePair> map, boolean merge) {
-        /*
+	public void setInfo(String info, Map<String, NameValuePair> map, boolean merge) {
+		/*
 		type=device;objects=0;master-objects=0;prole-objects=0;expired-objects=0;evicted-objects=0; \
 		set-deleted-objects=0;set-evicted-objects=0;used-bytes-memory=18688;data-used-bytes-memory=0; \
 		index-used-bytes-memory=0;sindex-used-bytes-memory=18688;free-pct-memory=99;max-void-time=0; \
@@ -141,48 +137,47 @@ public class Namespace {
 		data-in-memory=true;load-at-startup=true;file=/opt/aerospike/test.data;filesize=4294967296; \
 		writethreads=1;writecache=67108864;obj-size-hist-max=100
 		 */
-        if (map == null)
-            return;
+		if (map == null)
+			return;
 
-        if (info.isEmpty())
-            return;
-        String[] parts = info.split(";");
+		if (info.isEmpty())
+			return;
+		String[] parts = info.split(";");
 
-        for (String part : parts) {
-            String[] kv = part.split("=");
-            String key = kv[0];
-            String value = kv[1];
-            NameValuePair storedValue = map.get(key);
-            if (storedValue == null) {
-                storedValue = new NameValuePair(this, key, value);
-                map.put(key, storedValue);
-            } else {
-                if (merge && !dontMerge.contains(key)) {
-                    try {
-                        Long newValue = Long.parseLong(value);
-                        Long oldValue = Long.parseLong(storedValue.value.toString());
-                        storedValue.value = Long.toString(oldValue + newValue);
-                    } catch (NumberFormatException e) {
-                        storedValue.value = value;
-                    }
-                } else {
-                    storedValue.value = value;
-                }
-            }
-        }
-    }
+		for (String part : parts) {
+			String[] kv = part.split("=");
+			String key = kv[0];
+			String value = kv[1];
+			NameValuePair storedValue = map.get(key);
+			if (storedValue == null) {
+				storedValue = new NameValuePair(this, key, value);
+				map.put(key, storedValue);
+			} else {
+				if (merge && !dontMerge.contains(key)) {
+					try {
+						Long newValue = Long.parseLong(value);
+						Long oldValue = Long.parseLong(storedValue.value.toString());
+						storedValue.value = Long.toString(oldValue + newValue);
+					} catch (NumberFormatException e) {
+						storedValue.value = value;
+					}
+				} else {
+					storedValue.value = value;
+				}
+			}
+		}
+	}
 
-    public void setNamespaceInfo(String info) {
-        setInfo(info, values, false);
+	public void setNamespaceInfo(String info) {
+		setInfo(info, values, false);
+	}
 
-    }
+	public void mergeNamespaceInfo(String info) {
+		setInfo(info, values, true);
+	}
 
-    public void mergeNamespaceInfo(String info) {
-        setInfo(info, values, true);
-    }
-
-    public Set findSet(String tableName) {
-        return this.sets.get(tableName);
-    }
+	public Set findSet(String tableName) {
+		return this.sets.get(tableName);
+	}
 
 }

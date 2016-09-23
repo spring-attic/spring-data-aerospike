@@ -202,7 +202,6 @@ public class AerospikeCacheManager extends AbstractTransactionSupportingCacheMan
 			serializeAndPut(createOnly, key, value);
 			return get(key);
 		}
-
 	}
 
 }

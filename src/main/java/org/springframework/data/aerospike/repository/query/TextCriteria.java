@@ -5,7 +5,6 @@ package org.springframework.data.aerospike.repository.query;
 
 import java.util.List;
 
-import com.aerospike.client.query.Filter;
 import com.aerospike.helper.query.Qualifier;
 
 /**

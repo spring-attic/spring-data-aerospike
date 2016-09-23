@@ -4,26 +4,14 @@
 package org.springframework.data.aerospike.repository.query;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.aerospike.InvalidAerospikeDataAccessApiUsageException;
-import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
-import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
-import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
-import org.springframework.data.mapping.PersistentPropertyAccessor;
-import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.data.repository.query.parser.Part;
-import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.CollectionUtils;
 
 import com.aerospike.client.Value;
-import com.aerospike.client.query.Filter;
 import com.aerospike.helper.query.Qualifier;
 
 /**
@@ -40,11 +28,8 @@ public class Criteria implements CriteriaDefinition {
 	DefaultConversionService cs = new DefaultConversionService();
 
 	private String key;
-
 	private List<Criteria> criteriaChain;
-
 	private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
-
 	private Object isValue = NOT_SET;
 
 	public Criteria(String key) {
@@ -92,7 +77,6 @@ public class Criteria implements CriteriaDefinition {
 			}
 		}
 		return qualifiers;
-
 	}
 
 	protected Qualifier getSingleCriteriaObject() {
@@ -104,7 +88,6 @@ public class Criteria implements CriteriaDefinition {
 		}
 
 		return qualifier;
-
 	}
 
 	/*
@@ -209,6 +192,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	private boolean lastOperatorWasNotEqual() {
 		return this.criteria.size() > 0
 				&& Qualifier.FilterOperation.EQ.name().equals(this.criteria
