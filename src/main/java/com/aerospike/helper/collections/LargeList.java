@@ -421,7 +421,7 @@ public class LargeList {
     public List<?> range(Value begin, Value end) {
         List<Object> results = new ArrayList<Object>();
         Key[] elementKeys = getElementKeys();
-        if (elementKeys != null || elementKeys.length > 0) {
+        if (elementKeys != null && elementKeys.length > 0) {
             List<Record> records = fetchSubRecords(elementKeys);
             for (Record record : records) {
                 if (record != null && filterBinByRange(record, ListElementBinName, begin, end)) {
@@ -489,7 +489,7 @@ public class LargeList {
     public List<?> scan() {
         List<Object> results = new ArrayList<Object>();
         Key[] elementKeys = getElementKeys();
-        if (elementKeys != null || elementKeys.length > 0) {
+        if (elementKeys != null && elementKeys.length > 0) {
             List<Record> records = fetchSubRecords(elementKeys);
             for (Record record : records) {
                 if (record != null)
