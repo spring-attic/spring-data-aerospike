@@ -7,16 +7,14 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.aerospike.core.AerospikeOperations;
-import org.springframework.data.keyvalue.core.IterableConverter;
-import org.springframework.data.repository.core.EntityInformation;
-import org.springframework.data.repository.core.support.PersistentEntityInformation;
-import org.springframework.util.Assert;
 import org.springframework.data.aerospike.repository.AerospikeRepository;
-import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.keyvalue.core.IterableConverter;
+import org.springframework.data.repository.core.EntityInformation;
+import org.springframework.util.Assert;
 
 import com.aerospike.client.query.IndexType;
 
@@ -39,25 +37,23 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	public T findOne(ID id) {
 		return operations.findById(id, entityInformation.getJavaType(), getDomainClass());
 	}
+
 	@Override
 	public <S extends T> S save(S entity) {
 		Assert.notNull(entity);
 		operations.save(entityInformation.getId(entity), entity, getDomainClass());
 		return entity;
 	}
-	
+
 	public <S extends T> List<S> save(Iterable<S> entities) {
-		
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
-		
+
 		List<S> result = convertIterableToList(entities);
-		boolean allNew = true;
 		for (S entity : result) {
 			save(entity);
 		}
-		
+
 		return result;
-		
 	}
 	
 	@Override
@@ -73,7 +69,6 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	}
 	
 	static <T> List<T> convertIterableToList(Iterable<T> entities) {
-
 		if (entities instanceof List) {
 			return (List<T>) entities;
 		}
@@ -95,6 +90,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	private static int tryDetermineRealSizeOrReturn(Iterable<?> iterable, int defaultSize) {
 		return iterable == null ? 0 : (iterable instanceof Collection) ? ((Collection<?>) iterable).size() : defaultSize;
 	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
 	 */
@@ -105,6 +101,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Pageable)
 	 */
+
 	@Override
 	public Page<T> findAll(Pageable pageable) {
 
@@ -117,6 +114,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 
 		return new PageImpl<T>(IterableConverter.toList(content), pageable, this.operations.count(entityInformation.getJavaType(),getDomainClass().getSimpleName()));
 	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#exists(java.io.Serializable)
 	 */
@@ -132,6 +130,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	public List<T> findAll() {
 		return IterableConverter.toList(operations.findAll(entityInformation.getJavaType()));
 	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#findAll(java.lang.Iterable)
 	 */
@@ -150,6 +149,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 
 		return result;
 	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#count()
 	 */
@@ -158,6 +158,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 		return operations.count(entityInformation.getJavaType());
 		//return 0;
 	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#delete(java.io.Serializable)
 	 */
@@ -167,6 +168,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 		operations.delete(id, entityInformation.getJavaType());
 		
 	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#delete(java.lang.Iterable)
 	 */
@@ -177,6 +179,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 		}
 		
 	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#deleteAll()
 	 */
@@ -185,6 +188,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 		operations.delete(entityInformation.getJavaType());
 		
 	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.aerospike.repository.AerospikeRepository#createIndex(java.lang.Class, java.lang.String, java.lang.String, com.aerospike.client.query.IndexType)
 	 */

@@ -17,39 +17,32 @@ import com.aerospike.client.Bin;
  *
  */
 public class AerospikeMetadataBin {
-	
-	/**
-	 * 
-	 */
+
 	public static final String AEROSPIKE_META_DATA = "ASpikeMetaData";
 	public static final String TYPE_BIN_NAME = "spring_class";
 	public static final String SPRING_ID_BIN = "SpringID";
-	
+
 	private Map<String, Object> map = new HashMap<String, Object>();
-	
-	/**
-	 * 
-	 */
+
 	public AerospikeMetadataBin() {
 		// TODO Auto-generated constructor stub
 	}
-	
+
+	@SuppressWarnings("unchecked")
 	public void setAerospikeMetaDataBin(Bin bin){
 		map = (Map<String, Object>) bin.value.getObject();
 	}
-	
+
 	public Bin getAerospikeMetaDataBin(){
 		return new Bin(AerospikeMetadataBin.AEROSPIKE_META_DATA, map);
 	}
-	
+
 	public void addKeyValuetoAerospikeMetaData(String key, Object value){
 		map.put(key, value);
 	}
-	
+
 	public Object getAerospikeMetaDataUsingKey(String key){
-		
 		return map.get(key);
-		
 	}
 
 	/**
@@ -61,7 +54,5 @@ public class AerospikeMetadataBin {
 			addKeyValuetoAerospikeMetaData(entry.getKey(), entry.getValue());
 		}		
 	}
-	
-	
 
 }

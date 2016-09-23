@@ -81,7 +81,6 @@ public class ScanPolicyFactoryBean extends ReadPolicyFactoryBean {
 	public void setScanPercent(int scanPercent){
 		this.policy.scanPercent = scanPercent;
 	}
-	
 
 	/* 
 	 * (non-Javadoc)

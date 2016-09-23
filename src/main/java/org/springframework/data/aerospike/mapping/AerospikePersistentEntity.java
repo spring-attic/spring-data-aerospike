@@ -33,10 +33,10 @@ public interface AerospikePersistentEntity<T> extends PersistentEntity<T, Aerosp
 	 * @return
 	 */
 	String getSetName();
-	
+
 	Key getKey();
-	
+
 	long getGeneration();
-	
+
 	int getTTL();
 }

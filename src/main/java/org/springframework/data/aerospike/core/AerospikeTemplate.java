@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *	  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,14 +17,11 @@ package org.springframework.data.aerospike.core;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -32,12 +29,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.support.PropertyComparator;
-import org.springframework.beans.support.SortDefinition;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.aerospike.convert.AerospikeData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
-import org.springframework.data.aerospike.mapping.*;
+import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
+import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
+import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
@@ -45,7 +45,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.keyvalue.core.IterableConverter;
 import org.springframework.data.keyvalue.core.KeyValueCallback;
-import org.springframework.data.keyvalue.core.SpelPropertyComparator;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
@@ -62,21 +61,18 @@ import com.aerospike.client.Record;
 import com.aerospike.client.ScanCallback;
 import com.aerospike.client.Value;
 import com.aerospike.client.cluster.Node;
-import com.aerospike.client.command.ParticleType;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.ScanPolicy;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.client.query.KeyRecord;
-import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.ResultSet;
 import com.aerospike.client.query.Statement;
 import com.aerospike.client.task.IndexTask;
 import com.aerospike.helper.query.KeyRecordIterator;
 import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.QueryEngine;
-import com.aerospike.helper.query.Qualifier.FilterOperation;
 
 /**
  * Primary implementation of {@link AerospikeOperations}.
@@ -87,25 +83,16 @@ import com.aerospike.helper.query.Qualifier.FilterOperation;
 public class AerospikeTemplate implements AerospikeOperations {
 
 	private static final MappingAerospikeConverter DEFAULT_CONVERTER = new MappingAerospikeConverter();
-
 	private static final AerospikeExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new DefaultAerospikeExceptionTranslator();
-
+	
 	private final MappingContext<BasicAerospikePersistentEntity<?>, AerospikePersistentProperty> mappingContext;
-
 	private final AerospikeClient client;
-
 	private final MappingAerospikeConverter converter;
-
 	private final String namespace;
-
-	private int count = 0;
-
 	private final QueryEngine queryEngine;
-
+	
 	private AerospikeExceptionTranslator exceptionTranslator;
-
 	private WritePolicy insertPolicy;
-
 	private WritePolicy updatePolicy;
 
 	/**
@@ -132,7 +119,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 		this.queryEngine = new QueryEngine(this.client);
 
 		loggerSetup();
-
 	}
 
 	private void loggerSetup() {
@@ -160,7 +146,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 					}
 				});
-
 	}
 
 	@Override
@@ -206,7 +191,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToInsert, data);
 			data.setID(id);
-            data.setSetName(AerospikeSimpleTypes.getColletionName(domainType));
+			data.setSetName(AerospikeSimpleTypes.getColletionName(domainType));
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
 			client.put(null, key, bins);
@@ -216,7 +201,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 					.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
 		}
-
 	}
 
 	@Override
@@ -334,7 +318,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 							if (client.delete(null, key))
 								count.addAndGet(1);
 							/*
-							 * after 25,000 records delete, return print the
+							 * after 10,000 records delete, return print the
 							 * count.
 							 */
 							if (count.get() % 10000 == 0) {
@@ -395,7 +379,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		// the list is unbounded and could contain billions of elements
 		// we need to find another solution
 		final List<T> scanList = new ArrayList<T>();
-		Iterable<T> results = findAllUsingQuery(type, null, null);
+		Iterable<T> results = findAllUsingQuery(type, null, (Qualifier[])null);
 		Iterator<T> iterator = results.iterator();
 		try {
 			while (iterator.hasNext()) {
@@ -481,23 +465,24 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return null;
 	}
 
+	@SuppressWarnings("unused")
 	private String resolveKeySpace(Class<?> type) {
 		return this.mappingContext.getPersistentEntity(type).getSetName();
 	}
 
+	@SuppressWarnings("unused")
 	private static boolean typeCheck(Class<?> requiredType, Object candidate) {
 		return candidate == null ? true
 				: ClassUtils.isAssignable(requiredType, candidate.getClass());
 	}
 
-	public boolean exists(Query query, Class<?> entityClass) {
-
+	public boolean exists(Query<?> query, Class<?> entityClass) {
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException(
 					"Query passed in to exist can't be null");
 		}
 
-		Iterator iterator = (Iterator<?>) find(query, entityClass).iterator();
+		Iterator<?> iterator = (Iterator<?>) find(query, entityClass).iterator();
 
 		return iterator.hasNext();
 	}
@@ -547,6 +532,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 * org.springframework.data.aerospike.core.AerospikeOperations#find(org.
 	 * springframework.data.aerospike.repository.query.Query, java.lang.Class)
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public <T> Iterable<T> find(Query<?> query, Class<T> type) {
 		Assert.notNull(query, "Query must not be null!");
@@ -611,14 +597,13 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 * org.springframework.data.keyvalue.core.KeyValueOperations#findInRange(
 	 * int, int, org.springframework.data.domain.Sort, java.lang.Class)
 	 */
-	@SuppressWarnings("rawtypes")
 	@Override
 	public <T> Iterable<T> findInRange(int offset, int rows, Sort sort,
 			Class<T> type) {
 		Assert.notNull(type, "Type for count must not be null!");
 		final long rowCount = rows;
 		final AtomicLong count = new AtomicLong(0);
-		final Iterable<T> results = findAllUsingQuery(type, null, null);
+		final Iterable<T> results = findAllUsingQuery(type, null, (Qualifier[])null);
 		final Iterator<T> iterator = results.iterator();
 		/*
 		 * skip over offset
@@ -723,13 +708,9 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return results;
 	}
 
-
 	public class EntityIterator<T> implements CloseableIterator<T> {
-
 		private KeyRecordIterator keyRecordIterator;
-
 		private MappingAerospikeConverter converter;
-
 		private Class<T> type;
 		
 		public EntityIterator(Class<T> type,
@@ -770,6 +751,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T prepend(T objectToPrependTo, String fieldName, String value) {
 		Assert.notNull(objectToPrependTo,
@@ -793,6 +775,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T prepend(T objectToPrependTo, Map<String, String> values) {
 		Assert.notNull(objectToPrependTo,
@@ -821,6 +804,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T append(T objectToAppendTo, Map<String, String> values) {
 		Assert.notNull(objectToAppendTo,
@@ -849,6 +833,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T append(T objectToAppendTo, String binName, String value) {
 		Assert.notNull(objectToAppendTo,
@@ -872,6 +857,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T add(T objectToAddTo, Map<String, Long> values) {
 		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
 		T result = null;
@@ -891,7 +877,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 					operations);
 			data.setRecord(record);
 			result = (T) converter.read(objectToAddTo, data);
-
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
@@ -901,6 +886,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T add(T objectToAddTo, String binName, int value) {
 		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
 		T result = null;

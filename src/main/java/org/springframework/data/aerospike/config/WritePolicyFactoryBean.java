@@ -56,6 +56,7 @@ public class WritePolicyFactoryBean extends ReadPolicyFactoryBean {
 	public void setExpiration(int expiration){
 		this.policy.expiration = expiration;
 	}
+
 	/**
 	 * Configures the expected generation. Generation is the number of times a record has been modified
 	 * (including creation) on the server. If a write operation is creating a record, 

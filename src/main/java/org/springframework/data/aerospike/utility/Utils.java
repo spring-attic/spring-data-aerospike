@@ -1,11 +1,7 @@
 package org.springframework.data.aerospike.utility;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.springframework.data.aerospike.repository.query.Criteria;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Info;

@@ -54,7 +54,6 @@ public class ReadPolicyFactoryBean implements FactoryBean<Policy> {
 		this.policy.maxRetries = maxRetries;
 	}
 
-	
 	/**
 	 * Configures the sleep between retries if a transaction fails and the 
 	 * timeout was not exceeded.  Enter zero to skip sleep.
@@ -63,6 +62,7 @@ public class ReadPolicyFactoryBean implements FactoryBean<Policy> {
 	public void setSleepBetweenRetries(int sleepBetweenRetries){
 		this.policy.sleepBetweenRetries = sleepBetweenRetries;
 	}
+
 	/**
 	 * Configures how replicas should be consulted in a read operation to provide the desired
 	 * consistency guarantee. Default to allowing one replica to be used in the
@@ -71,6 +71,7 @@ public class ReadPolicyFactoryBean implements FactoryBean<Policy> {
 	public void setConsistencyLevel(ConsistencyLevel consistencyLevel){
 		this.policy.consistencyLevel = consistencyLevel;
 	}
+
 	/**
 	 * Configures the priority of request relative to other transactions.
 	 * Currently, only used for scans.
@@ -78,6 +79,7 @@ public class ReadPolicyFactoryBean implements FactoryBean<Policy> {
 	public void setPriority(Priority priority){
 		this.policy.priority = priority;
 	}
+
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()

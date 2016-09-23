@@ -24,13 +24,15 @@ import com.aerospike.client.Value;
  */
 public class GenerationQualifier extends Qualifier {
 
-    public GenerationQualifier(FilterOperation op, Value value) {
-        super(QueryEngine.Meta.GENERATION.toString(), op, value);
-    }
+	private static final long serialVersionUID = 8229654562432677907L;
 
-    @Override
-    protected String luaFieldString(String field) {
-        return "generation";
-    }
+	public GenerationQualifier(FilterOperation op, Value value) {
+		super(QueryEngine.Meta.GENERATION.toString(), op, value);
+	}
+
+	@Override
+	protected String luaFieldString(String field) {
+		return "generation";
+	}
 
 }

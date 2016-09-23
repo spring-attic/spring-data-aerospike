@@ -11,11 +11,9 @@ import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.aerospike.mapping.CachingAerospikePersistentProperty;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.keyvalue.core.IterableConverter;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.Type;
@@ -28,7 +26,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  * @author Jean Mercier
  *
  */
-public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query, Criteria> {
+public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query<?>, Criteria> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AerospikeQueryCreator.class);
 	//private ParameterAccessor accessor;
@@ -43,7 +41,6 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query, Criteria
 		this.context = new AerospikeMappingContext();
 	}
 
-	
 	/**
 	 * @param tree
 	 * @param parameters
@@ -63,7 +60,7 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query, Criteria
 		Criteria criteria = from(part, property, Criteria.where(path.toDotPath()), iterator);
 		return criteria;
 	}
-	
+
 	/**
 	 * Populates the given {@link CriteriaDefinition} depending on the {@link Part} given.
 	 * 
@@ -73,8 +70,7 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query, Criteria
 	 * @param parameters
 	 * @return
 	 */
-	private Criteria from(Part part, AerospikePersistentProperty property, Criteria criteria, Iterator parameters) {
-
+	private Criteria from(Part part, AerospikePersistentProperty property, Criteria criteria, Iterator<?> parameters) {
 		Type type = part.getType();
 		String fieldName = ((CachingAerospikePersistentProperty) property).getFieldName();
 
@@ -154,9 +150,8 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query, Criteria
 	 * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#complete(java.lang.Object, org.springframework.data.domain.Sort)
 	 */
 	@Override
-	protected Query complete(Criteria criteria, Sort sort) {
-
-		Query query = (criteria == null ? new Query() : new Query(criteria)).with(sort);
+	protected Query<?> complete(Criteria criteria, Sort sort) {
+		Query<?> query = (criteria == null ? new Query<Object>() : new Query<Object>(criteria)).with(sort);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Created query " + query);
@@ -164,9 +159,9 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query, Criteria
 
 		return query;
 	}
-	
-	private boolean isSimpleComparisionPossible(Part part) {
 
+	@SuppressWarnings("unused")
+	private boolean isSimpleComparisionPossible(Part part) {
 		switch (part.shouldIgnoreCase()) {
 			case NEVER:
 				return true;

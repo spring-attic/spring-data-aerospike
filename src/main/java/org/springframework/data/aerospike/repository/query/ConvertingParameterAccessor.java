@@ -19,6 +19,7 @@ import org.springframework.util.Assert;
  */
 public class ConvertingParameterAccessor implements AerospikeParameterAccessor {
 	
+	@SuppressWarnings("unused")
 	private final AerospikeWriter<?> writer;
 	private final AerospikeParameterAccessor delegate;
 	

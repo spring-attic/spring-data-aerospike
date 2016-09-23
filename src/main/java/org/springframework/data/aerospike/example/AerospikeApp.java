@@ -49,17 +49,16 @@ public class AerospikeApp {
 			aerospikeTemplate.insert(personSven03);
 			aerospikeTemplate.insert(personSven04);
 
-			Query query = new Query(
+			Query<?> query = new Query<Object>(
 					Criteria.where("Person").is("WName", "name"));
 
 			Iterable<Person> it = aerospikeTemplate.find(query, Person.class);
-			int count = 0;
+
 			Person firstPerson = null;
 			for (Person person : it) {
 				firstPerson = person;
 				LOG.info(firstPerson.toString());
 				System.out.println(firstPerson.toString());
-				count++;
 			}
 		}
 		catch (AerospikeException e) {

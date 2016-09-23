@@ -36,168 +36,164 @@ import com.aerospike.client.policy.WritePolicy;
  * @author Peter Milne
  */
 public class TimeSeries {
-    /**
-     * the bin in the top record to hold the TimeSeries configuration
-     */
-    public static final String tsKey = "TimeStamp";
-    public static final String tsValue = "Value";
+	/**
+	 * the bin in the top record to hold the TimeSeries configuration
+	 */
+	public static final String tsKey = "TimeStamp";
+	public static final String tsValue = "Value";
 
-    public static final long DefaultBucketSize = 1000; // In milliseconds
+	public static final long DefaultBucketSize = 1000; // In milliseconds
 
-    private static final String configBucketSize = "bucketSize";
+	private static final String configBucketSize = "bucketSize";
 
-    private static final String valueBin = "____TSvalue";
-    private static final String topBin = "____TStop";
-    private static final String tailBin = "____TStail";
-    private AerospikeClient client;
-    private WritePolicy policy;
-    private Key key;
-    private String binName;
-    private long bucketSize; // Bucket size in milliseconds
-    private long modelVersion = 1;
+	private static final String valueBin = "____TSvalue";
+	private static final String topBin = "____TStop";
+	private static final String tailBin = "____TStail";
+	private AerospikeClient client;
+	private WritePolicy policy;
+	private Key key;
+	private String binName;
+	private long bucketSize; // Bucket size in milliseconds
 
+	/**
+	 * Private constructor for test only
+	 */
+	TimeSeries(Key topRecordKey, long bucketSize) {
+		this.bucketSize = bucketSize;
+		this.key = topRecordKey;
+	}
 
-    /**
-     * Private constructor for test only
-     */
-    TimeSeries(Key topRecordKey, long bucketSize) {
-        this.bucketSize = bucketSize;
-        this.key = topRecordKey;
-    }
+	public TimeSeries(AerospikeClient client, WritePolicy policy, Key key, String binName) {
+		super();
+		this.client = client;
+		this.policy = policy;
+		this.key = key;
+		this.binName = binName;
+		config();
+	}
 
-    public TimeSeries(AerospikeClient client, WritePolicy policy, Key key, String binName) {
-        super();
-        this.client = client;
-        this.policy = policy;
-        this.key = key;
-        this.binName = binName;
-        config();
-    }
+	@SuppressWarnings("unchecked")
+	private void config() {
+		Map<String, Object> conf = null;
+		Record record = this.client.get(this.policy, key, binName);
+		if (record != null) {
+			conf = (Map<String, Object>) record.getValue(binName);
+		}
+		if (conf == null) {
+			conf = new HashMap<String, Object>();
+			conf.put(configBucketSize, DefaultBucketSize);
+			this.bucketSize = DefaultBucketSize;
+			this.client.put(this.policy, this.key, new Bin(binName, Value.get(conf)));
+		} else {
+			this.bucketSize = (Long) conf.get(configBucketSize);
+		}
+	}
 
-    private void config() {
-        Map<String, Object> conf = null;
-        Record record = this.client.get(this.policy, key, binName);
-        if (record != null) {
-            conf = (Map<String, Object>) record.getValue(binName);
-        }
-        if (conf == null) {
-            conf = new HashMap<String, Object>();
-            conf.put(configBucketSize, DefaultBucketSize);
-            this.bucketSize = DefaultBucketSize;
-            this.client.put(this.policy, this.key, new Bin(binName, Value.get(conf)));
-        } else {
-            this.bucketSize = (Long) conf.get(configBucketSize);
-        }
-    }
+	public void add(long timeStamp, Value value) {
+		Key subKey = formSubrecordKey(timeStamp);
+		this.client.operate(this.policy, subKey, ListOperation.append(valueBin, Value.get(new Entry(timeStamp, value).toMap())));
+	}
 
-    public void add(long timeStamp, Value value) {
-        Key subKey = formSubrecordKey(timeStamp);
-        this.client.operate(this.policy, subKey, ListOperation.append(valueBin, Value.get(new Entry(timeStamp, value).toMap())));
-    }
+	public void add(List<Map<String, Object>> values) {
+		for (Map<String, Object> entry : values) {
+			if (entry.containsKey(tsKey) && entry.containsKey(tsValue)) {
+				Key subKey = formSubrecordKey((Long) entry.get(tsKey));
+				this.client.operate(this.policy, subKey, ListOperation.append(valueBin, Value.get(entry)));
+			}
+		}
+	}
 
-    public void add(List<Map<String, Object>> values) {
-        for (Map<String, Object> entry : values) {
-            if (entry.containsKey(tsKey) && entry.containsKey(tsValue)) {
-                Key subKey = formSubrecordKey((Long) entry.get(tsKey));
-                this.client.operate(this.policy, subKey, ListOperation.append(valueBin, Value.get(entry)));
-            }
-        }
-    }
+	@SuppressWarnings("unchecked")
+	public Value find(long timeStamp) {
+		Key subKey = formSubrecordKey(timeStamp);
+		Record record = this.client.get(this.policy, subKey);
+		if (record != null) {
+			List<Value> values = (List<Value>) record.getList(valueBin);
+			for (Value value : values) {
+				// TODO do something clever here
+			}
+		}
+		return null;
+	}
 
-    public Value find(long timeStamp) {
-        Key subKey = formSubrecordKey(timeStamp);
-        Record record = this.client.get(this.policy, subKey);
-        if (record != null) {
-            List<Value> values = (List<Value>) record.getList(valueBin);
-            for (Value value : values) {
-                // do something clever here
-            }
-        }
-        return null;
-    }
+	/**
+	 * clear all elements from the TimeSeries associated with a Key
+	 */
+	public void clear() {
+		Record record = this.client.get(null, key, tailBin, topBin);
+		long tail = record.getLong(tailBin);
+		long top = record.getLong(topBin);
+		List<Key> subKeys = subrecordKeys(tail, top);
+		for (Key key : subKeys) {
+			this.client.delete(null, key);
+		}
+	}
 
-    /**
-     * clear all elements from the TimeSeries associated with a Key
-     */
-    public void clear() {
-        Record record = this.client.get(null, key, tailBin, topBin);
-        long tail = record.getLong(tailBin);
-        long top = record.getLong(topBin);
-        List<Key> subKeys = subrecordKeys(tail, top);
-        for (Key key : subKeys) {
-            this.client.delete(null, key);
-        }
-    }
+	/**
+	 * Destroy the TimeSeries associated with a Key
+	 */
+	public void destroy() {
+		clear();
+		this.client.operate(null, key, Operation.put(Bin.asNull(binName)));
+	}
 
-    /**
-     * Destroy the TimeSeries associated with a Key
-     */
-    public void destroy() {
-        clear();
-        this.client.operate(null, key, Operation.put(Bin.asNull(binName)));
-    }
+	/**
+	 * creates a list of Keys in the time series
+	 *
+	 * @param lowTime
+	 * @param highTime
+	 * @return
+	 */
+	List<Key> subrecordKeys(long lowTime, long highTime) {
+		List<Key> keys = new ArrayList<Key>();
+		long lowBucketNumber = bucketNumber(lowTime);
+		long highBucketNumber = bucketNumber(highTime);
+		for (long index = lowBucketNumber; index <= highBucketNumber; index += this.bucketSize) {
+			keys.add(formSubrecordKey(index));
+		}
+		return keys;
+	}
 
-    /**
-     * creates a list of Keys in the time series
-     *
-     * @param lowTime
-     * @param highTime
-     * @return
-     */
-    List<Key> subrecordKeys(long lowTime, long highTime) {
-        List<Key> keys = new ArrayList<Key>();
-        long lowBucketNumber = bucketNumber(lowTime);
-        long highBucketNumber = bucketNumber(highTime);
-        for (long index = lowBucketNumber; index <= highBucketNumber; index += this.bucketSize) {
-            keys.add(formSubrecordKey(index));
-        }
-        return keys;
-    }
+	Key formSubrecordKey(long timeStamp) {
+		String keyString = String.format("%s::%s", this.key.userKey.toString(), Long.toHexString(bucketNumber(timeStamp)));
+		return new Key(this.key.namespace, this.key.setName, keyString);
+	}
 
-    Key formSubrecordKey(long timeStamp) {
-        String keyString = String.format("%s::%s", this.key.userKey.toString(), Long.toHexString(bucketNumber(timeStamp)));
-        return new Key(this.key.namespace, this.key.setName, keyString);
-    }
+	long bucketNumber(long timeStamp) {
+		long quantPart = timeStamp / bucketSize;
+		long bucketNumber = quantPart * bucketSize;
+		return bucketNumber;
+	}
 
-    long bucketNumber(long timeStamp) {
-        long quantPart = timeStamp / bucketSize;
-        long bucketNumber = quantPart * bucketSize;
-        return bucketNumber;
-    }
+	public Key getKey() {
+		return this.key;
+	}
 
-    public Key getKey() {
-        return this.key;
-    }
+	public class Entry {
+		private long timeStamp;
+		private Value value;
 
-    public class Entry {
+		public Entry(long timeStamp, Value value) {
+			this.timeStamp = timeStamp;
+			this.value = value;
+		}
 
-        private long timeStamp;
-        private Value value;
+		Map<String, Object> internalMap;
 
-        public Entry(long timeStamp, Value value) {
-            this.timeStamp = timeStamp;
-            this.value = value;
-        }
+		public long getTimeStamp() {
+			return this.timeStamp;
+		}
 
-        Map<String, Object> internalMap;
+		public Value getValue() {
+			return this.value;
+		}
 
-        public long getTimeStamp() {
-            return this.timeStamp;
-        }
-
-        public Value getValue() {
-            return this.value;
-        }
-
-        public Map<String, Object> toMap() {
-            Map<String, Object> entry = new HashMap<String, Object>();
-            entry.put(tsKey, timeStamp);
-            entry.put(tsValue, value);
-            return entry;
-
-        }
-
-    }
-
+		public Map<String, Object> toMap() {
+			Map<String, Object> entry = new HashMap<String, Object>();
+			entry.put(tsKey, timeStamp);
+			entry.put(tsValue, value);
+			return entry;
+		}
+	}
 
 }

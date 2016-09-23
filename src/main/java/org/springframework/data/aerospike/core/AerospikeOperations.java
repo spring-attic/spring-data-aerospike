@@ -150,7 +150,4 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 */
 	long count(Class<?> type);
 
-
-
-	
 }

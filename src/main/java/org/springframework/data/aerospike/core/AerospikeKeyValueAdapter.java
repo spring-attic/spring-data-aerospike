@@ -201,14 +201,12 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 		return super.find(query, keyspace);
 	}
 
-
 	@Override
 	public CloseableIterator<Entry<Serializable, Object>> entries(
 			Serializable keyspace) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 
 	@Override
 	public long count(Serializable keyspace) {
