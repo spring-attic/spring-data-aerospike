@@ -94,4 +94,10 @@ public class ConvertingParameterAccessor implements AerospikeParameterAccessor {
 		return null;
 	}
 
+	@Override
+	public Class<?> getDynamicProjection() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

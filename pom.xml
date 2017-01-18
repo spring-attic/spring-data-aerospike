@@ -11,17 +11,16 @@
     <name>Spring Data Aerospike</name>
 
 
-    <parent>
-        <groupId>org.springframework.data.build</groupId>
-        <artifactId>spring-data-parent</artifactId>
-        <version>1.7.0.RELEASE</version>
-        <relativePath>../spring-data-build/parent/pom.xml</relativePath>
-    </parent>
+ 	<parent>
+		<groupId>org.springframework.data.build</groupId>
+		<artifactId>spring-data-parent</artifactId>
+		<version>1.9.0.BUILD-SNAPSHOT</version>
+	</parent>
 
     <properties>
-        <aerospike>3.2.3</aerospike>
-        <springdata.commons>1.11.0.RELEASE</springdata.commons>
-        <springdata.keyvalue>1.0.0.M1</springdata.keyvalue>
+        <aerospike>3.3.2</aerospike>
+        <springdata.commons>1.13.0.RC1</springdata.commons>
+        <springdata.keyvalue>1.2.0.M1</springdata.keyvalue>
         <dist.key>DATAAERO</dist.key>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <asciidoctor.maven.plugin.version>1.5.2.1</asciidoctor.maven.plugin.version>

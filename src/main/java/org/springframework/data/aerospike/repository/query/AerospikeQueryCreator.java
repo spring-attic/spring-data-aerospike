@@ -111,7 +111,7 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query<?>, Crite
 			case NEAR:
 				return null;
 			case WITHIN:
-				return null;
+				return criteria.geo_within(parameters.next(), parameters.next(), parameters.next(), fieldName);
 			case SIMPLE_PROPERTY:
 				return criteria.is(parameters.next(), fieldName);
 			case NEGATING_SIMPLE_PROPERTY:

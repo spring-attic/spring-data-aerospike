@@ -3,6 +3,7 @@
  */
 package org.springframework.data.aerospike.example;
 
+import org.apache.log4j.BasicConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
@@ -22,8 +23,10 @@ import com.aerospike.client.query.IndexType;
  */
 public class AerospikeApp {
 
-	private static final Logger LOG = LoggerFactory
-			.getLogger(AerospikeApp.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AerospikeApp.class);
+	static {
+		BasicConfigurator.configure();
+	}
 
 	/**
 	 * @param args
@@ -58,6 +61,9 @@ public class AerospikeApp {
 			for (Person person : it) {
 				firstPerson = person;
 				LOG.info(firstPerson.toString());
+				LOG.debug("Debug output");
+				LOG.warn("Warning");
+				LOG.error("Erroring out");
 				System.out.println(firstPerson.toString());
 			}
 		}

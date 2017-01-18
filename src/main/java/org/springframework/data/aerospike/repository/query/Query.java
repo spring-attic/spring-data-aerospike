@@ -54,8 +54,7 @@ public class Query<T> {
 	 */
 	public Query<?> addCriteria(CriteriaDefinition criteriaDefinition) {
 
-		CriteriaDefinition existing = this.criteria
-				.get(criteriaDefinition.getKey());
+		CriteriaDefinition existing = this.criteria.get(criteriaDefinition.getKey());
 		String key = criteriaDefinition.getKey();
 
 		if (existing == null) {

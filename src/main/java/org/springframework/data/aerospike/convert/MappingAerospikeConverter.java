@@ -16,7 +16,6 @@
 package org.springframework.data.aerospike.convert;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,8 +26,16 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.data.aerospike.mapping.*;
-import org.springframework.data.convert.*;
+import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
+import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
+import org.springframework.data.aerospike.mapping.CachingAerospikePersistentProperty;
+import org.springframework.data.convert.DefaultTypeMapper;
+import org.springframework.data.convert.EntityInstantiator;
+import org.springframework.data.convert.EntityInstantiators;
+import org.springframework.data.convert.TypeAliasAccessor;
+import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PropertyHandler;
@@ -46,6 +53,7 @@ import org.springframework.util.CollectionUtils;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Record;
 import com.aerospike.client.Value;
+import com.aerospike.client.Value.GeoJSONValue;
 import com.aerospike.client.Value.MapValue;
 
 /**
@@ -85,7 +93,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		this.entityInstantiators = new EntityInstantiators();
 		this.simpleTypeHolder = AerospikeSimpleTypes.HOLDER;
 
-		this.typeMapper = new DefaultTypeMapper<AerospikeData>(AerospikeTypeAliasAccessor.INSTANCE, mappingContext, Arrays.asList(SimpleTypeInformationMapper.INSTANCE));
+		this.typeMapper = new DefaultTypeMapper<AerospikeData>(AerospikeTypeAliasAccessor.INSTANCE);
 	}
 
 	/*
@@ -348,6 +356,8 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 			data.addMetaDataItem(fieldName, propertyObj.getClass());
 			Value value = new MapValue((Map<?, ?>) accessor.getProperty(persistentProperty));
 			bins.add(new Bin(fieldName, value));
+		} else if (Value.class.isAssignableFrom(valueType.getType())){
+			bins.add(new Bin(fieldName, propertyObj));
 		} else if (conversionService.canConvert(propertyObj.getClass(), String.class)) {
 			Value value = new Value.StringValue(conversionService.convert(propertyObj, String.class));
 			bins.add(new Bin(fieldName, value));
