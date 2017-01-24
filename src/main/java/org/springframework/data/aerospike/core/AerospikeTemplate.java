@@ -150,13 +150,18 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	@Override
 	public void insert(Serializable id, Object objectToInsert) {
+		insert(id, objectToInsert, null);
+	}
+	
+	@Override
+	public void insert(Serializable id, Object objectToInsert, WritePolicy policy) {
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToInsert, data);
 			data.setID(id);
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
-			client.put(this.insertPolicy, key, bins);
+			client.put(policy == null ? this.insertPolicy : policy, key, bins);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
@@ -184,6 +189,12 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public <T> void save(Serializable id, Object objectToInsert,
 			Class<T> domainType) {
+		 save(id, objectToInsert, domainType, null); 
+	}
+	
+	@Override
+	public <T> void save(Serializable id, Object objectToInsert,
+			Class<T> domainType, WritePolicy policy) {
 		Assert.notNull(id, "Id must not be null!");
 		Assert.notNull(domainType, "Domain Type must not be null!");
 		Assert.notNull(objectToInsert, "Object to insert must not be null!");
@@ -194,7 +205,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 			data.setSetName(AerospikeSimpleTypes.getColletionName(domainType));
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
-			client.put(null, key, bins);
+			client.put(policy, key, bins);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
@@ -222,6 +233,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		}
 	}
 
+	@Override
 	public void save(Serializable id, Object objectToInsert) {
 		Assert.notNull(id, "Id must not be null!");
 		Assert.notNull(objectToInsert, "Object to insert must not be null!");
@@ -232,6 +244,26 @@ public class AerospikeTemplate implements AerospikeOperations {
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
 			client.put(null, key, bins);
+		}
+		catch (AerospikeException o_O) {
+			DataAccessException translatedException = exceptionTranslator
+					.translateExceptionIfPossible(o_O);
+			throw translatedException == null ? o_O : translatedException;
+		}
+	}
+	
+	
+	@Override
+	public void save(Serializable id, Object objectToInsert, WritePolicy policy) {
+		Assert.notNull(id, "Id must not be null!");
+		Assert.notNull(objectToInsert, "Object to insert must not be null!");
+		try {
+			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			converter.write(objectToInsert, data);
+			data.setID(id);
+			Key key = data.getKey();
+			Bin[] bins = data.getBinsAsArray();
+			client.put(policy, key, bins);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
@@ -252,13 +284,18 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	@Override
 	public <T> T insert(T objectToInsert) {
+		return insert(objectToInsert, null);
+	}
+	
+	@Override
+	public <T> T insert(T objectToInsert, WritePolicy policy) {
 		Assert.notNull(objectToInsert, "Object to insert must not be null!");
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToInsert, data);
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
-			client.put(this.insertPolicy, key, bins);
+			client.put(policy == null ? this.insertPolicy : policy, key, bins);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
@@ -270,13 +307,18 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	@Override
 	public void update(Object objectToUpdate) {
+		update( objectToUpdate,  null);
+	}
+	
+	@Override
+	public void update(Object objectToUpdate, WritePolicy policy) {
 		Assert.notNull(objectToUpdate, "Object to update must not be null!");
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToUpdate, data);
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
-			client.put(this.updatePolicy, key, bins);
+			client.put(policy == null ? this.updatePolicy : policy, key, bins);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
@@ -287,13 +329,18 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	@Override
 	public void update(Serializable id, Object objectToUpdate) {
+		update(id, objectToUpdate, null);
+	}
+	
+	@Override
+	public void update(Serializable id, Object objectToUpdate, WritePolicy policy) {
 		Assert.notNull(id, "Id must not be null!");
 		Assert.notNull(objectToUpdate, "Object to update must not be null!");
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToUpdate, data);
 			data.setID(id);
-			client.put(this.updatePolicy, data.getKey(), data.getBinsAsArray());
+			client.put(policy == null ? this.updatePolicy : policy, data.getKey(), data.getBinsAsArray());
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
