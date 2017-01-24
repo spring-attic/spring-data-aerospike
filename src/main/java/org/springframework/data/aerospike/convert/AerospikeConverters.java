@@ -22,6 +22,7 @@ import org.springframework.core.convert.converter.Converter;
 
 import com.aerospike.client.Bin;
 import com.aerospike.client.Value;
+import com.aerospike.client.Value.GeoJSONValue;
 
 /**
  * Wrapper class to contain useful converters 
@@ -88,6 +89,18 @@ abstract class AerospikeConverters {
 
 		public Value convert(Byte[] source) {
 			return source == null ? null : Value.get(source);
+		}
+	}
+	
+	public static enum StringToAerospikeGeoJSONValueConverter implements Converter<String, GeoJSONValue>{
+		INSTANCE;
+		
+		/* (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		@Override
+		public GeoJSONValue convert(String source) {
+			return new GeoJSONValue(source);
 		}
 	}
 

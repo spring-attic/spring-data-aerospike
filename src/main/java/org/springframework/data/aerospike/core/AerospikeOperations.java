@@ -25,6 +25,7 @@ import org.springframework.data.keyvalue.core.KeyValueCallback;
 import org.springframework.data.mapping.context.MappingContext;
 
 import com.aerospike.client.Value;
+import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 
@@ -50,6 +51,15 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 * @return
 	 */
 	public <T> T insert(T objectToInsert);
+	
+	/**
+	 * Insert operation using the WritePolicy specified. 
+	 * @param objectToInsert
+	 * @param policy
+	 * @return
+	 */
+	public <T> T insert(T objectToInsert, WritePolicy policy);
+
 	/**
 	 * Insert operation using the WritePolicy.recordExisits policy of CREATE_ONLY 
 	 * @param id
@@ -58,14 +68,39 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	void insert(Serializable id, Object objectToInsert);
 	
 	/**
+	 * Insert operation using the WritePolicy specified.
+	 * @param id
+	 * @param objectToInsert
+	 * @param policy
+	 */
+	void insert(Serializable id, Object objectToInsert, WritePolicy policy);
+	
+	/**
 	 * @return mapping context in use.
 	 */
 	MappingContext<?, ?> getMappingContext();
 	
+	/**
+	 * Save operation using the WritePolicy.recordExisits policy of CREATE_ONLY 
+	 * @param id
+	 * @param objectToInsert
+	 */
 	void save(Serializable id, Object objectToInsert);
+	
+	/**
+	 * Save operation using the WritePolicy specified.
+	 * @param id
+	 * @param objectToInsert
+	 * @param policy
+	 */
+	void save(Serializable id, Object objectToInsert, WritePolicy policy);
+	
 	<T> void save(Serializable id, Object objectToInsert, Class<T> domainType);
+	<T> void save(Serializable id, Object objectToInsert, Class<T> domainType, WritePolicy policy);
 	void update(Object objectToUpdate);
+	void update(Object objectToUpdate, WritePolicy policy);
 	void update(Serializable id, Object objectToUpdate);
+	void update(Serializable id, Object objectToUpdate, WritePolicy policy);
 	
 	void delete(Class<?> type);
 	

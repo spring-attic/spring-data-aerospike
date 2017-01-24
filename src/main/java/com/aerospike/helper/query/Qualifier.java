@@ -69,7 +69,7 @@ public class Qualifier implements Map<String, Object>, Serializable {
 	public enum FilterOperation {
 		EQ, GT, GTEQ, LT, LTEQ, NOTEQ, BETWEEN, START_WITH, ENDS_WITH,
 		LIST_CONTAINS, MAP_KEYS_CONTAINS, MAP_VALUES_CONTAINS,
-		LIST_BETWEEN, MAP_KEYS_BETWEEN, MAP_VALUES_BETWEEN
+		LIST_BETWEEN, MAP_KEYS_BETWEEN, MAP_VALUES_BETWEEN, GEO_WITHIN
 	}
 
 	public Qualifier() {
@@ -114,8 +114,11 @@ public class Qualifier implements Map<String, Object>, Serializable {
 					return Filter.equal(getField(), getValue1().toLong());
 				else
 					return Filter.equal(getField(), getValue1().toString());
+			case GTEQ:
 			case BETWEEN:
-				return Filter.range(getField(), getValue1().toLong(), getValue2().toLong());
+				return Filter.range(getField(), getValue1().toLong(), getValue2()==null?Long.MAX_VALUE:getValue2().toLong());
+			case GT:
+				return Filter.range(getField(), getValue1().toLong()+1, getValue2()==null?Long.MAX_VALUE:getValue2().toLong());
 			case LIST_CONTAINS:
 				return collectionContains(IndexCollectionType.LIST);
 			case MAP_KEYS_CONTAINS:
@@ -128,9 +131,15 @@ public class Qualifier implements Map<String, Object>, Serializable {
 				return collectionRange(IndexCollectionType.MAPKEYS);
 			case MAP_VALUES_BETWEEN:
 				return collectionRange(IndexCollectionType.MAPKEYS);
+			case GEO_WITHIN:
+				return geoWithinRadius(IndexCollectionType.DEFAULT);
 			default:
 				return null;
 		}
+	}
+
+	private Filter geoWithinRadius(IndexCollectionType collectionType) {
+		return  Filter.geoContains(getField(), getValue1().toString());
 	}
 
 	private Filter collectionContains(IndexCollectionType collectionType) {
@@ -192,6 +201,9 @@ public class Qualifier implements Map<String, Object>, Serializable {
 						luaFieldString(getField()),
 						value1,
 						value1);
+			case GEO_WITHIN:
+				System.out.println(value1);
+				return String.format("%s %d %s %s)", getField(), ParticleType.GEOJSON, value1, value1);
 		}
 		return "";
 	}
@@ -213,10 +225,13 @@ public class Qualifier implements Map<String, Object>, Serializable {
 			//		case ParticleType.DOUBLE:
 			//			res = value.toString();
 			//			break;
-			case ParticleType.STRING:
-				res = String.format("'%s'", value.toString());
-				break;
-			default:
+		case ParticleType.STRING:
+			res = String.format("'%s'", value.toString());
+			break;
+		case ParticleType.GEOJSON:
+			res = String.format("'%s'", value.toString());
+			break;
+		default:
 				res = value.toString();
 				break;
 		}

@@ -23,6 +23,10 @@ RepositoryFactoryBeanSupport<T, S, ID> {
 	
 	private AerospikeOperations operations;
 	private Class<? extends AbstractQueryCreator<?, ?>> queryCreator;
+	
+	public AerospikeRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+		super(repositoryInterface);
+	}
 
 	@Override
 	public void setMappingContext(MappingContext<?, ?> mappingContext) {

@@ -224,7 +224,7 @@ public class AerospikeTemplateIntegrationTests {
 		Method method = PersonRepository.class.getMethod(methodName, argTypes);
 
 		PartTree partTree = new PartTree(method.getName(), Person.class);
-		AerospikeQueryCreator creator = new AerospikeQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,repositoryMetaData).getParameters(), args));
+		AerospikeQueryCreator creator = new AerospikeQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,repositoryMetaData, null).getParameters(), args));
 
 		Query<T> q = (Query<T>) creator.createQuery();
 

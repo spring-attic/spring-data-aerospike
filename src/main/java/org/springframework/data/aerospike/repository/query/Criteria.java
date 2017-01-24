@@ -128,7 +128,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria gt(Object o, String propertyName) {
 		Qualifier qualifier = new Qualifier(propertyName,
-				Qualifier.FilterOperation.EQ, Value.get(o));
+				Qualifier.FilterOperation.GT, Value.get(o));
 		this.isValue = o;
 		this.criteria.put(Qualifier.FilterOperation.GT.name(), qualifier);
 		return this;
@@ -141,7 +141,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria gte(Object o,String propertyName) {
 		Qualifier qualifier = new Qualifier(propertyName,
-				Qualifier.FilterOperation.EQ, Value.get(o));
+				Qualifier.FilterOperation.GTEQ, Value.get(o));
 		this.isValue = o;
 		this.criteria.put(Qualifier.FilterOperation.GTEQ.name(), qualifier);
 		return this;
@@ -154,7 +154,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria lt(Object o,String propertyName) {
 		Qualifier qualifier = new Qualifier(propertyName,
-				Qualifier.FilterOperation.EQ, Value.get(o));
+				Qualifier.FilterOperation.LT, Value.get(o));
 		this.isValue = o;
 		this.criteria.put(Qualifier.FilterOperation.LT.name(), qualifier);
 		return this;
@@ -166,7 +166,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria lte(Object o,String propertyName) {
 		Qualifier qualifier = new Qualifier(propertyName,
-				Qualifier.FilterOperation.EQ, Value.get(o));
+				Qualifier.FilterOperation.LTEQ, Value.get(o));
 		this.isValue = o;
 		this.criteria.put(Qualifier.FilterOperation.LTEQ.name(), qualifier);
 		return this;
@@ -300,6 +300,15 @@ public class Criteria implements CriteriaDefinition {
 				qualifier);
 		return this;
 
+	}
+
+	public Criteria geo_within(Object lng, Object lat, Object radius, String propertyName) {
+		Qualifier qualifier = new Qualifier(propertyName,
+				Qualifier.FilterOperation.GEO_WITHIN, Value.get(String.format("{ \"type\": \"AeroCircle\", "
+						  + "\"coordinates\": [[%.8f, %.8f], %f] }",
+						  lng, lat, radius)));
+		this.criteria.put(Qualifier.FilterOperation.GEO_WITHIN.name(), qualifier);
+		return this;
 	}
 
 }

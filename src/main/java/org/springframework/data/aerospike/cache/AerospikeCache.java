@@ -1,6 +1,8 @@
 package org.springframework.data.aerospike.cache;
 
 
+import java.util.concurrent.Callable;
+
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.SimpleValueWrapper;
 
@@ -86,5 +88,12 @@ public class AerospikeCache implements Cache {
 		Record record = client.operate(this.createOnly, getKey(key), Operation.put(new Bin(VALUE, value)), Operation.get(VALUE));
 		return toWrapper(record);
 	}
+
+	@Override
+	public <T> T get(Object key, Callable<T> valueLoader) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 }

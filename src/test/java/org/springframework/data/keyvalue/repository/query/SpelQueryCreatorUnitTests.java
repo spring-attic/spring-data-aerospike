@@ -227,7 +227,7 @@ public class SpelQueryCreatorUnitTests {
 		Method method = PersonRepository.class.getMethod(methodName, argTypes);
 
 		PartTree partTree = new PartTree(method.getName(), method.getReturnType());
-		SpelQueryCreator creator = new SpelQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,metadataMock).getParameters(), args));
+		SpelQueryCreator creator = new SpelQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,metadataMock, null).getParameters(), args));
 
 		KeyValueQuery<SpelExpression> q = creator.createQuery();
 		q.getCritieria().setEvaluationContext(new StandardEvaluationContext(args));

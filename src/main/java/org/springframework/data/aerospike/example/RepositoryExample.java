@@ -4,6 +4,7 @@
 package org.springframework.data.aerospike.example;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.data.aerospike.core.AerospikeOperations;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.example.config.TestRepositoryConfig;
+import org.springframework.data.aerospike.example.data.CLRentPage;
 import org.springframework.data.aerospike.example.data.Person;
 
 import com.aerospike.client.AerospikeClient;
@@ -27,6 +29,9 @@ import com.aerospike.client.query.IndexType;
 public class RepositoryExample {
 
 	@Autowired
+	protected CLRentPageRepository clrepository;
+
+	@Autowired
 	protected PersonRepository repository;
 
 	@Autowired
@@ -40,6 +45,7 @@ public class RepositoryExample {
 	 */
 	public RepositoryExample(ApplicationContext ctx) {
 		aerospikeOperations = ctx.getBean(AerospikeTemplate.class);
+		clrepository = (CLRentPageRepository) ctx.getBean("CLRentPageRepository");
 		repository = (PersonRepository) ctx.getBean("personRepository");
 		client = ctx.getBean(AerospikeClient.class);
 	}
@@ -81,14 +87,28 @@ public class RepositoryExample {
 	 * 
 	 */
 	protected void executeRepositoryCall() {
+//		System.out.println("Results for name startting with letter 'M'");
+//		List<Person> resultPartial = repository.findByNameStartsWith("M");
+//		for (Person person : resultPartial) {
+//			System.out.println(person.toString());
+//		}
+//
+		
+		
+
+		System.out.println("Querying by Location.....");
+		long t = new Date().getTime() - 10*3600*1000;//1484690036000L;
+//		List<CLRentPage> pages = clrepository.findByGeoLocationWithin( -122.429245, 37.705574 ,10000);
+//		List<CLRentPage> pages = clrepository.findByPostDateAfterAndGeoLocationWithin(t, -122.429245, 37.705574 ,10000);
+		List<CLRentPage> pages = clrepository.findByGeoLocationWithinAndPostDateAfter(-122.429245, 37.705574 ,10000, t);
+//		List<CLRentPage> pages = clrepository.findByPostDateAfter(t);
+		System.out.println("result count: " + pages.size());
+		for(CLRentPage p : pages){
+			System.out.println("......id=" + p.getId() + ", postTime=" + p.getPostDate());
+		}
 		List<Person> result = repository.findByName("Beauford");
 		System.out.println("Results for exact match of 'Beauford'");
 		for (Person person : result) {
-			System.out.println(person.toString());
-		}
-		System.out.println("Results for name startting with letter 'M'");
-		List<Person> resultPartial = repository.findByNameStartsWith("M");
-		for (Person person : resultPartial) {
 			System.out.println(person.toString());
 		}
 	}
@@ -98,7 +118,7 @@ public class RepositoryExample {
 		ApplicationContext ctx = new AnnotationConfigApplicationContext(
 				TestRepositoryConfig.class);
 		RepositoryExample repositoryExample = new RepositoryExample(ctx);
-		repositoryExample.setUp();
+//		repositoryExample.setUp();
 		repositoryExample.executeRepositoryCall();
 		repositoryExample.cleanUp();
 	}

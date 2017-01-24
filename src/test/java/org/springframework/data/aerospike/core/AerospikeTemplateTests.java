@@ -485,7 +485,7 @@ public class AerospikeTemplateTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullTypeObjectToBeSaved() {
-		template.save("",null,null);
+		template.save("",null,null,null);
 	}
 
 	@SuppressWarnings("rawtypes")
