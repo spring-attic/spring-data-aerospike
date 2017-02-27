@@ -16,6 +16,7 @@ import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
+import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 
@@ -73,7 +74,8 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query<?>, Crite
 	private Criteria from(Part part, AerospikePersistentProperty property, Criteria criteria, Iterator<?> parameters) {
 		Type type = part.getType();
 		String fieldName = ((CachingAerospikePersistentProperty) property).getFieldName();
-
+		IgnoreCaseType ignoreCase = part.shouldIgnoreCase();
+		
 		switch (type) {
 			case AFTER:
 			case GREATER_THAN:
@@ -96,11 +98,11 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query<?>, Crite
 				return criteria.in(parameters.next());
 			case LIKE:
 			case STARTING_WITH:
-				return criteria.startingWith(parameters.next(), fieldName);
+				return criteria.startingWith(parameters.next(), fieldName, ignoreCase);
 			case ENDING_WITH:
 				return null;
 			case CONTAINING:
-				return criteria.containing(parameters.next(), fieldName);
+				return criteria.containing(parameters.next(), fieldName, ignoreCase);
 			case NOT_CONTAINING:
 				return null;
 			case REGEX:

@@ -36,6 +36,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
+
 import com.aerospike.client.Value;
 import com.aerospike.client.command.ParticleType;
 import com.aerospike.client.query.Filter;
@@ -61,13 +63,14 @@ import com.aerospike.client.query.IndexCollectionType;
 public class Qualifier implements Map<String, Object>, Serializable {
 	private static final long serialVersionUID = -2689196529952712849L;
 	private static final String FIELD = "field";
+	private static final String IGNORE_CASE = "ignoreCase";
 	private static final String VALUE2 = "value2";
 	private static final String VALUE1 = "value1";
 	private static final String OPERATION = "operation";
 	protected Map<String, Object> internalMap;
 
 	public enum FilterOperation {
-		EQ, GT, GTEQ, LT, LTEQ, NOTEQ, BETWEEN, START_WITH, ENDS_WITH,CONTAINING,
+		EQ, GT, GTEQ, LT, LTEQ, NOTEQ, BETWEEN, START_WITH, ENDS_WITH, CONTAINING,
 		LIST_CONTAINS, MAP_KEYS_CONTAINS, MAP_VALUES_CONTAINS,
 		LIST_BETWEEN, MAP_KEYS_BETWEEN, MAP_VALUES_BETWEEN, GEO_WITHIN
 	}
@@ -78,14 +81,19 @@ public class Qualifier implements Map<String, Object>, Serializable {
 	}
 
 	public Qualifier(String field, FilterOperation operation, Value value1) {
+		this(field, operation, IgnoreCaseType.NEVER, value1);
+	}
+	
+	public Qualifier(String field, FilterOperation operation, IgnoreCaseType ignoreCase, Value value1) {
 		this();
 		internalMap.put(FIELD, field);
 		internalMap.put(OPERATION, operation);
 		internalMap.put(VALUE1, value1);
+		internalMap.put(IGNORE_CASE, ignoreCase);
 	}
 
 	public Qualifier(String field, FilterOperation operation, Value value1, Value value2) {
-		this(field, operation, value1);
+		this(field, operation, IgnoreCaseType.NEVER, value1);
 		internalMap.put(VALUE2, value2);
 	}
 
@@ -194,7 +202,10 @@ public class Qualifier implements Map<String, Object>, Serializable {
 				value2 = luaValueString(getValue2());
 				return String.format("rangeValue(%s, %s, %s)", luaFieldString(getField()), value1, value2);
 			case START_WITH:
-				return String.format("string.sub(%s,1,string.len(%s))==%s", luaFieldString(getField()), value1, value1);
+				if(IgnoreCaseType.ALWAYS == internalMap.get(IGNORE_CASE))
+					return String.format("string.upper(string.sub(%s,1,string.len(%s)))==%s", luaFieldString(getField()), value1, value1.toUpperCase());
+				else
+					return String.format("string.sub(%s,1,string.len(%s))==%s", luaFieldString(getField()), value1, value1);
 			case ENDS_WITH:
 				return String.format("%s=='' or string.sub(%s,-string.len(%s))==%s",
 						value1,
@@ -202,7 +213,10 @@ public class Qualifier implements Map<String, Object>, Serializable {
 						value1,
 						value1);
 			case CONTAINING:
-				return String.format("string.find(%s, %s)", luaFieldString(getField()), value1);
+				if(IgnoreCaseType.ALWAYS == internalMap.get(IGNORE_CASE))
+					return String.format("string.find(string.upper(%s), %s)", luaFieldString(getField()), value1.toUpperCase());
+				else
+					return String.format("string.find(%s, %s)", luaFieldString(getField()), value1);
 			case GEO_WITHIN:
 				return String.format("%s %d %s %s)", getField(), ParticleType.GEOJSON, value1, value1);
 		}
