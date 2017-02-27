@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.aerospike.InvalidAerospikeDataAccessApiUsageException;
+import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.util.CollectionUtils;
 
 import com.aerospike.client.Value;
@@ -293,9 +294,9 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria2
 	 * @return
 	 */
-	public Criteria startingWith(Object o,String propertyName) {
+	public Criteria startingWith(Object o,String propertyName, IgnoreCaseType ignoreCase) {
 		Qualifier qualifier = new Qualifier(propertyName,
-				Qualifier.FilterOperation.START_WITH, Value.get(o));
+				Qualifier.FilterOperation.START_WITH, ignoreCase, Value.get(o));
 		this.criteria.put(Qualifier.FilterOperation.START_WITH.name(),
 				qualifier);
 		return this;
@@ -308,9 +309,9 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria2
 	 * @return
 	 */
-	public Criteria containing(Object o,String propertyName) {
+	public Criteria containing(Object o,String propertyName, IgnoreCaseType ignoreCase) {
 		Qualifier qualifier = new Qualifier(propertyName,
-				Qualifier.FilterOperation.CONTAINING, Value.get(o));
+				Qualifier.FilterOperation.CONTAINING, ignoreCase, Value.get(o));
 		this.criteria.put(Qualifier.FilterOperation.CONTAINING.name(),
 				qualifier);
 		return this;
