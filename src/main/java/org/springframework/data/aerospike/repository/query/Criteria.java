@@ -302,6 +302,29 @@ public class Criteria implements CriteriaDefinition {
 
 	}
 
+	/**
+	 * @param next
+	 * @param part
+	 * @param criteria2
+	 * @return
+	 */
+	public Criteria containing(Object o,String propertyName) {
+		Qualifier qualifier = new Qualifier(propertyName,
+				Qualifier.FilterOperation.CONTAINING, Value.get(o));
+		this.criteria.put(Qualifier.FilterOperation.CONTAINING.name(),
+				qualifier);
+		return this;
+
+	}
+
+	/***
+	 * GEO Query with distance from a geo location given longitude/latitude 
+	 * @param lng
+	 * @param lat
+	 * @param radius
+	 * @param propertyName
+	 * @return
+	 */
 	public Criteria geo_within(Object lng, Object lat, Object radius, String propertyName) {
 		Qualifier qualifier = new Qualifier(propertyName,
 				Qualifier.FilterOperation.GEO_WITHIN, Value.get(String.format("{ \"type\": \"AeroCircle\", "

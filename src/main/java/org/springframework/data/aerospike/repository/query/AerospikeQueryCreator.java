@@ -98,8 +98,9 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query<?>, Crite
 			case STARTING_WITH:
 				return criteria.startingWith(parameters.next(), fieldName);
 			case ENDING_WITH:
-			case CONTAINING:
 				return null;
+			case CONTAINING:
+				return criteria.containing(parameters.next(), fieldName);
 			case NOT_CONTAINING:
 				return null;
 			case REGEX:

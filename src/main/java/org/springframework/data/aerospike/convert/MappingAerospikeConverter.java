@@ -53,7 +53,6 @@ import org.springframework.util.CollectionUtils;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Record;
 import com.aerospike.client.Value;
-import com.aerospike.client.Value.GeoJSONValue;
 import com.aerospike.client.Value.MapValue;
 
 /**

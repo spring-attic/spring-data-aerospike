@@ -67,7 +67,7 @@ public class Qualifier implements Map<String, Object>, Serializable {
 	protected Map<String, Object> internalMap;
 
 	public enum FilterOperation {
-		EQ, GT, GTEQ, LT, LTEQ, NOTEQ, BETWEEN, START_WITH, ENDS_WITH,
+		EQ, GT, GTEQ, LT, LTEQ, NOTEQ, BETWEEN, START_WITH, ENDS_WITH,CONTAINING,
 		LIST_CONTAINS, MAP_KEYS_CONTAINS, MAP_VALUES_CONTAINS,
 		LIST_BETWEEN, MAP_KEYS_BETWEEN, MAP_VALUES_BETWEEN, GEO_WITHIN
 	}
@@ -201,8 +201,9 @@ public class Qualifier implements Map<String, Object>, Serializable {
 						luaFieldString(getField()),
 						value1,
 						value1);
+			case CONTAINING:
+				return String.format("string.find(%s, %s)", luaFieldString(getField()), value1);
 			case GEO_WITHIN:
-				System.out.println(value1);
 				return String.format("%s %d %s %s)", getField(), ParticleType.GEOJSON, value1, value1);
 		}
 		return "";
