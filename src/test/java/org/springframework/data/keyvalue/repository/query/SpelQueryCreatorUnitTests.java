@@ -5,6 +5,7 @@ package org.springframework.data.keyvalue.repository.query;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -19,6 +20,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.keyvalue.core.query.KeyValueQuery;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
@@ -153,7 +156,7 @@ public class SpelQueryCreatorUnitTests {
 		}
 	}
 	
-	static interface PersonRepository {
+	static interface PersonRepository  extends CrudRepository<Person, String> {
 
 		// Type.SIMPLE_PROPERTY
 		Person findByFirstname(String firstname);
@@ -214,6 +217,7 @@ public class SpelQueryCreatorUnitTests {
 		return new Evaluation((SpelExpression) createQueryForMethodWithArgs(methodName, args).getCritieria());
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private KeyValueQuery<SpelExpression> createQueryForMethodWithArgs(String methodName, Object... args)
 			throws NoSuchMethodException, SecurityException {
 
@@ -225,9 +229,9 @@ public class SpelQueryCreatorUnitTests {
 		}
 
 		Method method = PersonRepository.class.getMethod(methodName, argTypes);
-
+		when(metadataMock.getReturnedDomainClass(method)).thenReturn((Class) Person.class);
 		PartTree partTree = new PartTree(method.getName(), method.getReturnType());
-		SpelQueryCreator creator = new SpelQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,metadataMock, null).getParameters(), args));
+		SpelQueryCreator creator = new SpelQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,metadataMock, new SpelAwareProxyProjectionFactory()).getParameters(), args));
 
 		KeyValueQuery<SpelExpression> q = creator.createQuery();
 		q.getCritieria().setEvaluationContext(new StandardEvaluationContext(args));
@@ -242,6 +246,6 @@ public class SpelQueryCreatorUnitTests {
 	
 	@Test
 	public void equalsReturnsTrueWhenMatching() throws Exception {
-		assertThat(evaluate("findByFirstname", BRAN.firstname).against(BRAN), is(true));
+		assertThat(evaluate("findByFirstname", RICKON.firstname).against(RICKON), is(true));
 	}
 }

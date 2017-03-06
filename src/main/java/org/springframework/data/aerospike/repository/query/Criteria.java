@@ -296,7 +296,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria startingWith(Object o,String propertyName, IgnoreCaseType ignoreCase) {
 		Qualifier qualifier = new Qualifier(propertyName,
-				Qualifier.FilterOperation.START_WITH, ignoreCase, Value.get(o));
+				Qualifier.FilterOperation.START_WITH, ignoreCase==IgnoreCaseType.ALWAYS, Value.get(o));
 		this.criteria.put(Qualifier.FilterOperation.START_WITH.name(),
 				qualifier);
 		return this;
@@ -311,7 +311,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria containing(Object o,String propertyName, IgnoreCaseType ignoreCase) {
 		Qualifier qualifier = new Qualifier(propertyName,
-				Qualifier.FilterOperation.CONTAINING, ignoreCase, Value.get(o));
+				Qualifier.FilterOperation.CONTAINING, ignoreCase==IgnoreCaseType.ALWAYS, Value.get(o));
 		this.criteria.put(Qualifier.FilterOperation.CONTAINING.name(),
 				qualifier);
 		return this;
