@@ -35,6 +35,7 @@ import org.springframework.data.aerospike.repository.PersonRepository;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
@@ -43,9 +44,17 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
 
-import com.aerospike.client.*;
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.AerospikeException;
+import com.aerospike.client.Bin;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.ScanCallback;
 import com.aerospike.client.policy.ScanPolicy;
-import com.aerospike.client.query.*;
+import com.aerospike.client.query.Filter;
+import com.aerospike.client.query.IndexType;
+import com.aerospike.client.query.RecordSet;
+import com.aerospike.client.query.Statement;
 import com.aerospike.client.task.IndexTask;
 
 /**
@@ -224,7 +233,7 @@ public class AerospikeTemplateIntegrationTests {
 		Method method = PersonRepository.class.getMethod(methodName, argTypes);
 
 		PartTree partTree = new PartTree(method.getName(), Person.class);
-		AerospikeQueryCreator creator = new AerospikeQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,repositoryMetaData, null).getParameters(), args));
+		AerospikeQueryCreator creator = new AerospikeQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,repositoryMetaData, new SpelAwareProxyProjectionFactory()).getParameters(), args));
 
 		Query<T> q = (Query<T>) creator.createQuery();
 
@@ -347,8 +356,8 @@ public class AerospikeTemplateIntegrationTests {
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin(
 				"firstname", "Aabbbt"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 30));
-
-		Query query = createQueryForMethodWithArgs("findByLastnameOrderByFirstnameDesc","Matthews");
+		Object [] args = {"Matthews"};
+		Query query = createQueryForMethodWithArgs("findByLastnameOrderByFirstnameDesc",args);
 
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
@@ -395,7 +404,7 @@ public class AerospikeTemplateIntegrationTests {
 		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin(
 				"firstname", "Dave10"), new Bin("lastname", "Matthews"), new Bin(
 				"age", 30));
-
+		
 		Query query = createQueryForMethodWithArgs("findCustomerByAgeBetween", 25,30);
 
 		Iterable<Person> it = template.find(query, Person.class);

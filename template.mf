@@ -8,6 +8,7 @@ Import-Template:
     gnu.crypto.util;version="0",
     org.apache.log4j;version="0",
     com.aerospike.client.*;version="${aerospike:[=.=.=,+1.0.0)}",
+    com.aerospike.helper.*;version="${aerospike:[=.=.=,+1.0.0)}",
     org.springframework.*;version="${spring:[=.=.=,+1.0.0)}",
     org.springframework.data.*;version="${springdata.commons:[=.=.=,+1.0.0)}",
     org.springframework.data.keyvalue;version="${springdata.keyvalue:[=.=.=,+1.0.0)}",
