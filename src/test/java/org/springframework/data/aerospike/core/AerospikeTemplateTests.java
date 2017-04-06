@@ -169,7 +169,7 @@ public class AerospikeTemplateTests {
 			System.out.print(firstPerson+"\n");
 			count++;
 		}
-		Assert.assertEquals(4, count);
+		Assert.assertEquals(2, count);
 	}
 
 	@SuppressWarnings("rawtypes")
