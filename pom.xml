@@ -14,13 +14,13 @@
  	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>1.9.0.BUILD-SNAPSHOT</version>
+		<version>1.9.1.RELEASE</version>
 	</parent>
 
     <properties>
         <aerospike>3.3.2</aerospike>
-        <springdata.commons>1.13.0.RC1</springdata.commons>
-        <springdata.keyvalue>1.2.0.M1</springdata.keyvalue>
+        <springdata.commons>1.13.1.RELEASE</springdata.commons>
+        <springdata.keyvalue>1.2.1.RELEASE</springdata.keyvalue>
         <dist.key>DATAAERO</dist.key>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <asciidoctor.maven.plugin.version>1.5.2.1</asciidoctor.maven.plugin.version>
