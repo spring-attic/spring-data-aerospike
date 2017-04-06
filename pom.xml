@@ -19,12 +19,13 @@
 
     <properties>
         <aerospike>3.3.2</aerospike>
+        <aerospike-helper-java.version>1.1</aerospike-helper-java.version>
+
         <springdata.commons>1.13.1.RELEASE</springdata.commons>
         <springdata.keyvalue>1.2.1.RELEASE</springdata.keyvalue>
         <dist.key>DATAAERO</dist.key>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <asciidoctor.maven.plugin.version>1.5.2.1</asciidoctor.maven.plugin.version>
-        <jruby.version>1.7.20.1</jruby.version>
 
         <spring-boot-starter-test.version>1.5.1.RELEASE</spring-boot-starter-test.version>
         <testcontainers.version>1.2.0</testcontainers.version>
@@ -32,18 +33,43 @@
 
     </properties>
 
+    <dependencyManagement>
+
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-commons</artifactId>
+                <version>${springdata.commons}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-keyvalue</artifactId>
+                <version>${springdata.keyvalue}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.aerospike</groupId>
+                <artifactId>aerospike-client</artifactId>
+                <version>${aerospike}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.aerospike</groupId>
+                <artifactId>aerospike-helper-java</artifactId>
+                <version>${aerospike-helper-java.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
 
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
-            <version>${springdata.commons}</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-keyvalue</artifactId>
-            <version>${springdata.keyvalue}</version>
         </dependency>
 
         <dependency>
@@ -62,42 +88,13 @@
         </dependency>
 
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>1.10.19</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>hamcrest-core</artifactId>
-                    <groupId>org.hamcrest</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>com.aerospike</groupId>
             <artifactId>aerospike-client</artifactId>
-            <version>${aerospike}</version>
         </dependency>
 
         <dependency>
             <groupId>com.aerospike</groupId>
             <artifactId>aerospike-helper-java</artifactId>
-            <version>1.1</version>
-        </dependency>
-
-        <!-- Logging -->
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
-        </dependency>
-
-        <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-            <version>2.7</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
