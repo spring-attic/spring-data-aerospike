@@ -107,8 +107,7 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 
 		Key key = makeKey(keyspace.toString(), id.toString());
 		Record record = client.get(null, key);
-		AerospikeData data = AerospikeData.forRead(key, null);
-		data.setRecord(record);
+		AerospikeData data = AerospikeData.forRead(key, record);
 		return converter.read(Object.class,  data);
 	}
 

@@ -46,6 +46,7 @@ public class AerospikeDataTest {
 	@Mock AerospikeTemplate mockTtemplate;
 	@Mock AerospikeClient mockClient;
 	@Mock AerospikeData mockAerospikeData;
+	private Key key = new Key(AerospikeDataTest.AEROSPIKE_NAME_SPACE, AerospikeDataTest.AEROSPIKE_SET_NAME, AerospikeDataTest.AEROSPIKE_KEY);
 
 	/**
 	 * @throws java.lang.Exception
@@ -63,19 +64,6 @@ public class AerospikeDataTest {
 	}
 
 	/**
-	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#forRead(com.aerospike.client.Key, java.lang.String[])}.
-	 */
-	@Test
-	public void testForRead() {
-		Key key = new Key(AerospikeDataTest.AEROSPIKE_NAME_SPACE, AerospikeDataTest.AEROSPIKE_SET_NAME, AerospikeDataTest.AEROSPIKE_KEY);
-		AerospikeData data = AerospikeData.forRead(key, null);
-		assertEquals(key,  data.getKey());
-		assertNull(data.getRecord());
-		assertEquals(AerospikeDataTest.AEROSPIKE_NAME_SPACE, data.getNamespace());
-		assertEquals(Collections.<Bin>emptyList(), data.getBins());
-	}
-
-	/**
 	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#forWrite(java.lang.String)}.
 	 */
 	@Test
@@ -85,18 +73,6 @@ public class AerospikeDataTest {
 		assertNull(data.getRecord());
 		assertEquals(AerospikeDataTest.AEROSPIKE_NAME_SPACE, data.getNamespace());
 		assertEquals( new ArrayList<Bin>(), data.getBins());
-	}
-
-	/**
-	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#getKey()}.
-	 */
-	@Test
-	public void testGetKey() {
-		Key key = new Key(AerospikeDataTest.AEROSPIKE_NAME_SPACE, AerospikeDataTest.AEROSPIKE_SET_NAME, AerospikeDataTest.AEROSPIKE_KEY);
-		AerospikeData data = AerospikeData.forRead(key, null);
-		assertEquals(key,  data.getKey());
-		data = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
-		assertNull(data.getKey());
 	}
 
 	/**
@@ -305,12 +281,9 @@ public class AerospikeDataTest {
 		assertArrayEquals(binNames, data.getBinNames());
 	}
 
-	/**
-	 * Test method for {@link org.springframework.data.aerospike.convert.AerospikeData#setRecord(com.aerospike.client.Record)}.
-	 */
 	@SuppressWarnings("serial")
 	@Test
-	public void testSetRecord() {
+	public void testForRead() {
 		int expiration = 200;
 		int generation = 200;
 
@@ -321,9 +294,9 @@ public class AerospikeDataTest {
 			}
 		};
 		Record record = new Record(bins, generation, expiration);
-		AerospikeData data = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
-		data.setRecord(record);
+		AerospikeData data = AerospikeData.forRead(key, record);
 		assertEquals(record, data.getRecord());
+		assertEquals(key,  data.getKey());
 	}
 
 	/**
@@ -356,8 +329,7 @@ public class AerospikeDataTest {
 			}
 		};
 		Record record = new Record(bins, generation, expiration);
-		AerospikeData data = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
-		data.setRecord(record);
+		AerospikeData data = AerospikeData.forRead(key, record);
 		assertEquals("10000", data.getRecord().getValue(AerospikeData.SPRING_ID_BIN));
 	}
 

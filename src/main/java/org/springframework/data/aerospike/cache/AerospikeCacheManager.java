@@ -171,8 +171,7 @@ public class AerospikeCacheManager extends AbstractTransactionSupportingCacheMan
 			Key dbKey = getKey(key);
 			Record record =  client.get(null, dbKey);
 			if (record != null) {
-				AerospikeData data = AerospikeData.forRead(dbKey, null);
-				data.setRecord(record);
+				AerospikeData data = AerospikeData.forRead(dbKey, record);
 				T value = aerospikeConverter.read(type,  data);
 				return value;
 			}

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -33,6 +34,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
+import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -44,13 +46,7 @@ import com.aerospike.client.Key;
  * 
  * @author Venil Noronha
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestConfig.class})
-public class AerospikeCacheMangerTests {
-
-	@Configuration
-	@EnableAerospikeRepositories(basePackageClasses = AerospikeTemplate.class)
-	static class Config extends TestConfig { }
+public class AerospikeCacheMangerTests extends BaseRepositoriesIntegrationTests {
 
 	@Autowired AerospikeClient client;
 

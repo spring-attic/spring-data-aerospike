@@ -17,6 +17,7 @@ import org.springframework.data.aerospike.convert.AerospikeConverter;
 import org.springframework.data.aerospike.core.Person;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.mapping.context.MappingContext;
@@ -28,9 +29,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Peter Milne
  * @author Jean Mercier
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
-public class AerospikeQueryCreatorUnitTests {
+public class AerospikeQueryCreatorUnitTests extends BaseRepositoriesIntegrationTests {
 
 	MappingContext<?, AerospikePersistentProperty> context;
 	Method findByFirstname, findByFirstnameAndFriend, findByFirstnameNotNull;

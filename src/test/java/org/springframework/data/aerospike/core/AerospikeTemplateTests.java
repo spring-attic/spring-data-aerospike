@@ -14,19 +14,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.policy.Policy;
+import com.aerospike.client.policy.WritePolicy;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import org.assertj.core.api.Assertions;
+import org.junit.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.RecoverableDataAccessException;
-import org.springframework.data.aerospike.config.TestConfig;
+import org.springframework.data.aerospike.mapping.Document;
+import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.Version;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Value;
@@ -42,9 +48,7 @@ import com.aerospike.helper.query.Qualifier.FilterOperation;
  * @author Jean Mercier
  *
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestConfig.class})
-public class AerospikeTemplateTests {
+public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 	@Autowired AerospikeTemplate template;
 	@Autowired AerospikeClient client;
@@ -68,6 +72,53 @@ public class AerospikeTemplateTests {
 	@After
 	public void tearDown() throws Exception {
 		cleanDb();
+	}
+
+	@Test
+	public void findById_shouldSetVersionEqualToNumberOfModifications() throws Exception {
+		String id = nextId();
+		template.insert(new VersionedClass(id, "foobar"));
+		template.update(new VersionedClass(id, "foobar1"));
+		template.update(new VersionedClass(id, "foobar2"));
+
+		Record raw = client.get(new Policy(), new Key(info.getNamespace(), "versioned-set", id));
+		Assertions.assertThat(raw.generation).isEqualTo(3);
+		VersionedClass actual = template.findById(id, VersionedClass.class);
+		Assertions.assertThat(actual.getVersion()).isEqualTo(3);
+	}
+
+	@Test
+	public void findById_shouldReturnNullForNonExistingKey() throws Exception {
+		Person one = template.findById("person-non-existing-key", Person.class);
+
+		Assertions.assertThat(one).isNull();
+	}
+
+	@Test
+	public void find_shouldReturnEmptyResultForQueryWithNoResults() throws Exception {
+		template.createIndex(Person.class, "Person_age_index", "age",IndexType.NUMERIC );
+		Query<?> query = new Query<Object>(
+				Criteria.where("age").is(-10, "age"));
+
+		Iterable<Person> it = template.find(query, Person.class);
+
+		int count = 0;
+		for (Person person : it) {
+			count++;
+		}
+		Assertions.assertThat(count).isZero();
+	}
+
+	@Test
+	public void shouldInsertAndFindWithCustomCollectionSet() throws Exception {
+		String id = nextId();
+		CustomCollectionClass initial = new CustomCollectionClass(id, "data0");
+		template.insert(initial, new WritePolicy());
+
+		Record record = client.get(new Policy(), new Key(info.getNamespace(), "custom-set", id));
+
+		Assertions.assertThat(record.getString("data")).isEqualTo("data0");
+		Assertions.assertThat(template.findById(id, CustomCollectionClass.class)).isEqualTo(initial);
 	}
 
 	@Test
@@ -169,7 +220,7 @@ public class AerospikeTemplateTests {
 			System.out.print(firstPerson+"\n");
 			count++;
 		}
-		Assert.assertEquals(4, count);
+		Assert.assertEquals(2, count);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -233,34 +284,15 @@ public class AerospikeTemplateTests {
 
 	@Test  (expected = RecoverableDataAccessException.class)
 	public void testUpdateFailure(){
-		Person personSven01 = new Person("Sven-01","ZLastName",25);
-		Person personSven02 = new Person("Sven-02","QLastName",21);
-		Person personSven03 = new Person("Sven-03","ALastName",24);
-		Person personSven04 = new Person("Sven-04","WLastName",35);
-		Person personSven05 = new Person("Sven-05","svenfirstName",11);
-
-		template.insert(personSven01);
-		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
-
-		template.update("Sven-06", personSven05);
+		template.update(new Person("Sven-06","svenfirstName",11));
 	}
 
 	@Test 
 	public void testUpdateSuccess(){
-		Person personSven01 = new Person("Sven-01","ZLastName",25);
-		Person personSven02 = new Person("Sven-02","QLastName",21);
-		Person personSven03 = new Person("Sven-03","ALastName",24);
-		Person personSven04 = new Person("Sven-04","WLastName",35);
-		Person personSven05 = new Person("Sven-04","WLastName",11);
+		Person person = new Person("Sven-04","WLastName",11);
+		template.insert(person);
 
-		template.insert(personSven01);
-		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
-
-		template.update("Sven-04", personSven05);
+		template.update(person);
 
 		Person result = template.findById("Sven-04", Person.class);
 
@@ -407,7 +439,7 @@ public class AerospikeTemplateTests {
 		Person personWithList = template.findById("Sven-02", Person.class);
 		personWithList.getList().add("Added something new");
 		template.update(personWithList);
-		Person personWithList2 = template.findOne("Sven-02", Person.class);
+		Person personWithList2 = template.findById("Sven-02", Person.class);
 
 		Assert.assertEquals(personWithList2, personWithList);
 		Assert.assertEquals(personWithList2.getList().size(), 4);
@@ -439,7 +471,7 @@ public class AerospikeTemplateTests {
 		Person personWithList = template.findById("Sven-02", Person.class);
 		personWithList.getMap().put("key4","Added something new");
 		template.update(personWithList);
-		Person personWithList2 = template.findOne("Sven-02", Person.class);
+		Person personWithList2 = template.findById("Sven-02", Person.class);
 
 		Assert.assertEquals(personWithList2, personWithList);
 		Assert.assertEquals(personWithList2.getMap().size(), 4);
@@ -480,12 +512,12 @@ public class AerospikeTemplateTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullObjectToBeSaved() {
-		template.save("",null);
+		template.save(null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullTypeObjectToBeSaved() {
-		template.save("",null,null,null);
+		template.save(null,null);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -548,14 +580,117 @@ public class AerospikeTemplateTests {
 	}
 
 	@Test
-	public void TestAdd() {
-		Person personSven01 = new Person("Sven-01", "ZLastName", 25);
+	public void shouldAdd() {
+		String id = nextId();
+		Person one = Person.builder().id(id).age(25).build();
+		template.insert(one);
 
-		template.insert(personSven01);
-		template.add(personSven01, "age", 1);
+		Person updated = template.add(one, "age", 1);
 
-		//clean up
-		template.delete(personSven01);
-		Assert.assertEquals(26, personSven01.getAge());
+		Assertions.assertThat(updated.getAge()).isEqualTo(26);
+	}
+
+	@Test
+	public void shouldAppend() throws Exception {
+		String id = nextId();
+		Person one = Person.builder().id(id).firstName("Nas").build();
+		template.insert(one);
+
+		Person appended = template.append(one, "firstName", "tya");
+
+		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(template.findById(id, Person.class).getFirstName()).isEqualTo("Nastya");
+	}
+
+	@Test
+	public void shouldAppendMultipleFields() throws Exception {
+		String id = nextId();
+		Person one = Person.builder().id(id).firstName("Nas").emailAddress("nastya@").build();
+		template.insert(one);
+
+		Map<String, String> toBeUpdated = new HashMap<>();
+		toBeUpdated.put("firstName", "tya");
+		toBeUpdated.put("email", "gmail.com");
+		Person appended = template.append(one, toBeUpdated);
+
+		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(appended.getEmailAddress()).isEqualTo("nastya@gmail.com");
+		Person actual = template.findById(id, Person.class);
+		Assertions.assertThat(actual.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(actual.getEmailAddress()).isEqualTo("nastya@gmail.com");
+	}
+
+	@Test
+	public void shouldPrepend() throws Exception {
+		String id = nextId();
+		Person one = Person.builder().id(id).firstName("tya").build();
+		template.insert(one);
+
+		Person appended = template.prepend(one, "firstName", "Nas");
+
+		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(template.findById(id, Person.class).getFirstName()).isEqualTo("Nastya");
+	}
+
+	@Test
+	public void shouldPrependMultipleFields() throws Exception {
+		String id = nextId();
+		Person one = Person.builder().id(id).firstName("tya").emailAddress("gmail.com").build();
+		template.insert(one);
+
+		Map<String, String> toBeUpdated = new HashMap<>();
+		toBeUpdated.put("firstName", "Nas");
+		toBeUpdated.put("email", "nastya@");
+		Person appended = template.prepend(one, toBeUpdated);
+
+		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(appended.getEmailAddress()).isEqualTo("nastya@gmail.com");
+		Person actual = template.findById(id, Person.class);
+		Assertions.assertThat(actual.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(actual.getEmailAddress()).isEqualTo("nastya@gmail.com");
+
+	}
+
+	@Getter
+	@EqualsAndHashCode
+	@ToString
+	@Document(collection = "versioned-set")
+	static class VersionedClass {
+
+		@Id
+		private String id;
+
+		@Version
+		private long version;
+
+		private String field;
+
+		@PersistenceConstructor
+		private VersionedClass(String id, String field, long version) {
+			this.id = id;
+			this.field = field;
+			this.version = version;
+		}
+
+		public VersionedClass(String id, String field) {
+			this.id = id;
+			this.field = field;
+		}
+	}
+
+	@Getter
+	@EqualsAndHashCode
+	@ToString
+	@Document(collection = "custom-set")
+	static class CustomCollectionClass {
+
+		@Id
+		private String id;
+		private String data;
+
+		public CustomCollectionClass(String id, String data) {
+			this.id = id;
+			this.data = data;
+		}
 	}
 }

@@ -16,12 +16,8 @@
 
 package org.springframework.data.aerospike.repository;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-
-import java.util.*;
-
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.query.IndexType;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +28,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.util.Assert;
 
-import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.query.IndexType;
+import java.util.*;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Peter Milne
  * @author Jean Mercier
  */
-public abstract class AbstractPersonRepositoryIntegrationTests {
+public abstract class AbstractPersonRepositoryIntegrationTests extends BaseRepositoriesIntegrationTests {
 
 	@Autowired
 	protected PersonRepository repository;
@@ -73,7 +72,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		repository.createIndex(Person.class, "last_name_index", "lastname", IndexType.STRING);
 		repository.createIndex(Person.class, "first_name_index", "firstname", IndexType.STRING);
-		//	repository.createIndex(Person.class,"person_age_index", "age", IndexType.NUMERIC);
+		repository.createIndex(Person.class, "person_age_index", "age", IndexType.NUMERIC);
 
 		all = (List<Person>) repository.save(Arrays.asList(oliver, dave, donny, carter, boyd, stefan, leroi, leroi2, alicia));
 	}
@@ -194,14 +193,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 			System.out.print(person + "\n");
 			count++;
 		}
-		assertEquals(2, count);
+		assertEquals(1, count);
 
 		count = 0;
 		for (Person person : result) {
 			System.out.print(person + "\n");
 			count++;
 		}
-		assertEquals(2, count);
+		assertEquals(1, count);
 	}
 
 //	@Ignore("Searching by association not Supported Yet!" )@Test

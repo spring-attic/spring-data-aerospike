@@ -15,8 +15,11 @@ import org.junit.runners.Suite.SuiteClasses;
  *
  */
 @RunWith(Suite.class)
-@SuiteClasses({ CustomerRepositoriesIntegrationTests.class,
-		PersonRepositoryIntegrationTests.class })
+@SuiteClasses({
+		CustomerRepositoriesIntegrationTests.class,
+		PersonRepositoryIntegrationTests.class,
+		RepositoriesIntegrationTests.class
+})
 public class AllTests {
 
 }

@@ -1,35 +1,100 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.springframework.data</groupId>
+    <groupId>com.aerospike</groupId>
     <artifactId>spring-data-aerospike</artifactId>
-    <version>1.0.1.BUILD-SNAPSHOT</version>
-
+    <version>1.0.2.RELEASE</version>
     <name>Spring Data Aerospike</name>
-
+    <organization>
+        <name>Aerospike Inc.</name>
+        <url>http://www.aerospike.com</url>
+    </organization>
 
  	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>1.9.0.BUILD-SNAPSHOT</version>
+		<version>1.9.1.RELEASE</version>
 	</parent>
 
     <properties>
-        <aerospike>3.3.2</aerospike>
-        <springdata.commons>1.13.0.RC1</springdata.commons>
-        <springdata.keyvalue>1.2.0.M1</springdata.keyvalue>
+        <aerospike>3.3.4</aerospike>
+        <springdata.commons>1.13.1.RELEASE</springdata.commons>
+        <springdata.keyvalue>1.2.1.RELEASE</springdata.keyvalue>
         <dist.key>DATAAERO</dist.key>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <asciidoctor.maven.plugin.version>1.5.2.1</asciidoctor.maven.plugin.version>
         <jruby.version>1.7.20.1</jruby.version>
-
+        <spring-boot-starter-test.version>1.5.1.RELEASE</spring-boot-starter-test.version>
+        <testcontainers.version>1.2.0</testcontainers.version>
+        <docker-java.version>3.0.6</docker-java.version>
     </properties>
 
-    <dependencies>
+    <licenses>
+      <license>
+        <name>The Apache License, Version 2.0</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      </license>
+    </licenses>
 
+    <developers>
+        <developer>
+            <id>Peter Milne</id>
+            <name>Peter Milne</name>
+            <email>peter@aerospike.com</email>
+            <url>http://www.aerospike.com</url>
+            <organization>Aerospike Inc.</organization>
+            <organizationUrl>http://www.aerospike.com</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>-6</timezone>
+        </developer>
+        <developer>
+            <id>Michael Zhang</id>
+            <name>Michael Zhang</name>
+            <email>mzhang@aerospike.com</email>
+            <url>http://www.aerospike.com</url>
+            <organization>Aerospike Inc.</organization>
+            <organizationUrl>http://www.aerospike.com</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>-8</timezone>
+        </developer>
+        <developer>
+            <id>Jeff Boone</id>
+            <name>Jeff Boone</name>
+            <email>jboone@aerospike.com</email>
+            <url>http://www.aerospike.com</url>
+            <organization>Aerospike Inc.</organization>
+            <organizationUrl>http://www.aerospike.com</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>-8</timezone>
+        </developer>
+    </developers>
+
+    <scm>
+      <connection>scm:git:git://github.com/spring-projects/spring-data-aerospike.git</connection>
+      <developerConnection>scm:git:ssh://git@github.com:spring-projects/spring-data-aerospike.git</developerConnection>
+      <url>https://github.com/spring-projects/spring-data-aerospike</url>
+    </scm>
+
+    <distributionManagement>
+      <snapshotRepository>
+        <id>ossrh</id>
+        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      </snapshotRepository>
+      <repository>
+        <id>ossrh</id>
+        <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      </repository>
+    </distributionManagement>
+
+    <dependencies>
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
@@ -95,75 +160,123 @@
             <version>2.7</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>${spring-boot-starter-test.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java</artifactId>
+            <version>${docker-java.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>wagon-maven-plugin</artifactId>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.1</version>
-                    <configuration>
-                        <source>1.8</source>
-                        <target>1.8</target>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.asciidoctor</groupId>
-                    <artifactId>asciidoctor-maven-plugin</artifactId>
-                    <version>${asciidoctor.maven.plugin.version}</version>
-                    <configuration>
-                        <goalPrefix>asciidoctor</goalPrefix>
-                        <backend>html5</backend>
-                        <doctype>book</doctype>
-                        <sourceHighlighter>coderay</sourceHighlighter>
-                    </configuration>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+            </plugin>
 
-                </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>wagon-maven-plugin</artifactId>
+            </plugin>
 
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-                <plugin>
-                    <groupId>org.eclipse.m2e</groupId>
-                    <artifactId>lifecycle-mapping</artifactId>
-                    <version>1.0.0</version>
-                    <configuration>
-                        <lifecycleMappingMetadata>
-                            <pluginExecutions>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>
-                                            org.apache.maven.plugins
-                                        </groupId>
-                                        <artifactId>
-                                            maven-compiler-plugin
-                                        </artifactId>
-                                        <versionRange>
-                                            [3.1,)
-                                        </versionRange>
-                                        <goals>
-                                            <goal>testCompile</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore></ignore>
-                                    </action>
-                                </pluginExecution>
-                            </pluginExecutions>
-                        </lifecycleMappingMetadata>
-                    </configuration>
-                </plugin>
-            </plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
 
-        </pluginManagement>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-javadoc-plugin</artifactId>
+              <version>2.9.1</version>
+              <executions>
+                <execution>
+                  <id>attach-javadocs</id>
+                  <goals>
+                    <goal>jar</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-gpg-plugin</artifactId>
+              <version>1.5</version>
+              <executions>
+                <execution>
+                  <id>sign-artifacts</id>
+                  <phase>verify</phase>
+                  <goals>
+                    <goal>sign</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.asciidoctor</groupId>
+                <artifactId>asciidoctor-maven-plugin</artifactId>
+                <version>${asciidoctor.maven.plugin.version}</version>
+                <configuration>
+                    <goalPrefix>asciidoctor</goalPrefix>
+                    <backend>html5</backend>
+                    <doctype>book</doctype>
+                    <sourceHighlighter>coderay</sourceHighlighter>
+                </configuration>
+            </plugin>
+
+            <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+            <plugin>
+                <groupId>org.eclipse.m2e</groupId>
+                <artifactId>lifecycle-mapping</artifactId>
+                <version>1.0.0</version>
+                <configuration>
+                    <lifecycleMappingMetadata>
+                        <pluginExecutions>
+                            <pluginExecution>
+                                <pluginExecutionFilter>
+                                    <groupId>
+                                        org.apache.maven.plugins
+                                    </groupId>
+                                    <artifactId>
+                                        maven-compiler-plugin
+                                    </artifactId>
+                                    <versionRange>
+                                        [3.1,)
+                                    </versionRange>
+                                    <goals>
+                                        <goal>testCompile</goal>
+                                    </goals>
+                                </pluginExecutionFilter>
+                                <action>
+                                    <ignore></ignore>
+                                </action>
+                            </pluginExecution>
+                        </pluginExecutions>
+                    </lifecycleMappingMetadata>
+                </configuration>
+            </plugin>
+        </plugins>
+
         <resources>
             <resource>
                 <directory>${project.basedir}/src/main/lua</directory>

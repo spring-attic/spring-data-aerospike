@@ -18,6 +18,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.aerospike.config.TestConfig;
+import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -39,9 +40,7 @@ import org.springframework.util.ObjectUtils;
  * @author Jean Mercier
  *
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
-public class SpelQueryCreatorUnitTests {
+public class SpelQueryCreatorUnitTests extends BaseRepositoriesIntegrationTests {
 	
 	static final DateTimeFormatter FORMATTER = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC();
 
