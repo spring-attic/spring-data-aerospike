@@ -3,41 +3,35 @@
  */
 package org.springframework.data.aerospike.core;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.StreamSupport;
-
-import org.assertj.core.api.Assertions;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.RecoverableDataAccessException;
-import org.springframework.data.aerospike.config.TestConfig;
-import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
-import org.springframework.data.aerospike.repository.CompositeObject;
-import org.springframework.data.aerospike.repository.query.Criteria;
-import org.springframework.data.aerospike.repository.query.Query;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
 import com.aerospike.client.Value;
+import com.aerospike.client.policy.Policy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.Qualifier.FilterOperation;
+import lombok.*;
+import org.assertj.core.api.Assertions;
+import org.junit.*;
+import org.junit.rules.TestName;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.RecoverableDataAccessException;
+import org.springframework.data.aerospike.mapping.Document;
+import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
+import org.springframework.data.aerospike.repository.query.Criteria;
+import org.springframework.data.aerospike.repository.query.Query;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.Version;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -47,6 +41,9 @@ import com.aerospike.helper.query.Qualifier.FilterOperation;
  *
  */
 public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
+
+	@Rule
+	public TestName testName = new TestName();
 
 	@Autowired AerospikeTemplate template;
 	@Autowired AerospikeClient client;
@@ -61,6 +58,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 	private void cleanDb() {
 		template.delete(Person.class);
+		template.delete(VersionedClass.class);
 
 	}
 
@@ -70,6 +68,32 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 	@After
 	public void tearDown() throws Exception {
 		cleanDb();
+	}
+
+	@Test
+	public void findById_shouldSetVersionEqualToNumberOfModifications() throws Exception {
+		String id = nextId();
+		template.insert(new VersionedClass(id, "foobar"));
+		template.update(new VersionedClass(id, "foobar1"));
+		template.update(new VersionedClass(id, "foobar2"));
+
+		Record raw = client.get(new Policy(), new Key(info.getNamespace(), "versioned-set", id));
+		assertEquals(3, raw.generation);
+		VersionedClass actual = template.findById(id, VersionedClass.class);
+		assertEquals(3, actual.getVersion());
+	}
+
+	@Test
+	public void findOne_shouldSetVersionEqualToNumberOfModifications() throws Exception {
+		String id = nextId();
+		template.insert(new VersionedClass(id, "foobar"));
+		template.update(new VersionedClass(id, "foobar1"));
+		template.update(new VersionedClass(id, "foobar2"));
+
+		Record raw = client.get(new Policy(), new Key(info.getNamespace(), "versioned-set", id));
+		assertEquals(3, raw.generation);
+		VersionedClass actual = template.findOne(id, VersionedClass.class);
+		assertEquals(3, actual.getVersion());
 	}
 
 	@Test
@@ -165,7 +189,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 			System.out.print(firstPerson+"\n");
 			count++;
 		}
-		Assert.assertEquals(2, count);
+		assertEquals(2, count);
 	}
 
 	@Test 
@@ -200,7 +224,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 			System.out.print(firstPerson+"\n");
 			count++;
 		}
-		Assert.assertEquals(2, count);
+		assertEquals(2, count);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -228,8 +252,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 			System.out.print(person+"\n");
 			count++;
 		}
-		Assert.assertEquals(1, count);
-		Assert.assertEquals(firstPerson, personSven03);
+		assertEquals(1, count);
+		assertEquals(firstPerson, personSven03);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -257,8 +281,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 			System.out.print(person+"\n");
 			count++;
 		}
-		Assert.assertEquals(1, count);
-		Assert.assertEquals(firstPerson, personSven04);
+		assertEquals(1, count);
+		assertEquals(firstPerson, personSven04);
 	}
 
 
@@ -295,7 +319,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Person result = template.findById("Sven-04", Person.class);
 
-		Assert.assertEquals(result.getAge(), 11);
+		assertEquals(result.getAge(), 11);
 	}
 
 	@Test 
@@ -362,7 +386,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Person findDate = template.findById("Sven-02", Person.class);
 
-		Assert.assertEquals(findDate.getDateOfBirth(), birthday1);
+		assertEquals(findDate.getDateOfBirth(), birthday1);
 	}
 
 	@Test 
@@ -382,7 +406,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Person findDate = template.findById("Sven-02", Person.class);
 
-		Assert.assertEquals(findDate.getMap(), map);
+		assertEquals(findDate.getMap(), map);
 	}
 
 	@Test 
@@ -409,8 +433,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Person findDate = template.findById("Sven-02", Person.class);
 
-		Assert.assertEquals(findDate.getMap(), map);
-		Assert.assertEquals(findDate.getList(), list);
+		assertEquals(findDate.getMap(), map);
+		assertEquals(findDate.getList(), list);
 	}
 
 	@Test
@@ -440,8 +464,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.update(personWithList);
 		Person personWithList2 = template.findOne("Sven-02", Person.class);
 
-		Assert.assertEquals(personWithList2, personWithList);
-		Assert.assertEquals(personWithList2.getList().size(), 4);
+		assertEquals(personWithList2, personWithList);
+		assertEquals(personWithList2.getList().size(), 4);
 	}
 
 	@Test
@@ -472,9 +496,9 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.update(personWithList);
 		Person personWithList2 = template.findOne("Sven-02", Person.class);
 
-		Assert.assertEquals(personWithList2, personWithList);
-		Assert.assertEquals(personWithList2.getMap().size(), 4);
-		Assert.assertEquals(personWithList2.getMap().get("key4"), "Added something new");
+		assertEquals(personWithList2, personWithList);
+		assertEquals(personWithList2.getMap().size(), 4);
+		assertEquals(personWithList2.getMap().get("key4"), "Added something new");
 
 	}
 
@@ -573,8 +597,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 			System.out.print(person+"\n");
 			count++;
 		}
-		Assert.assertEquals(1, count);
-		Assert.assertEquals(firstPerson, personWithMail);
+		assertEquals(1, count);
+		assertEquals(firstPerson, personWithMail);
 		assertThat(personWithMail.getEmailAddress(), is("new@mail.com"));
 	}
 
@@ -587,6 +611,33 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		//clean up
 		template.delete(personSven01);
-		Assert.assertEquals(26, personSven01.getAge());
+		assertEquals(26, personSven01.getAge());
+	}
+
+	@Getter
+	@EqualsAndHashCode
+	@ToString
+	@Document(collection = "versioned-set")
+	static class VersionedClass {
+
+		@Id
+		private String id;
+
+		@Version
+		private long version;
+
+		private String field;
+
+		@PersistenceConstructor
+		private VersionedClass(String id, String field, long version) {
+			this.id = id;
+			this.field = field;
+			this.version = version;
+		}
+
+		public VersionedClass(String id, String field) {
+			this.id = id;
+			this.field = field;
+		}
 	}
 }

@@ -15,17 +15,16 @@
  */
 package org.springframework.data.aerospike.core;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-
+import com.aerospike.client.*;
+import com.aerospike.client.cluster.Node;
+import com.aerospike.client.policy.RecordExistsAction;
+import com.aerospike.client.policy.ScanPolicy;
+import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.client.query.*;
+import com.aerospike.client.task.IndexTask;
+import com.aerospike.helper.query.KeyRecordIterator;
+import com.aerospike.helper.query.Qualifier;
+import com.aerospike.helper.query.QueryEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.support.PropertyComparator;
@@ -33,11 +32,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.aerospike.convert.AerospikeData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
-import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
-import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
-import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
-import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
-import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.*;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
@@ -45,34 +40,18 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.keyvalue.core.IterableConverter;
 import org.springframework.data.keyvalue.core.KeyValueCallback;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.comparator.CompoundComparator;
 
-import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.AerospikeException;
-import com.aerospike.client.Bin;
-import com.aerospike.client.Info;
-import com.aerospike.client.Key;
-import com.aerospike.client.Operation;
-import com.aerospike.client.Record;
-import com.aerospike.client.ScanCallback;
-import com.aerospike.client.Value;
-import com.aerospike.client.cluster.Node;
-import com.aerospike.client.policy.RecordExistsAction;
-import com.aerospike.client.policy.ScanPolicy;
-import com.aerospike.client.policy.WritePolicy;
-import com.aerospike.client.query.Filter;
-import com.aerospike.client.query.IndexType;
-import com.aerospike.client.query.KeyRecord;
-import com.aerospike.client.query.ResultSet;
-import com.aerospike.client.query.Statement;
-import com.aerospike.client.task.IndexTask;
-import com.aerospike.helper.query.KeyRecordIterator;
-import com.aerospike.helper.query.Qualifier;
-import com.aerospike.helper.query.QueryEngine;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Primary implementation of {@link AerospikeOperations}.
@@ -958,7 +937,20 @@ public class AerospikeTemplate implements AerospikeOperations {
 		}
 		AerospikeData data = AerospikeData.forRead(key, null);
 		data.setRecord(record);
-		return converter.read(type, data);
+		T readEntity = converter.read(type, data);
+
+		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
+		if (entity.hasVersionProperty()) {
+			final ConvertingPropertyAccessor accessor = getPropertyAccessor(entity, readEntity);
+			accessor.setProperty(entity.getVersionProperty(), data.getRecord().generation);
+		}
+
+		return readEntity;
+	}
+
+	private final ConvertingPropertyAccessor getPropertyAccessor(AerospikePersistentEntity<?> entity, Object source) {
+		PersistentPropertyAccessor accessor = entity.getPropertyAccessor(source);
+		return new ConvertingPropertyAccessor(accessor, converter.getConversionService());
 	}
 
 }
