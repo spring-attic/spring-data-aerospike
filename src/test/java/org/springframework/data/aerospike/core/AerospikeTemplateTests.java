@@ -13,7 +13,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 
+import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -24,6 +26,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
+import org.springframework.data.aerospike.repository.CompositeObject;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.test.context.ContextConfiguration;
@@ -67,6 +70,35 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 	@After
 	public void tearDown() throws Exception {
 		cleanDb();
+	}
+
+	@Test
+	public void findOne_shouldReturnNullForNonExistingKey() throws Exception {
+		Person one = template.findOne("person-non-existing-key", Person.class);
+
+		Assertions.assertThat(one).isNull();
+	}
+
+	@Test
+	public void findById_shouldReturnNullForNonExistingKey() throws Exception {
+		Person one = template.findById("person-non-existing-key", Person.class, Person.class);
+
+		Assertions.assertThat(one).isNull();
+	}
+
+	@Test
+	public void find_shouldReturnEmptyResultForQueryWithNoResults() throws Exception {
+		template.createIndex(Person.class, "Person_age_index", "age",IndexType.NUMERIC );
+		Query<?> query = new Query<Object>(
+				Criteria.where("age").is(-10, "age"));
+
+		Iterable<Person> it = template.find(query, Person.class);
+
+		int count = 0;
+		for (Person person : it) {
+			count++;
+		}
+		Assertions.assertThat(count).isZero();
 	}
 
 	@Test

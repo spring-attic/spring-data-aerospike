@@ -13,11 +13,13 @@ public class CompositeObject {
 
     @Id
     String id;
+    int intValue;
     SimpleObject simpleObject;
 
     @PersistenceConstructor
-    public CompositeObject(String id, SimpleObject simpleObject) {
+    public CompositeObject(String id, int intValue, SimpleObject simpleObject) {
         this.id = id;
+        this.intValue = intValue;
         this.simpleObject = simpleObject;
     }
 
