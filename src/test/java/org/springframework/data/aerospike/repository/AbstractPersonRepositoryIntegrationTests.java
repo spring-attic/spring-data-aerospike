@@ -38,7 +38,7 @@ import static org.junit.Assert.assertThat;
  * @author Peter Milne
  * @author Jean Mercier
  */
-public abstract class AbstractPersonRepositoryIntegrationTests {
+public abstract class AbstractPersonRepositoryIntegrationTests extends BaseRepositoriesIntegrationTests {
 
 	@Autowired
 	protected PersonRepository repository;
