@@ -25,6 +25,7 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -45,7 +46,7 @@ import com.aerospike.client.Key;
  * @author Venil Noronha
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestConfig.class})
+@SpringBootTest(classes = {TestConfig.class})
 public class AerospikeCacheMangerTests {
 
 	@Configuration
