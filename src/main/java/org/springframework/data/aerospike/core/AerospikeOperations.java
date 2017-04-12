@@ -61,47 +61,26 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	public <T> T insert(T objectToInsert, WritePolicy policy);
 
 	/**
-	 * Insert operation using the WritePolicy.recordExisits policy of CREATE_ONLY 
-	 * @param id
-	 * @param objectToInsert
-	 */
-	void insert(Serializable id, Object objectToInsert);
-	
-	/**
-	 * Insert operation using the WritePolicy specified.
-	 * @param id
-	 * @param objectToInsert
-	 * @param policy
-	 */
-	void insert(Serializable id, Object objectToInsert, WritePolicy policy);
-	
-	/**
 	 * @return mapping context in use.
 	 */
 	MappingContext<?, ?> getMappingContext();
 	
 	/**
-	 * Save operation using the WritePolicy.recordExisits policy of CREATE_ONLY 
-	 * @param id
+	 * Save operation using the WritePolicy.recordExisits policy of CREATE_ONLY
 	 * @param objectToInsert
 	 */
-	void save(Serializable id, Object objectToInsert);
+	void save(Object objectToInsert);
 	
 	/**
 	 * Save operation using the WritePolicy specified.
-	 * @param id
 	 * @param objectToInsert
 	 * @param policy
 	 */
-	void save(Serializable id, Object objectToInsert, WritePolicy policy);
+	void save(Object objectToInsert, WritePolicy policy);
 	
-	<T> void save(Serializable id, Object objectToInsert, Class<T> domainType);
-	<T> void save(Serializable id, Object objectToInsert, Class<T> domainType, WritePolicy policy);
 	void update(Object objectToUpdate);
 	void update(Object objectToUpdate, WritePolicy policy);
-	void update(Serializable id, Object objectToUpdate);
-	void update(Serializable id, Object objectToUpdate, WritePolicy policy);
-	
+
 	void delete(Class<?> type);
 	
 	<T> T delete(Serializable id, Class<T> type);
@@ -111,7 +90,6 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	<T> List<T> findAll(Class<T> type);
 
 	<T> T findById(Serializable id, Class<T> type);
-	<T> T findById(Serializable id, Class<T> type, Class<T> domainType);
 
 	<T> T add(T objectToAddTo, Map<String, Long> values);
 	<T> T add(T objectToAddTo, String binName, int value);
@@ -170,14 +148,6 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 */
 	<T> void createIndex(Class<T> domainType, String indexName, String binName,
 			IndexType indexType);
-
-	/**
-	 * @param <T>
-	 * @param id
-	 * @param type
-	 * @return
-	 */
-	<T> T findOne(Serializable id, Class<T> type);
 
 	/**
 	 * @param type

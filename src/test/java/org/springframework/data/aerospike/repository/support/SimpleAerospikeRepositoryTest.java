@@ -93,7 +93,7 @@ public class SimpleAerospikeRepositoryTest {
 		//Mockito.when(operations.findOne("21", Person.class)).thenReturn(new Person("21", "Jean"));
 
 
-		Mockito.when(operations.findById("21",Person.class,Person.class)).thenReturn(testPerson);
+		Mockito.when(operations.findById("21",Person.class)).thenReturn(testPerson);
 		Person person = (Person) simpleAerospikeRepository.findOne("21");
 		assertThat(person.getFirstName(), org.hamcrest.Matchers.equalToIgnoringCase("Jean"));
 	}
@@ -203,7 +203,7 @@ public class SimpleAerospikeRepositoryTest {
 	 */
 	@Test
 	public void testExists() {
-		Mockito.when(operations.findById("21",Person.class,Person.class)).thenReturn(testPerson);
+		Mockito.when(operations.findById("21",Person.class)).thenReturn(testPerson);
 		Boolean exits = simpleAerospikeRepository.exists("21");
 		assertThat("Exits is true", exits);
 	}
