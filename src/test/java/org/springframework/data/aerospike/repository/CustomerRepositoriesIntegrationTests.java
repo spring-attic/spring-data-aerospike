@@ -36,24 +36,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * @author Oliver Gierke
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration
-
-// Ignored until we have the infrastructure set up to actually run the tests
-public class CustomerRepositoriesIntegrationTests {
-
-	@Configuration
-	@EnableAerospikeRepositories(basePackageClasses = CustomerRepository.class)
-	static class Config extends TestConfig { }
+public class CustomerRepositoriesIntegrationTests extends BaseRepositoriesIntegrationTests {
 
 	@Autowired CustomerRepository repository;
-	@Mock
-	private Customer customerMock;
-
-	@Before
-	public void setUp() {
-		MockitoAnnotations.initMocks(this);
-	}
 
 	@Test
 	public void testCreate() {

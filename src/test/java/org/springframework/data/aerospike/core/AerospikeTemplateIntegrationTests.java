@@ -28,10 +28,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.aerospike.config.TestConfig;
-import org.springframework.data.aerospike.repository.AnnotatedPerson;
-import org.springframework.data.aerospike.repository.ContactRepository;
+import org.springframework.data.aerospike.repository.*;
 import org.springframework.data.aerospike.repository.Person;
-import org.springframework.data.aerospike.repository.PersonRepository;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
@@ -63,17 +61,11 @@ import com.aerospike.client.task.IndexTask;
  * @author Oliver Gierke
  * 
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestConfig.class})
-public class AerospikeTemplateIntegrationTests {
+public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrationTests {
 	
 	protected static final String SET_NAME_PERSON = "Person";
 	protected static final String SET_NAME_ANNOTATED_PERSON = "person";
 	protected static final String NAME_SPACE_TEST = "test";
-
-	@Configuration
-	@EnableAerospikeRepositories(basePackageClasses = AerospikeTemplate.class)
-	static class Config extends TestConfig { }
 
 	@Autowired AerospikeTemplate template;
 	@Autowired AerospikeClient client;

@@ -142,16 +142,6 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 					PreferredConstructor<?, AerospikePersistentProperty> constructor = entity.getPersistenceConstructor();
 					Record record = data.getRecord();
 					if (record == null) return;
-					Object propertyObject = record.getValue(((CachingAerospikePersistentProperty) persistentProperty).getFieldName());
-					if (propertyObject instanceof HashMap<?, ?> && ((Map) propertyObject).containsKey(MappingAerospikeConverter.SPRING_ID_BIN)) {
-						AerospikeData aerospikeData = AerospikeData.convertToAerospikeData((Map) propertyObject);
-						if (aerospikeData == null) return;
-
-						accessor.setProperty(persistentProperty, read(persistentProperty.getType(), aerospikeData));
-
-						return;
-
-					}
 
 					if (constructor.isConstructorParameter(persistentProperty)) {
 						return;
@@ -470,7 +460,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	 *
 	 * @author Oliver Gierke
 	 */
-	private static class RecordReadingPropertyValueProvider implements PropertyValueProvider<AerospikePersistentProperty> {
+	private class RecordReadingPropertyValueProvider implements PropertyValueProvider<AerospikePersistentProperty> {
 
 		private final Record record;
 		private final ConversionService conversionService;
@@ -496,14 +486,22 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		@Override
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(AerospikePersistentProperty property) {
-			T value = null;
-			if (record == null) return value;
+			if (record == null) {
+				return null;
+			}
+
 			Object propertyObject = record.getValue(((CachingAerospikePersistentProperty) property).getFieldName());
 
-			if (propertyObject != null) {
-				value = (T) conversionService.convert(propertyObject, TypeDescriptor.valueOf(propertyObject.getClass()), TypeDescriptor.valueOf(property.getType()));
+			if (propertyObject == null) {
+				return null;
 			}
-			return value;
+
+			if (propertyObject instanceof HashMap<?, ?> && ((Map) propertyObject).containsKey(MappingAerospikeConverter.SPRING_ID_BIN)) {
+				AerospikeData aerospikeData = AerospikeData.convertToAerospikeData((Map) propertyObject);
+				return (T) read(property.getType(), aerospikeData);
+			}
+
+			return (T) conversionService.convert(propertyObject, TypeDescriptor.valueOf(propertyObject.getClass()), TypeDescriptor.valueOf(property.getType()));
 		}
 
 		/*

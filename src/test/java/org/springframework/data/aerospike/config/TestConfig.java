@@ -3,7 +3,6 @@
  */
 package org.springframework.data.aerospike.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
@@ -17,6 +16,7 @@ import org.springframework.data.aerospike.repository.ContactRepository;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 
 import com.aerospike.client.AerospikeClient;
+import org.springframework.data.aerospike.sample.CustomerRepository;
 
 /**
  *
@@ -26,7 +26,7 @@ import com.aerospike.client.AerospikeClient;
  *
  */
 @Configuration
-@EnableAerospikeRepositories(basePackageClasses = ContactRepository.class)
+@EnableAerospikeRepositories(basePackageClasses = {ContactRepository.class, CustomerRepository.class})
 @EnableCaching
 @EnableAutoConfiguration
 public class TestConfig extends CachingConfigurerSupport {
