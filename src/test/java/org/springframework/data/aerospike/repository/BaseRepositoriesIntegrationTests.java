@@ -18,6 +18,10 @@ public abstract class BaseRepositoriesIntegrationTests {
     @Autowired
     protected EmbeddedAerospikeInfo info;
 
+    protected String getNameSpace() {
+        return info.getNamespace();
+    }
+
     protected static String nextId() {
         return "as-" + counter.incrementAndGet();
     }

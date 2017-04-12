@@ -28,7 +28,7 @@ import com.aerospike.client.ResultCode;
  * This class translates the AerospikeException and result code
  * to a DataAccessException.
  */
-class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTranslator {
+public class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTranslator {
 
 	/* 
 	 * (non-Javadoc)
