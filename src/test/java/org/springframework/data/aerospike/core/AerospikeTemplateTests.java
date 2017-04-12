@@ -14,20 +14,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.policy.Policy;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import org.assertj.core.api.Assertions;
+import org.junit.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.RecoverableDataAccessException;
-import org.springframework.data.aerospike.config.TestConfig;
+import org.springframework.data.aerospike.mapping.Document;
 import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.Version;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Value;
@@ -67,6 +71,61 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 	@After
 	public void tearDown() throws Exception {
 		cleanDb();
+	}
+
+	@Test
+	public void findById_shouldSetVersionEqualToNumberOfModifications() throws Exception {
+		String id = nextId();
+		template.insert(new VersionedClass(id, "foobar"));
+		template.update(new VersionedClass(id, "foobar1"));
+		template.update(new VersionedClass(id, "foobar2"));
+
+		Record raw = client.get(new Policy(), new Key(info.getNamespace(), "versioned-set", id));
+		Assertions.assertThat(raw.generation).isEqualTo(3);
+		VersionedClass actual = template.findById(id, VersionedClass.class);
+		Assertions.assertThat(actual.getVersion()).isEqualTo(3);
+	}
+
+	@Test
+	public void findOne_shouldSetVersionEqualToNumberOfModifications() throws Exception {
+		String id = nextId();
+		template.insert(new VersionedClass(id, "foobar"));
+		template.update(new VersionedClass(id, "foobar1"));
+		template.update(new VersionedClass(id, "foobar2"));
+
+		Record raw = client.get(new Policy(), new Key(info.getNamespace(), "versioned-set", id));
+		Assertions.assertThat(raw.generation).isEqualTo(3);
+		VersionedClass actual = template.findOne(id, VersionedClass.class);
+		Assertions.assertThat(actual.getVersion()).isEqualTo(3);
+	}
+
+	@Test
+	public void findOne_shouldReturnNullForNonExistingKey() throws Exception {
+		Person one = template.findOne("person-non-existing-key", Person.class);
+
+		Assertions.assertThat(one).isNull();
+	}
+
+	@Test
+	public void findById_shouldReturnNullForNonExistingKey() throws Exception {
+		Person one = template.findById("person-non-existing-key", Person.class, Person.class);
+
+		Assertions.assertThat(one).isNull();
+	}
+
+	@Test
+	public void find_shouldReturnEmptyResultForQueryWithNoResults() throws Exception {
+		template.createIndex(Person.class, "Person_age_index", "age",IndexType.NUMERIC );
+		Query<?> query = new Query<Object>(
+				Criteria.where("age").is(-10, "age"));
+
+		Iterable<Person> it = template.find(query, Person.class);
+
+		int count = 0;
+		for (Person person : it) {
+			count++;
+		}
+		Assertions.assertThat(count).isZero();
 	}
 
 	@Test
@@ -556,5 +615,32 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		//clean up
 		template.delete(personSven01);
 		Assert.assertEquals(26, personSven01.getAge());
+	}
+
+	@Getter
+	@EqualsAndHashCode
+	@ToString
+	@Document(collection = "versioned-set")
+	static class VersionedClass {
+
+		@Id
+		private String id;
+
+		@Version
+		private long version;
+
+		private String field;
+
+		@PersistenceConstructor
+		private VersionedClass(String id, String field, long version) {
+			this.id = id;
+			this.field = field;
+			this.version = version;
+		}
+
+		public VersionedClass(String id, String field) {
+			this.id = id;
+			this.field = field;
+		}
 	}
 }
