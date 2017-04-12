@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.ToString;
 import org.springframework.data.aerospike.mapping.Field;
 import org.springframework.data.annotation.Id;
 
@@ -17,6 +20,9 @@ import org.springframework.data.annotation.Id;
  * @author Jean Mercier
  *
  */
+@AllArgsConstructor
+@ToString
+@Builder
 public class Person {
 	private @Id String id;
 	private String firstName;
@@ -29,14 +35,6 @@ public class Person {
 
 	@Field("email") 
 	private String emailAddress;
-
-	@Override
-	public String toString() {
-		return "Person [id=" + id + ", firstName=" + firstName + ", age=" + age
-				+ ", map=" + map + ", friend=" + friend + ", active=" + active
-				+ ", dateOfBirth=" + dateOfBirth + ", list=" + list
-				+ ", emailAddress=" + emailAddress + "]";
-	}
 
 	public Person() {
 		super();
