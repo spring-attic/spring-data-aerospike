@@ -27,7 +27,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	public SimpleAerospikeRepository(EntityInformation<T, ID> metadata,
 			AerospikeOperations operations) {
 		this.entityInformation = metadata;
-		this.operations = (AerospikeOperations) operations;
+		this.operations = operations;
 	}
 	/*
 	 * (non-Javadoc)
@@ -35,13 +35,13 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	 */
 	@Override
 	public T findOne(ID id) {
-		return operations.findById(id, entityInformation.getJavaType(), getDomainClass());
+		return operations.findById(id, entityInformation.getJavaType());
 	}
 
 	@Override
 	public <S extends T> S save(S entity) {
 		Assert.notNull(entity);
-		operations.save(entityInformation.getId(entity), entity, getDomainClass());
+		operations.save(entity);
 		return entity;
 	}
 
@@ -61,13 +61,6 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 		operations.delete(entity);
 	}
 
-	/**
-	 * @return the entityInformation
-	 */
-	public Class<T> getDomainClass() {
-		return  this.entityInformation.getJavaType();
-	}
-	
 	static <T> List<T> convertIterableToList(Iterable<T> entities) {
 		if (entities instanceof List) {
 			return (List<T>) entities;
@@ -112,7 +105,8 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 
 		Iterable<T> content = operations.findInRange(pageable.getOffset(), pageable.getPageSize(), pageable.getSort(),entityInformation.getJavaType());
 
-		return new PageImpl<T>(IterableConverter.toList(content), pageable, this.operations.count(entityInformation.getJavaType(),getDomainClass().getSimpleName()));
+		String setName = operations.getSetName(entityInformation.getJavaType());
+		return new PageImpl<T>(IterableConverter.toList(content), pageable, this.operations.count(entityInformation.getJavaType(), setName));
 	}
 
 	/* (non-Javadoc)
@@ -156,7 +150,6 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	@Override
 	public long count() {
 		return operations.count(entityInformation.getJavaType());
-		//return 0;
 	}
 
 	/* (non-Javadoc)
