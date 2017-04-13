@@ -125,8 +125,7 @@ public class MappingAerospikeConverterTest {
 		};
 		Record record = new Record(bins, 1, 1);
 
-		AerospikeData dbObject = AerospikeData.forRead(key, null);
-		dbObject.setRecord(record);
+		AerospikeData dbObject = AerospikeData.forRead(key, record);
 
 		Address convertedAddress = converter.read(Address.class, dbObject);
 		assertThat(convertedAddress, SamePropertyValuesAs.samePropertyValuesAs(address));
@@ -145,9 +144,10 @@ public class MappingAerospikeConverterTest {
 
 		assertThat(returnBinPropertyValue(dbObject, "birthDate"), is(instanceOf(Date.class)));
 		Record record = new Record(listToMap(dbObject.getBins()), 1, 1);
-		dbObject.setRecord(record);
 
-		Person result = converter.read(Person.class, dbObject);
+		AerospikeData forRead = AerospikeData.forRead(key, record);
+
+		Person result = converter.read(Person.class, forRead);
 		assertThat(result.birthDate, is(notNullValue()));
 	}
 
@@ -228,8 +228,7 @@ public class MappingAerospikeConverterTest {
 		};
 		Record record = new Record(bins, 1, 1);
 
-		AerospikeData dbObject = AerospikeData.forRead(key, null);
-		dbObject.setRecord(record);
+		AerospikeData dbObject = AerospikeData.forRead(key, record);
 
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
 
@@ -247,8 +246,7 @@ public class MappingAerospikeConverterTest {
 		};
 		Record record = new Record(bins, 1, 1);
 
-		AerospikeData dbObject = AerospikeData.forRead(key, null);
-		dbObject.setRecord(record);
+		AerospikeData dbObject = AerospikeData.forRead(key, record);
 
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
 
@@ -286,8 +284,7 @@ public class MappingAerospikeConverterTest {
 		};
 		Record record = new Record(bins, 1, 1);
 
-		AerospikeData dbObject = AerospikeData.forRead(key, null);
-		dbObject.setRecord(record);
+		AerospikeData dbObject = AerospikeData.forRead(key, record);
 
 		Person result = converter.read(Person.class, dbObject);
 
@@ -335,8 +332,7 @@ public class MappingAerospikeConverterTest {
 		};
 		Record record = new Record(bins, 1, 1);
 
-		AerospikeData dbObject = AerospikeData.forRead(key, null);
-		dbObject.setRecord(record);
+		AerospikeData dbObject = AerospikeData.forRead(key, record);
 
 		Person result = converter.read(Person.class, dbObject);
 
@@ -373,8 +369,7 @@ public class MappingAerospikeConverterTest {
 		};
 		Record record = new Record(bins, 1, 1);
 
-		AerospikeData dbObject = AerospikeData.forRead(key, null);
-		dbObject.setRecord(record);
+		AerospikeData dbObject = AerospikeData.forRead(key, record);
 
 		BigDecimalContainer result = converter.read(BigDecimalContainer.class, dbObject);
 
@@ -388,13 +383,14 @@ public class MappingAerospikeConverterTest {
 		Person person = new Person();
 		person.addresses = Collections.emptySet();
 
-		AerospikeData dbObject = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
-		dbObject.setID(AEROSPIKE_KEY);
+		AerospikeData forWrite = AerospikeData.forWrite(AEROSPIKE_NAME_SPACE);
+		forWrite.setID(AEROSPIKE_KEY);
 
-		converter.write(person, dbObject);
-		Record record = new Record(listToMap(dbObject.getBins()), 1, 1);
-		dbObject.setRecord(record);
-		Person result = converter.read(Person.class, dbObject);
+		converter.write(person, forWrite);
+		Record record = new Record(listToMap(forWrite.getBins()), 1, 1);
+
+		AerospikeData forRead = AerospikeData.forRead(key, record);
+		Person result = converter.read(Person.class, forRead);
 
 		assertThat(result.addresses, hasSize(0));
 	}
@@ -425,8 +421,7 @@ public class MappingAerospikeConverterTest {
 			}
 		};
 		Record record = new Record(bins, 1, 1);
-		AerospikeData dbObject = AerospikeData.forRead(key, null);
-		dbObject.setRecord(record);
+		AerospikeData dbObject = AerospikeData.forRead(key, record);
 
 		ClassWithSortedMap result = converter.read(ClassWithSortedMap.class, dbObject);
 
