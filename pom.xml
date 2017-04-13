@@ -19,6 +19,8 @@
 	</parent>
 
     <properties>
+        <bundlor.enabled>false</bundlor.enabled>
+
         <aerospike>3.3.4</aerospike>
         <springdata.commons>1.13.1.RELEASE</springdata.commons>
         <springdata.keyvalue>1.2.1.RELEASE</springdata.keyvalue>
