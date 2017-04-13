@@ -66,17 +66,10 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	MappingContext<?, ?> getMappingContext();
 	
 	/**
-	 * Save operation using the WritePolicy.recordExisits policy of CREATE_ONLY
+	 * Save operation
 	 * @param objectToInsert
 	 */
 	void save(Object objectToInsert);
-	
-	/**
-	 * Save operation using the WritePolicy specified.
-	 * @param objectToInsert
-	 * @param policy
-	 */
-	void save(Object objectToInsert, WritePolicy policy);
 	
 	void update(Object objectToUpdate);
 	void update(Object objectToUpdate, WritePolicy policy);
