@@ -35,6 +35,8 @@ import org.springframework.data.annotation.Persistent;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
 public @interface Document {
+
+	//TODO: add support for SPEL expression
 	String collection() default "";
 
 	/**

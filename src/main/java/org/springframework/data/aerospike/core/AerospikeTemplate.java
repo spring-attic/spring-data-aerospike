@@ -33,11 +33,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.aerospike.convert.AerospikeData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
-import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
-import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
-import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
-import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
-import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.*;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
@@ -84,9 +80,6 @@ import com.aerospike.helper.query.QueryEngine;
  */
 public class AerospikeTemplate implements AerospikeOperations {
 
-	private static final MappingAerospikeConverter DEFAULT_CONVERTER = new MappingAerospikeConverter();
-	private static final AerospikeExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new DefaultAerospikeExceptionTranslator();
-	
 	private final MappingContext<BasicAerospikePersistentEntity<?>, AerospikePersistentProperty> mappingContext;
 	private final AerospikeClient client;
 	private final MappingAerospikeConverter converter;
@@ -101,18 +94,23 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 * Creates a new {@link AerospikeTemplate} for the given
 	 * {@link AerospikeClient}.
 	 * 
+	 * @param converter
+	 * @param mappingContext
+	 * @param exceptionTranslator
 	 * @param client must not be {@literal null}.
 	 */
-	public AerospikeTemplate(AerospikeClient client, String namespace) {
+	public AerospikeTemplate(AerospikeClient client, String namespace, MappingAerospikeConverter converter,
+							 AerospikeMappingContext mappingContext,
+							 AerospikeExceptionTranslator exceptionTranslator) {
 		Assert.notNull(client, "Aerospike client must not be null!");
 		Assert.notNull(namespace, "Namespace cannot be null");
 		Assert.hasLength(namespace);
 
 		this.client = client;
-		this.converter = DEFAULT_CONVERTER;
-		this.exceptionTranslator = DEFAULT_EXCEPTION_TRANSLATOR;
+		this.converter = converter;
+		this.exceptionTranslator = exceptionTranslator;
 		this.namespace = namespace;
-		this.mappingContext = new AerospikeMappingContext();
+		this.mappingContext = mappingContext;
 		this.insertPolicy = new WritePolicy(this.client.writePolicyDefault);
 		this.updatePolicy = new WritePolicy(this.client.writePolicyDefault);
 		this.insertPolicy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
@@ -366,17 +364,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 		else
 			resultSet = this.client.queryAggregate(null, statement);
 		return (Iterable<T>) resultSet;
-	}
-
-	/**
-	 * Configures the {@link AerospikeExceptionTranslator} to be used.
-	 * 
-	 * @param exceptionTranslator can be {@literal null}.
-	 */
-	public void setExceptionTranslator(
-			AerospikeExceptionTranslator exceptionTranslator) {
-		this.exceptionTranslator = exceptionTranslator == null
-				? DEFAULT_EXCEPTION_TRANSLATOR : exceptionTranslator;
 	}
 
 	@Override

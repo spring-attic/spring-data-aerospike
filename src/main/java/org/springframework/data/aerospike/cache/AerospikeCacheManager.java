@@ -63,9 +63,10 @@ public class AerospikeCacheManager extends AbstractTransactionSupportingCacheMan
 	 * set name "aerospike".
 	 * 
 	 * @param aerospikeClient the {@link AerospikeClient} instance.
+	 * @param aerospikeConverter
 	 */
-	public AerospikeCacheManager(AerospikeClient aerospikeClient) {
-		this(aerospikeClient, Collections.<String>emptyList());
+	public AerospikeCacheManager(AerospikeClient aerospikeClient, MappingAerospikeConverter aerospikeConverter) {
+		this(aerospikeClient, Collections.<String>emptyList(), aerospikeConverter);
 	}
 
 	/**
@@ -74,9 +75,10 @@ public class AerospikeCacheManager extends AbstractTransactionSupportingCacheMan
 	 * 
 	 * @param aerospikeClient the {@link AerospikeClient} instance.
 	 * @param setName the set name.
+	 * @param aerospikeConverter
 	 */
-	public AerospikeCacheManager(AerospikeClient aerospikeClient, String setName) {
-		this(aerospikeClient, Collections.<String>emptyList(), setName);
+	public AerospikeCacheManager(AerospikeClient aerospikeClient, String setName, MappingAerospikeConverter aerospikeConverter) {
+		this(aerospikeClient, Collections.<String>emptyList(), setName, aerospikeConverter);
 	}
 
 	/**
@@ -85,10 +87,11 @@ public class AerospikeCacheManager extends AbstractTransactionSupportingCacheMan
 	 * 
 	 * @param aerospikeClient the {@link AerospikeClient} instance.
 	 * @param cacheNames the default caches to create.
+	 * @param aerospikeConverter
 	 */
 	public AerospikeCacheManager(AerospikeClient aerospikeClient,
-			Collection<String> cacheNames) {
-		this(aerospikeClient, cacheNames, DEFAULT_SET_NAME);
+								 Collection<String> cacheNames, MappingAerospikeConverter aerospikeConverter) {
+		this(aerospikeClient, cacheNames, DEFAULT_SET_NAME, aerospikeConverter);
 	}
 
 	/**
@@ -98,14 +101,15 @@ public class AerospikeCacheManager extends AbstractTransactionSupportingCacheMan
 	 * @param aerospikeClient the {@link AerospikeClient} instance.
 	 * @param cacheNames the default caches to create.
 	 * @param setName the set name.
+	 * @param aerospikeConverter
 	 */
 	public AerospikeCacheManager(AerospikeClient aerospikeClient,
-			Collection<String> cacheNames, String setName) {
+								 Collection<String> cacheNames, String setName, MappingAerospikeConverter aerospikeConverter) {
 		Assert.notNull(aerospikeClient, "AerospikeClient must not be null");
 		Assert.notNull(cacheNames, "Cache names must not be null");
 		Assert.notNull(setName, "Set name must not be null");
 		this.aerospikeClient = aerospikeClient;
-		this.aerospikeConverter = new MappingAerospikeConverter();
+		this.aerospikeConverter = aerospikeConverter;
 		this.setName = setName;
 		this.configuredCacheNames = new LinkedHashSet<String>(cacheNames);
 	}

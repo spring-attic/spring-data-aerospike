@@ -23,21 +23,15 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.transaction.TransactionAwareCacheDecorator;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.aerospike.config.TestConfig;
-import org.springframework.data.aerospike.core.AerospikeTemplate;
+import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
 import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
-import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Key;
@@ -49,10 +43,11 @@ import com.aerospike.client.Key;
 public class AerospikeCacheMangerTests extends BaseRepositoriesIntegrationTests {
 
 	@Autowired AerospikeClient client;
+	@Autowired MappingAerospikeConverter converter;
 
 	@Test
 	public void testMissingCache() {
-		AerospikeCacheManager manager = new AerospikeCacheManager(client);
+		AerospikeCacheManager manager = new AerospikeCacheManager(client, converter);
 		manager.afterPropertiesSet();
 		Cache cache = manager.getCache("missing-cache");
 		assertNotNull("Cache instance was null", cache);
@@ -62,7 +57,7 @@ public class AerospikeCacheMangerTests extends BaseRepositoriesIntegrationTests 
 	@Test
 	public void testDefaultCache() {
 		AerospikeCacheManager manager = new AerospikeCacheManager(client,
-				Arrays.asList("default-cache"));
+				Arrays.asList("default-cache"), converter);
 		manager.afterPropertiesSet();
 		Cache cache = manager.lookupAerospikeCache("default-cache");
 		assertNotNull("Cache instance was null", cache);
@@ -72,7 +67,7 @@ public class AerospikeCacheMangerTests extends BaseRepositoriesIntegrationTests 
 	@Test
 	public void testDefaultCacheWithCustomizedSet() {
 		AerospikeCacheManager manager = new AerospikeCacheManager(client,
-				Arrays.asList("default-cache"), "custom-set");
+				Arrays.asList("default-cache"), "custom-set", converter);
 		manager.afterPropertiesSet();
 		Cache cache = manager.lookupAerospikeCache("default-cache");
 		assertNotNull("Cache instance was null", cache);
@@ -81,7 +76,7 @@ public class AerospikeCacheMangerTests extends BaseRepositoriesIntegrationTests 
 
 	@Test
 	public void testTransactionAwareCache() {
-		AerospikeCacheManager manager = new AerospikeCacheManager(client);
+		AerospikeCacheManager manager = new AerospikeCacheManager(client, converter);
 		manager.setTransactionAware(true);
 		manager.afterPropertiesSet();
 		Cache cache = manager.getCache("transaction-aware-cache");
@@ -131,7 +126,7 @@ public class AerospikeCacheMangerTests extends BaseRepositoriesIntegrationTests 
 	}
 
 	private void cleanupForCacheableTest() {
-		client.delete(null, new Key("test", AerospikeCacheManager.DEFAULT_SET_NAME, "foo"));
+		client.delete(null, new Key(getNameSpace(), AerospikeCacheManager.DEFAULT_SET_NAME, "foo"));
 	}
 
 	public static class CachedObject {

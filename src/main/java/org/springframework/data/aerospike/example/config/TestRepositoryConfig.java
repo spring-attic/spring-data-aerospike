@@ -1,37 +1,32 @@
 /**
- * 
+ *
  */
 package org.springframework.data.aerospike.example.config;
 
-import org.springframework.context.annotation.Bean;
+import com.aerospike.client.Host;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.aerospike.core.AerospikeTemplate;
+import org.springframework.data.aerospike.config.AbstractAerospikeDataConfiguration;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 
-import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.policy.ClientPolicy;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
- *
- *
  * @author Peter Milne
  * @author Jean Mercier
- *
  */
 @Configuration
 @EnableAerospikeRepositories(basePackages = "org.springframework.data.aerospike.example")
-public class TestRepositoryConfig {
-	public @Bean(destroyMethod = "close") AerospikeClient aerospikeClient() {
+public class TestRepositoryConfig extends AbstractAerospikeDataConfiguration {
 
-		ClientPolicy policy = new ClientPolicy();
-		policy.failIfNotConnected = true;
-		policy.timeout = 2000;
+    @Override
+    protected Collection<Host> getHosts() {
+        return Collections.singleton(new Host("192.168.105.146", 3000));
+    }
 
-		return new AerospikeClient(policy, "192.168.105.146", 3000);
-	}
-
-	public @Bean AerospikeTemplate aerospikeTemplate() {
-		return new AerospikeTemplate(aerospikeClient(), "test");
-	}
+    @Override
+    protected String nameSpace() {
+        return "test";
+    }
 
 }
