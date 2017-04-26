@@ -22,14 +22,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
-import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
 import org.springframework.data.aerospike.mapping.CachingAerospikePersistentProperty;
 import org.springframework.data.convert.DefaultTypeMapper;
 import org.springframework.data.convert.EntityInstantiator;
@@ -61,7 +62,7 @@ import com.aerospike.client.Value.MapValue;
  *
  * @author Oliver Gierke
  */
-public class MappingAerospikeConverter implements AerospikeConverter {
+public class MappingAerospikeConverter implements AerospikeConverter, ApplicationContextAware {
 
 	private final AerospikeMappingContext mappingContext;
 	private final SimpleTypeHolder simpleTypeHolder;
@@ -75,10 +76,12 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 	/**
 	 * Creates a new {@link MappingAerospikeConverter}.
+	 * @param mappingContext
+	 * @param simpleTypeHolder
 	 */
 	@SuppressWarnings("rawtypes")
-	public MappingAerospikeConverter() {
-		this.mappingContext = new AerospikeMappingContext();
+	public MappingAerospikeConverter(AerospikeMappingContext mappingContext, SimpleTypeHolder simpleTypeHolder) {
+		this.mappingContext = mappingContext;
 		DefaultConversionService defaultConversionService = new DefaultConversionService();
 		defaultConversionService.addConverter(new LongToBoolean());
 
@@ -90,7 +93,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 		this.conversionService = defaultConversionService;
 		this.entityInstantiators = new EntityInstantiators();
-		this.simpleTypeHolder = AerospikeSimpleTypes.HOLDER;
+		this.simpleTypeHolder = simpleTypeHolder;
 
 		this.typeMapper = new DefaultTypeMapper<AerospikeData>(AerospikeTypeAliasAccessor.INSTANCE);
 	}
@@ -450,6 +453,11 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	 */
 	protected void writeMapInternal(Map<Object, Object> obj, AerospikeData data, TypeInformation<?> propertyType, List<Bin> bins) {
 
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 
 	/**

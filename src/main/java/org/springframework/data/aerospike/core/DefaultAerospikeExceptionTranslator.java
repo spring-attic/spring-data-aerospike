@@ -15,20 +15,17 @@
  */
 package org.springframework.data.aerospike.core;
 
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.dao.RecoverableDataAccessException;
-import org.springframework.data.keyvalue.core.UncategorizedKeyValueException;
-
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.ResultCode;
+import org.springframework.dao.*;
+import org.springframework.data.keyvalue.core.UncategorizedKeyValueException;
 
 /**
  * @author Peter Milne
  * This class translates the AerospikeException and result code
  * to a DataAccessException.
  */
-class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTranslator {
+public class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTranslator {
 
 	/* 
 	 * (non-Javadoc)
@@ -44,10 +41,13 @@ class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTranslato
 			/*
 			 * Future enhancements will be more elaborate 
 			 */
-			case ResultCode.KEY_EXISTS_ERROR:
-				return new DuplicateKeyException(msg, cause);
-			default:
-				return new RecoverableDataAccessException("Aerospike Error: " + cause.getMessage(), cause);
+				case ResultCode.KEY_EXISTS_ERROR:
+					return new DuplicateKeyException(msg, cause);
+				case ResultCode.KEY_NOT_FOUND_ERROR:
+					return new DataRetrievalFailureException(msg, cause);
+
+				default:
+					return new RecoverableDataAccessException("Aerospike Error: " + cause.getMessage(), cause);
 
 			}
 		}

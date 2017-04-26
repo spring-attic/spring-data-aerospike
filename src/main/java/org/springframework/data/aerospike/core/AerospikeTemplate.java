@@ -31,13 +31,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.support.PropertyComparator;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.convert.AerospikeData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
-import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
-import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
-import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
-import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
-import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.*;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
@@ -60,9 +57,11 @@ import com.aerospike.client.Info;
 import com.aerospike.client.Key;
 import com.aerospike.client.Operation;
 import com.aerospike.client.Record;
+import com.aerospike.client.ResultCode;
 import com.aerospike.client.ScanCallback;
 import com.aerospike.client.Value;
 import com.aerospike.client.cluster.Node;
+import com.aerospike.client.policy.GenerationPolicy;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.ScanPolicy;
 import com.aerospike.client.policy.WritePolicy;
@@ -84,39 +83,46 @@ import com.aerospike.helper.query.QueryEngine;
  */
 public class AerospikeTemplate implements AerospikeOperations {
 
-	private static final MappingAerospikeConverter DEFAULT_CONVERTER = new MappingAerospikeConverter();
-	private static final AerospikeExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new DefaultAerospikeExceptionTranslator();
-	
 	private final MappingContext<BasicAerospikePersistentEntity<?>, AerospikePersistentProperty> mappingContext;
 	private final AerospikeClient client;
 	private final MappingAerospikeConverter converter;
 	private final String namespace;
 	private final QueryEngine queryEngine;
-	
+
 	private AerospikeExceptionTranslator exceptionTranslator;
-	private WritePolicy insertPolicy;
-	private WritePolicy updatePolicy;
+	private final WritePolicy createOrUpdatePolicy;
+	private final WritePolicy insertPolicy;
+	private final WritePolicy updatePolicy;
 
 	/**
 	 * Creates a new {@link AerospikeTemplate} for the given
 	 * {@link AerospikeClient}.
 	 * 
+	 * @param converter
+	 * @param mappingContext
+	 * @param exceptionTranslator
 	 * @param client must not be {@literal null}.
 	 */
-	public AerospikeTemplate(AerospikeClient client, String namespace) {
+	public AerospikeTemplate(AerospikeClient client, String namespace, MappingAerospikeConverter converter,
+							 AerospikeMappingContext mappingContext,
+							 AerospikeExceptionTranslator exceptionTranslator) {
 		Assert.notNull(client, "Aerospike client must not be null!");
 		Assert.notNull(namespace, "Namespace cannot be null");
 		Assert.hasLength(namespace);
 
 		this.client = client;
-		this.converter = DEFAULT_CONVERTER;
-		this.exceptionTranslator = DEFAULT_EXCEPTION_TRANSLATOR;
+		this.converter = converter;
+		this.exceptionTranslator = exceptionTranslator;
 		this.namespace = namespace;
-		this.mappingContext = new AerospikeMappingContext();
+		this.mappingContext = mappingContext;
 		this.insertPolicy = new WritePolicy(this.client.writePolicyDefault);
 		this.updatePolicy = new WritePolicy(this.client.writePolicyDefault);
 		this.insertPolicy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
 		this.updatePolicy.recordExistsAction = RecordExistsAction.UPDATE_ONLY;
+
+		this.createOrUpdatePolicy = new WritePolicy();
+		this.createOrUpdatePolicy.generationPolicy = GenerationPolicy.NONE;
+		this.createOrUpdatePolicy.recordExistsAction = RecordExistsAction.UPDATE;
 
 		this.queryEngine = new QueryEngine(this.client);
 
@@ -133,16 +139,16 @@ public class AerospikeTemplate implements AerospikeOperations {
 							String message) {
 						switch (level) {
 						case INFO:
-							log.info("AS:" + message);
+							log.info("AS: {}", message);
 							break;
 						case DEBUG:
-							log.debug("AS:" + message);
+							log.debug("AS: {}", message);
 							break;
 						case ERROR:
-							log.error("AS:" + message);
+							log.error("AS: {}", message);
 							break;
 						case WARN:
-							log.warn("AS:" + message);
+							log.warn("AS: {}", message);
 							break;
 						}
 
@@ -161,24 +167,53 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	@Override
 	public void save(Object objectToInsert) {
-		save(objectToInsert, null);
-	}
-	
-	
-	@Override
-	public void save(Object objectToInsert, WritePolicy policy) {
 		Assert.notNull(objectToInsert, "Object to insert must not be null!");
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToInsert, data);
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
-			client.put(policy, key, bins);
+
+			final AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(objectToInsert.getClass());
+
+			if (entity.hasVersionProperty()) {
+				createOrUpdateUsingCas(objectToInsert, key, bins, entity);
+			} else {
+				client.put(createOrUpdatePolicy, key, bins);
+			}
+
+		} catch (AerospikeException e) {
+			int code = e.getResultCode();
+			if (code == ResultCode.KEY_EXISTS_ERROR
+					|| code == ResultCode.GENERATION_ERROR) {
+				throw new OptimisticLockingFailureException("Save document with version value failed", e);
+			}
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
 		}
-		catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator
-					.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
+	}
+
+	private void createOrUpdateUsingCas(Object objectToInsert, Key key, Bin[] bins, AerospikePersistentEntity<?> entity) {
+		final ConvertingPropertyAccessor accessor = getPropertyAccessor(entity, objectToInsert);
+		Integer version = entity.hasVersionProperty() ? accessor.getProperty(entity.getVersionProperty(), Integer.class) : null;
+		boolean existingDocument = version != null && version > 0L;
+
+		WritePolicy policy = new WritePolicy();
+		policy.generationPolicy = GenerationPolicy.EXPECT_GEN_EQUAL;
+		if (existingDocument) {
+			//Updating existing document with generation
+			policy.recordExistsAction = RecordExistsAction.REPLACE_ONLY;
+			policy.generation = version;
+		} else {
+			// create new document. if exists we should fail with optimistic locking
+			policy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
+		}
+
+		Operation[] operations = OperationUtils.operations(bins, b -> Operation.put(b), Operation.get());
+		Record newRecord = client.operate(policy, key, operations);
+
+		if (entity.hasVersionProperty() && newRecord != null && newRecord.generation != 0) {
+			accessor.setProperty(entity.getVersionProperty(), newRecord.generation);
 		}
 	}
 
@@ -366,17 +401,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 		else
 			resultSet = this.client.queryAggregate(null, statement);
 		return (Iterable<T>) resultSet;
-	}
-
-	/**
-	 * Configures the {@link AerospikeExceptionTranslator} to be used.
-	 * 
-	 * @param exceptionTranslator can be {@literal null}.
-	 */
-	public void setExceptionTranslator(
-			AerospikeExceptionTranslator exceptionTranslator) {
-		this.exceptionTranslator = exceptionTranslator == null
-				? DEFAULT_EXCEPTION_TRANSLATOR : exceptionTranslator;
 	}
 
 	@Override
