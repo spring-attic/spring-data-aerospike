@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.startupcheck.StartupCheckStrategy;
 
 @Configuration
 public class EmbeddedAerospikeAutoConfiguration {
@@ -13,7 +14,8 @@ public class EmbeddedAerospikeAutoConfiguration {
     @Bean(initMethod = "start", destroyMethod = "stop")
     public GenericContainer aerosike() {
         GenericContainer aerosike =
-                new GenericContainer("aerospike:latest")
+                new GenericContainer("aerospike:3.13.0.8")
+                        .withStartupCheckStrategy(new EmbeddedAerospikeStartupCheckStrategy())
                         .withExposedPorts(TestConstants.AS_PORT)
                         .withClasspathResourceMapping("aerospike.conf", "/etc/aerospike/aerospike.conf", BindMode.READ_ONLY);
         return aerosike;
