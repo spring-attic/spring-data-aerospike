@@ -15,10 +15,12 @@
  *******************************************************************************/
 package org.springframework.data.aerospike.mapping;
 
+import com.aerospike.client.Key;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.core.env.Environment;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
-
-import com.aerospike.client.Key;
+import org.springframework.util.Assert;
 
 /**
  * Default implementation of {@link AerospikePersistentEntity}.
@@ -26,8 +28,9 @@ import com.aerospike.client.Key;
  * @author Oliver Gierke
  */
 public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, AerospikePersistentProperty> implements
-		AerospikePersistentEntity<T> {
+		AerospikePersistentEntity<T>, EnvironmentAware {
 
+	private Environment environment;
 	private final TypeInformation<?> typeInformation;
 
 	/**
@@ -66,5 +69,10 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 	public int getTTL() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
 	}
 }

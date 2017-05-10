@@ -2,7 +2,6 @@ package org.springframework.data.aerospike;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
-import org.jetbrains.annotations.NotNull;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.startupcheck.StartupCheckStrategy;
 import org.testcontainers.shaded.com.github.dockerjava.api.DockerClient;
@@ -14,38 +13,43 @@ import org.testcontainers.utility.DockerStatus;
 
 public class EmbeddedAerospikeStartupCheckStrategy extends StartupCheckStrategy {
 
-    @Override
-    public StartupStatus checkStartupState(DockerClient dockerClient, String containerId) {
-        InspectContainerResponse response = dockerClient.inspectContainerCmd(containerId).exec();
+	private final int aerospikePort;
 
-        InspectContainerResponse.ContainerState state = response.getState();
-        if (!DockerStatus.isContainerExitCodeSuccess(state)) {
-            return StartupStatus.FAILED;
-        }
+	public EmbeddedAerospikeStartupCheckStrategy(int aerospikePort) {
+		this.aerospikePort = aerospikePort;
+	}
 
-        if (!state.getRunning()) {
-            return StartupStatus.NOT_YET_KNOWN;
-        }
+	@Override
+	public StartupStatus checkStartupState(DockerClient dockerClient, String containerId) {
+		InspectContainerResponse response = dockerClient.inspectContainerCmd(containerId).exec();
 
-        return checkStartupStateByConnectingToAerospike(response.getNetworkSettings());
-    }
+		InspectContainerResponse.ContainerState state = response.getState();
+		if (!DockerStatus.isContainerExitCodeSuccess(state)) {
+			return StartupStatus.FAILED;
+		}
 
-    @NotNull
-    private StartupStatus checkStartupStateByConnectingToAerospike(NetworkSettings networkSettings) {
-        int port = getMappedPort(networkSettings, TestConstants.AS_PORT);
-        String host = DockerClientFactory.instance().dockerHostIpAddress();
+		if (!state.getRunning()) {
+			return StartupStatus.NOT_YET_KNOWN;
+		}
 
-        try (AerospikeClient client = new AerospikeClient(host, port)) {
-            return StartupStatus.SUCCESSFUL;
-        } catch (AerospikeException.Connection ignore) {
-            return StartupStatus.NOT_YET_KNOWN;
-        }
-    }
+		return checkStartupStateByConnectingToAerospike(response.getNetworkSettings());
+	}
 
-    private int getMappedPort(NetworkSettings networkSettings, int originalPort) {
-        ExposedPort exposedPort = new ExposedPort(originalPort);
-        Ports.Binding[] binding = networkSettings.getPorts().getBindings().get(exposedPort);
+	private StartupStatus checkStartupStateByConnectingToAerospike(NetworkSettings networkSettings) {
+		int port = getMappedPort(networkSettings, aerospikePort);
+		String host = DockerClientFactory.instance().dockerHostIpAddress();
 
-        return Integer.valueOf(binding[0].getHostPortSpec());
-    }
+		try (AerospikeClient client = new AerospikeClient(host, port)) {
+			return StartupStatus.SUCCESSFUL;
+		} catch (AerospikeException.Connection ignore) {
+			return StartupStatus.NOT_YET_KNOWN;
+		}
+	}
+
+	private int getMappedPort(NetworkSettings networkSettings, int originalPort) {
+		ExposedPort exposedPort = new ExposedPort(originalPort);
+		Ports.Binding[] binding = networkSettings.getPorts().getBindings().get(exposedPort);
+
+		return Integer.valueOf(binding[0].getHostPortSpec());
+	}
 }

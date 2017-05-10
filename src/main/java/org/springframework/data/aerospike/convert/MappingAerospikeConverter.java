@@ -15,16 +15,28 @@
  */
 package org.springframework.data.aerospike.convert;
 
-import com.aerospike.client.Bin;
-import com.aerospike.client.Record;
-import com.aerospike.client.Value;
-import com.aerospike.client.Value.MapValue;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.data.aerospike.mapping.*;
-import org.springframework.data.convert.*;
+import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
+import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.mapping.CachingAerospikePersistentProperty;
+import org.springframework.data.convert.DefaultTypeMapper;
+import org.springframework.data.convert.EntityInstantiator;
+import org.springframework.data.convert.EntityInstantiators;
+import org.springframework.data.convert.TypeAliasAccessor;
+import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PropertyHandler;
@@ -39,7 +51,10 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import com.aerospike.client.Bin;
+import com.aerospike.client.Record;
+import com.aerospike.client.Value;
+import com.aerospike.client.Value.MapValue;
 
 /**
  * An implementation of {@link AerospikeConverter} to read domain objects from {@link AerospikeData} and write domain
@@ -47,7 +62,7 @@ import java.util.*;
  *
  * @author Oliver Gierke
  */
-public class MappingAerospikeConverter implements AerospikeConverter {
+public class MappingAerospikeConverter implements AerospikeConverter, ApplicationContextAware {
 
 	private final AerospikeMappingContext mappingContext;
 	private final SimpleTypeHolder simpleTypeHolder;
@@ -61,10 +76,12 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 	/**
 	 * Creates a new {@link MappingAerospikeConverter}.
+	 * @param mappingContext
+	 * @param simpleTypeHolder
 	 */
 	@SuppressWarnings("rawtypes")
-	public MappingAerospikeConverter() {
-		this.mappingContext = new AerospikeMappingContext();
+	public MappingAerospikeConverter(AerospikeMappingContext mappingContext, SimpleTypeHolder simpleTypeHolder) {
+		this.mappingContext = mappingContext;
 		DefaultConversionService defaultConversionService = new DefaultConversionService();
 		defaultConversionService.addConverter(new LongToBoolean());
 
@@ -76,7 +93,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 		this.conversionService = defaultConversionService;
 		this.entityInstantiators = new EntityInstantiators();
-		this.simpleTypeHolder = AerospikeSimpleTypes.HOLDER;
+		this.simpleTypeHolder = simpleTypeHolder;
 
 		this.typeMapper = new DefaultTypeMapper<AerospikeData>(AerospikeTypeAliasAccessor.INSTANCE);
 	}
@@ -436,6 +453,11 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 	 */
 	protected void writeMapInternal(Map<Object, Object> obj, AerospikeData data, TypeInformation<?> propertyType, List<Bin> bins) {
 
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
 	}
 
 	/**

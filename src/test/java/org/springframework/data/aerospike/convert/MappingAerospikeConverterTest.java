@@ -52,7 +52,7 @@ public class MappingAerospikeConverterTest {
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
 
-		converter = new MappingAerospikeConverter();
+		converter = new MappingAerospikeConverter(new AerospikeMappingContext(), AerospikeSimpleTypes.HOLDER);
 		key = new Key(AEROSPIKE_NAME_SPACE, AEROSPIKE_SET_NAME, AEROSPIKE_KEY);
 	}
 
@@ -68,7 +68,7 @@ public class MappingAerospikeConverterTest {
 	 */
 	@Test
 	public void testMappingAerospikeConverter() {
-		MappingAerospikeConverter mappingAerospikeConverter = new MappingAerospikeConverter();
+		MappingAerospikeConverter mappingAerospikeConverter = new MappingAerospikeConverter(new AerospikeMappingContext(), AerospikeSimpleTypes.HOLDER);
 		assertNotNull(mappingAerospikeConverter.getMappingContext());
 		assertNotNull(mappingAerospikeConverter.getConversionService());
 	}
@@ -78,7 +78,7 @@ public class MappingAerospikeConverterTest {
 	 */
 	@Test
 	public void testGetMappingContext() {
-		MappingAerospikeConverter mappingAerospikeConverter = new MappingAerospikeConverter();
+		MappingAerospikeConverter mappingAerospikeConverter = new MappingAerospikeConverter(new AerospikeMappingContext(), AerospikeSimpleTypes.HOLDER);
 		assertNotNull(mappingAerospikeConverter.getMappingContext());
 		assertTrue(mappingAerospikeConverter.getMappingContext() instanceof AerospikeMappingContext);
 	}
@@ -88,7 +88,7 @@ public class MappingAerospikeConverterTest {
 	 */
 	@Test
 	public void testGetConversionService() {
-		MappingAerospikeConverter mappingAerospikeConverter = new MappingAerospikeConverter();
+		MappingAerospikeConverter mappingAerospikeConverter = new MappingAerospikeConverter(new AerospikeMappingContext(), AerospikeSimpleTypes.HOLDER);
 		assertNotNull(mappingAerospikeConverter.getConversionService());
 		assertTrue(mappingAerospikeConverter.getConversionService() instanceof DefaultConversionService);
 	}

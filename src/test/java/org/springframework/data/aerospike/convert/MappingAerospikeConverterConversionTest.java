@@ -30,10 +30,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverterTest.ClassWithMapUsingEnumAsKey.FooBarEnum;
-import org.springframework.data.aerospike.mapping.AerospikeMetadataBin;
-import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
-import org.springframework.data.aerospike.mapping.Document;
-import org.springframework.data.aerospike.mapping.Field;
+import org.springframework.data.aerospike.mapping.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -62,7 +59,7 @@ public class MappingAerospikeConverterConversionTest {
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
 
-		converter = new MappingAerospikeConverter();
+		converter = new MappingAerospikeConverter(new AerospikeMappingContext(), AerospikeSimpleTypes.HOLDER);
 		key = new Key(AEROSPIKE_NAME_SPACE, AEROSPIKE_SET_NAME, AEROSPIKE_KEY);
 	}
 
