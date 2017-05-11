@@ -64,17 +64,19 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	MappingContext<?, ?> getMappingContext();
 	
 	/**
-	 * Save operation using the WritePolicy.recordExisits policy of CREATE_ONLY
-	 * @param objectToInsert
+	 * Save operation.
+	 *
+	 * If document has version property - CAS algorithm is used for updating record.
+	 * Version property is used for deciding whether to create new record or update existing.
+	 * If version is set to zero - new record will be created, creation will fail is such record already exists.
+	 * If version is greater than zero - existing record will be updated with RecordExistsAction.REPLACE_ONLY policy
+	 * taking into consideration the version property of the document.
+	 *
+	 * If document does not have version property - record is updated with RecordExistsAction.UPDATE policy.
+	 * This means that when such record does not exist it will be created, otherwise updated.
+	 * @param document
 	 */
-	void save(Object objectToInsert);
-	
-	/**
-	 * Save operation using the WritePolicy specified.
-	 * @param objectToInsert
-	 * @param policy
-	 */
-	void save(Object objectToInsert, WritePolicy policy);
+	void save(Object document);
 	
 	void update(Object objectToUpdate);
 	void update(Object objectToUpdate, WritePolicy policy);
