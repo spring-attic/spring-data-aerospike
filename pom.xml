@@ -19,18 +19,18 @@
 
     <properties>
         <source.level>1.8</source.level>
-        <aerospike>3.3.2</aerospike>
-        <aerospike-helper-java.version>1.1</aerospike-helper-java.version>
+        <aerospike>3.3.4</aerospike>
+        <aerospike-helper-java.version>1.2</aerospike-helper-java.version>
 
-        <springdata.commons>1.13.1.RELEASE</springdata.commons>
-        <springdata.keyvalue>1.2.1.RELEASE</springdata.keyvalue>
+        <springdata.commons>1.13.3.RELEASE</springdata.commons>
+        <springdata.keyvalue>1.2.3.RELEASE</springdata.keyvalue>
         <dist.key>DATAAERO</dist.key>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <spring-boot-starter-test.version>1.5.1.RELEASE</spring-boot-starter-test.version>
         <testcontainers.version>1.2.0</testcontainers.version>
         <docker-java.version>3.0.6</docker-java.version>
-
+        <joda-time.version>2.9.9</joda-time.version>
     </properties>
 
     <dependencyManagement>
@@ -113,6 +113,12 @@
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java</artifactId>
             <version>${docker-java.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${joda-time.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
