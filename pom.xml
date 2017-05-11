@@ -18,6 +18,7 @@
 	</parent>
 
     <properties>
+        <bundlor.enabled>false</bundlor.enabled>
         <source.level>1.8</source.level>
         <aerospike>3.3.4</aerospike>
         <aerospike-helper-java.version>1.2</aerospike-helper-java.version>
@@ -125,6 +126,11 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration combine.self="override"/>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
