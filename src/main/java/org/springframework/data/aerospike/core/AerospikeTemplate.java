@@ -18,6 +18,7 @@ package org.springframework.data.aerospike.core;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -106,7 +107,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public AerospikeTemplate(AerospikeClient client, String namespace) {
 		Assert.notNull(client, "Aerospike client must not be null!");
 		Assert.notNull(namespace, "Namespace cannot be null");
-		Assert.hasLength(namespace);
+		Assert.hasLength(namespace, "Namespace cannot be empty");
 
 		this.client = client;
 		this.converter = DEFAULT_CONVERTER;
@@ -240,30 +241,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public void delete(Class<?> type) {
 		try {
-			ScanPolicy scanPolicy = new ScanPolicy();
-			scanPolicy.includeBinData = false;
-			final AtomicLong count = new AtomicLong();
-			client.scanAll(scanPolicy, namespace, type.getSimpleName(),
-					new ScanCallback() {
-
-						@Override
-						public void scanCallback(Key key, Record record)
-								throws AerospikeException {
-
-							if (client.delete(null, key))
-								count.addAndGet(1);
-							/*
-							 * after 10,000 records delete, return print the
-							 * count.
-							 */
-							if (count.get() % 10000 == 0) {
-								System.out.println("Deleted " + count.get());
-							}
-
-						}
-					}, new String[] {});
-			System.out.println("Deleted " + count + " records from set "
-					+ type.getSimpleName());
+			client.truncate(null, getNamespace(), type.getSimpleName(), Calendar.getInstance());
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
