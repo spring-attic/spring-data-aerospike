@@ -579,15 +579,75 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 	}
 
 	@Test
-	public void TestAdd() {
-		Person personSven01 = new Person("Sven-01", "ZLastName", 25);
+	public void shouldAdd() {
+		String id = nextId();
+		Person one = Person.builder().id(id).age(25).build();
+		template.insert(one);
 
-		template.insert(personSven01);
-		template.add(personSven01, "age", 1);
+		Person updated = template.add(one, "age", 1);
 
-		//clean up
-		template.delete(personSven01);
-		assertEquals(26, personSven01.getAge());
+		Assertions.assertThat(updated.getAge()).isEqualTo(26);
+	}
+
+	@Test
+	public void shouldAppend() throws Exception {
+		String id = nextId();
+		Person one = Person.builder().id(id).firstName("Nas").build();
+		template.insert(one);
+
+		Person appended = template.append(one, "firstName", "tya");
+
+		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(template.findById(id, Person.class).getFirstName()).isEqualTo("Nastya");
+	}
+
+	@Test
+	public void shouldAppendMultipleFields() throws Exception {
+		String id = nextId();
+		Person one = Person.builder().id(id).firstName("Nas").emailAddress("nastya@").build();
+		template.insert(one);
+
+		Map<String, String> toBeUpdated = new HashMap<>();
+		toBeUpdated.put("firstName", "tya");
+		toBeUpdated.put("email", "gmail.com");
+		Person appended = template.append(one, toBeUpdated);
+
+		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(appended.getEmailAddress()).isEqualTo("nastya@gmail.com");
+		Person actual = template.findById(id, Person.class);
+		Assertions.assertThat(actual.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(actual.getEmailAddress()).isEqualTo("nastya@gmail.com");
+	}
+
+	@Test
+	public void shouldPrepend() throws Exception {
+		String id = nextId();
+		Person one = Person.builder().id(id).firstName("tya").build();
+		template.insert(one);
+
+		Person appended = template.prepend(one, "firstName", "Nas");
+
+		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(template.findById(id, Person.class).getFirstName()).isEqualTo("Nastya");
+	}
+
+	@Test
+	public void shouldPrependMultipleFields() throws Exception {
+		String id = nextId();
+		Person one = Person.builder().id(id).firstName("tya").emailAddress("gmail.com").build();
+		template.insert(one);
+
+		Map<String, String> toBeUpdated = new HashMap<>();
+		toBeUpdated.put("firstName", "Nas");
+		toBeUpdated.put("email", "nastya@");
+		Person appended = template.prepend(one, toBeUpdated);
+
+		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(appended.getEmailAddress()).isEqualTo("nastya@gmail.com");
+		Person actual = template.findById(id, Person.class);
+		Assertions.assertThat(actual.getFirstName()).isEqualTo("Nastya");
+		Assertions.assertThat(actual.getEmailAddress()).isEqualTo("nastya@gmail.com");
+
 	}
 
 	@Getter

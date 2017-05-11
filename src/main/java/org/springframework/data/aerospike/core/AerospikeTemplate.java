@@ -644,7 +644,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> T prepend(T objectToPrependTo, String fieldName, String value) {
 		Assert.notNull(objectToPrependTo,
 				"Object to prepend to must not be null!");
-		T result = null;
 		try {
 
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
@@ -652,15 +651,14 @@ public class AerospikeTemplate implements AerospikeOperations {
 			Record record = this.client.operate(null, data.getKey(),
 					Operation.prepend(new Bin(fieldName, value)),
 					Operation.get(fieldName));
-			data.setRecord(record);
-			result = (T) converter.read(objectToPrependTo, data);
+
+			return mapToEntity(data.getKey(), (Class<T>) objectToPrependTo.getClass(), record);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
 					.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
 		}
-		return result;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -668,7 +666,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> T prepend(T objectToPrependTo, Map<String, String> values) {
 		Assert.notNull(objectToPrependTo,
 				"Object to prepend to must not be null!");
-		T result = null;
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToPrependTo, data);
@@ -681,15 +678,14 @@ public class AerospikeTemplate implements AerospikeOperations {
 			}
 			ops[x] = Operation.get();
 			Record record = this.client.operate(null, data.getKey(), ops);
-			data.setRecord(record);
-			result = (T) converter.read(objectToPrependTo, data);
+
+			return mapToEntity(data.getKey(), (Class<T>) objectToPrependTo.getClass(), record);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
 					.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
 		}
-		return result;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -697,7 +693,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> T append(T objectToAppendTo, Map<String, String> values) {
 		Assert.notNull(objectToAppendTo,
 				"Object to append to must not be null!");
-		T result = null;
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToAppendTo, data);
@@ -710,15 +705,14 @@ public class AerospikeTemplate implements AerospikeOperations {
 			}
 			ops[x] = Operation.get();
 			Record record = this.client.operate(null, data.getKey(), ops);
-			data.setRecord(record);
-			result = (T) converter.read(objectToAppendTo, data);
+
+			return mapToEntity(data.getKey(), (Class<T>) objectToAppendTo.getClass(), record);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
 					.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
 		}
-		return result;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -726,7 +720,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> T append(T objectToAppendTo, String binName, String value) {
 		Assert.notNull(objectToAppendTo,
 				"Object to append to must not be null!");
-		T result = null;
 		try {
 
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
@@ -734,21 +727,19 @@ public class AerospikeTemplate implements AerospikeOperations {
 			Record record = this.client.operate(null, data.getKey(),
 					Operation.append(new Bin(binName, value)),
 					Operation.get(binName));
-			data.setRecord(record);
-			result = (T) converter.read(objectToAppendTo, data);
+
+			return mapToEntity(data.getKey(), (Class<T>) objectToAppendTo.getClass(), record);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
 					.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
 		}
-		return result;
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T add(T objectToAddTo, Map<String, Long> values) {
 		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
-		T result = null;
 		try {
 
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
@@ -763,44 +754,40 @@ public class AerospikeTemplate implements AerospikeOperations {
 			operations[x] = Operation.get();
 			Record record = this.client.operate(null, data.getKey(),
 					operations);
-			data.setRecord(record);
-			result = (T) converter.read(objectToAddTo, data);
+
+			return mapToEntity(data.getKey(), (Class<T>) objectToAddTo.getClass(), record);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
 					.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
 		}
-		return result;
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T add(T objectToAddTo, String binName, int value) {
 		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
-		T result = null;
 		try {
 
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
 			converter.write(objectToAddTo, data);
 			Record record = this.client.operate(null, data.getKey(),
 					Operation.add(new Bin(binName, value)), Operation.get());
-			data.setRecord(record);
-			result = (T) converter.read(objectToAddTo, data);
+
+			return mapToEntity(data.getKey(), (Class<T>) objectToAddTo.getClass(), record);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
 					.translateExceptionIfPossible(o_O);
 			throw translatedException == null ? o_O : translatedException;
 		}
-		return result;
 	}
 
 	private <T> T mapToEntity(Key key, Class<T> type, Record record) {
 		if(record == null) {
 			return null;
 		}
-		AerospikeData data = AerospikeData.forRead(key, null);
-		data.setRecord(record);
+		AerospikeData data = AerospikeData.forRead(key, record);
 		T readEntity = converter.read(type, data);
 
 		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
