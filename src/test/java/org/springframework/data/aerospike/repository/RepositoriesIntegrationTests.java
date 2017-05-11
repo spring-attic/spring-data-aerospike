@@ -31,5 +31,17 @@ public class RepositoriesIntegrationTests extends BaseRepositoriesIntegrationTes
         assertThat(actual).isEqualTo(expected);
     }
 
+    @Test
+    public void shouldDeleteObjectWithPersistenceConstructor() throws Exception {
+        String id = nextId();
+        CompositeObject expected = CompositeObject.builder()
+                .id(id)
+                .build();
+        repository.save(expected);
+        assertThat(repository.findOne(id)).isNotNull();
 
+        repository.delete(expected);
+
+        assertThat(repository.findOne(id)).isNull();
+    }
 }

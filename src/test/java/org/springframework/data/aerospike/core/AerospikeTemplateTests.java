@@ -8,11 +8,14 @@ import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.client.Value;
 import com.aerospike.client.policy.Policy;
+import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.Qualifier.FilterOperation;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.assertj.core.api.Assertions;
 import org.junit.*;
 import org.junit.rules.TestName;
@@ -78,41 +81,21 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.update(new VersionedClass(id, "foobar2"));
 
 		Record raw = client.get(new Policy(), new Key(info.getNamespace(), "versioned-set", id));
-		assertEquals(3, raw.generation);
+		Assertions.assertThat(raw.generation).isEqualTo(3);
 		VersionedClass actual = template.findById(id, VersionedClass.class);
-		assertEquals(3, actual.getVersion());
-	}
-
-	@Test
-	public void findOne_shouldSetVersionEqualToNumberOfModifications() throws Exception {
-		String id = nextId();
-		template.insert(new VersionedClass(id, "foobar"));
-		template.update(new VersionedClass(id, "foobar1"));
-		template.update(new VersionedClass(id, "foobar2"));
-
-		Record raw = client.get(new Policy(), new Key(info.getNamespace(), "versioned-set", id));
-		assertEquals(3, raw.generation);
-		VersionedClass actual = template.findOne(id, VersionedClass.class);
-		assertEquals(3, actual.getVersion());
-	}
-
-	@Test
-	public void findOne_shouldReturnNullForNonExistingKey() throws Exception {
-		Person one = template.findOne("person-non-existing-key", Person.class);
-
-		Assertions.assertThat(one).isNull();
+		Assertions.assertThat(actual.getVersion()).isEqualTo(3);
 	}
 
 	@Test
 	public void findById_shouldReturnNullForNonExistingKey() throws Exception {
-		Person one = template.findById("person-non-existing-key", Person.class, Person.class);
+		Person one = template.findById("person-non-existing-key", Person.class);
 
 		Assertions.assertThat(one).isNull();
 	}
 
 	@Test
 	public void find_shouldReturnEmptyResultForQueryWithNoResults() throws Exception {
-		template.createIndex(Person.class, "Person_age_index", "age",IndexType.NUMERIC );
+		template.createIndex(Person.class, "Person_age_index", "age", IndexType.NUMERIC );
 		Query<?> query = new Query<Object>(
 				Criteria.where("age").is(-10, "age"));
 
@@ -123,6 +106,18 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 			count++;
 		}
 		Assertions.assertThat(count).isZero();
+	}
+
+	@Test
+	public void shouldInsertAndFindWithCustomCollectionSet() throws Exception {
+		String id = nextId();
+		CustomCollectionClass initial = new CustomCollectionClass(id, "data0");
+		template.insert(initial, new WritePolicy());
+
+		Record record = client.get(new Policy(), new Key(info.getNamespace(), "custom-set", id));
+
+		Assertions.assertThat(record.getString("data")).isEqualTo("data0");
+		Assertions.assertThat(template.findById(id, CustomCollectionClass.class)).isEqualTo(initial);
 	}
 
 	@Test
@@ -288,34 +283,15 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 	@Test  (expected = RecoverableDataAccessException.class)
 	public void testUpdateFailure(){
-		Person personSven01 = new Person("Sven-01","ZLastName",25);
-		Person personSven02 = new Person("Sven-02","QLastName",21);
-		Person personSven03 = new Person("Sven-03","ALastName",24);
-		Person personSven04 = new Person("Sven-04","WLastName",35);
-		Person personSven05 = new Person("Sven-05","svenfirstName",11);
-
-		template.insert(personSven01);
-		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
-
-		template.update("Sven-06", personSven05);
+		template.update(new Person("Sven-06","svenfirstName",11));
 	}
 
 	@Test 
 	public void testUpdateSuccess(){
-		Person personSven01 = new Person("Sven-01","ZLastName",25);
-		Person personSven02 = new Person("Sven-02","QLastName",21);
-		Person personSven03 = new Person("Sven-03","ALastName",24);
-		Person personSven04 = new Person("Sven-04","WLastName",35);
-		Person personSven05 = new Person("Sven-04","WLastName",11);
+		Person person = new Person("Sven-04","WLastName",11);
+		template.insert(person);
 
-		template.insert(personSven01);
-		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
-
-		template.update("Sven-04", personSven05);
+		template.update(person);
 
 		Person result = template.findById("Sven-04", Person.class);
 
@@ -462,7 +438,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		Person personWithList = template.findById("Sven-02", Person.class);
 		personWithList.getList().add("Added something new");
 		template.update(personWithList);
-		Person personWithList2 = template.findOne("Sven-02", Person.class);
+		Person personWithList2 = template.findById("Sven-02", Person.class);
 
 		assertEquals(personWithList2, personWithList);
 		assertEquals(personWithList2.getList().size(), 4);
@@ -494,7 +470,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		Person personWithList = template.findById("Sven-02", Person.class);
 		personWithList.getMap().put("key4","Added something new");
 		template.update(personWithList);
-		Person personWithList2 = template.findOne("Sven-02", Person.class);
+		Person personWithList2 = template.findById("Sven-02", Person.class);
 
 		assertEquals(personWithList2, personWithList);
 		assertEquals(personWithList2.getMap().size(), 4);
@@ -535,12 +511,12 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullObjectToBeSaved() {
-		template.save("",null);
+		template.save(null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullTypeObjectToBeSaved() {
-		template.save("",null,null,null);
+		template.save(null,null);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -638,6 +614,22 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		public VersionedClass(String id, String field) {
 			this.id = id;
 			this.field = field;
+		}
+	}
+
+	@Getter
+	@EqualsAndHashCode
+	@ToString
+	@Document(collection = "custom-set")
+	static class CustomCollectionClass {
+
+		@Id
+		private String id;
+		private String data;
+
+		public CustomCollectionClass(String id, String data) {
+			this.id = id;
+			this.data = data;
 		}
 	}
 }

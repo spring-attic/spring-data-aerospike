@@ -24,13 +24,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.repository.*;
 import org.springframework.data.aerospike.repository.Person;
-import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -38,8 +34,6 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
 
 import com.aerospike.client.AerospikeClient;
@@ -64,7 +58,6 @@ import com.aerospike.client.task.IndexTask;
 public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrationTests {
 	
 	protected static final String SET_NAME_PERSON = "Person";
-	protected static final String SET_NAME_ANNOTATED_PERSON = "person";
 
 	@Autowired AerospikeTemplate template;
 	@Autowired AerospikeClient client;
@@ -93,41 +86,15 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 				}
 		}, new String[] {});
 		System.out.println("Deleted "+ count + " records from set " + AerospikeTemplateIntegrationTests.SET_NAME_PERSON);
-		client.scanAll(	scanPolicy, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_ANNOTATED_PERSON,  new ScanCallback() {
-			@Override
-			public void scanCallback(Key key, Record record)
-					throws AerospikeException {
-
-
-				if (client.delete(null, key))
-					count.addAndGet(1);
-					   /*
-						* after 10,000 records delete, return print the count.
-						*/
-				if (count.get() % 10000 == 0){
-					System.out.println("Deleted "+ count.get());
-				}
-
-			}
-		}, new String[] {});
 	}
 
 	@Test
-	public void testInsertWithKey(){
+	public void testUpdate(){
 		Person customer = new Person("dave-001", "Dave", "Matthews");
-		template.insert("dave-001", customer);
-		Record result = client.get(null, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"));
-		Assert.assertEquals("Dave", result.getString("firstname"));
-		Assert.assertEquals("Matthews", result.getString("lastname"));
-	}
-
-	@Test
-	public void testUpdateWithKey(){
-		Person customer = new Person("dave-001", "Dave", "Matthews");
-		template.insert("dave-001", customer);
+		template.insert(customer);
 		String newLastName = customer.getLastname() + "xx";
 		customer.setLastname(newLastName);
-		template.update("dave-001", customer);
+		template.update(customer);
 		customer = template.findById("dave-001", Person.class);
 		Assert.assertEquals("Matthewsxx", customer.getLastname());
 	}
@@ -451,13 +418,5 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		Assert.assertEquals(10, count);
 	}
 
-	@Test
-	public void testAnnotatedInsertWithKey(){
-		AnnotatedPerson customer = new AnnotatedPerson("dave-100", "Dave", "Matthews");
-		template.insert("dave-100", customer);
-		Record result = client.get(null, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_ANNOTATED_PERSON, "dave-100"));
-		Assert.assertEquals("Dave", result.getString("firstname"));
-		Assert.assertEquals("Matthews", result.getString("lastname"));
-	}
 }
 
