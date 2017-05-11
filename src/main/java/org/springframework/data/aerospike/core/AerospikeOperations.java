@@ -47,18 +47,16 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	
 	/**
 	 * Insert operation using the WritePolicy.recordExisits policy of CREATE_ONLY 
-	 * @param objectToInsert
-	 * @return
+	 * @param document
 	 */
-	public <T> T insert(T objectToInsert);
+	void insert(Object document);
 	
 	/**
 	 * Insert operation using the WritePolicy specified. 
-	 * @param objectToInsert
+	 * @param document
 	 * @param policy
-	 * @return
 	 */
-	public <T> T insert(T objectToInsert, WritePolicy policy);
+	void insert(Object document, WritePolicy policy);
 
 	/**
 	 * @return mapping context in use.

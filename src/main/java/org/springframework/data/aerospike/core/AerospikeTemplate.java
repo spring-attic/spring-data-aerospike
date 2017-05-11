@@ -161,53 +161,40 @@ public class AerospikeTemplate implements AerospikeOperations {
 		}
 	}
 
-	public <T> void insertAll(Collection<? extends T> objectsToSave) {
-		for (T element : objectsToSave) {
-			if (element == null) {
-				continue;
-			}
-
-			insert(element);
-		}
+	public <T> void insertAll(Collection<? extends T> documents) {
+		Assert.notNull(documents, "Documents must not be null!");
+		documents.stream().filter(Objects::nonNull).forEach(this::insert);
 	}
 
 	@Override
-	public <T> T insert(T objectToInsert) {
-		return insert(objectToInsert, null);
+	public void insert(Object document) {
+		insert(document, this.insertPolicy);
 	}
-	
+
 	@Override
-	public <T> T insert(T objectToInsert, WritePolicy policy) {
-		Assert.notNull(objectToInsert, "Object to insert must not be null!");
+	public void insert(Object document, WritePolicy policy) {
+		put(document, policy);
+	}
+
+	@Override
+	public void update(Object document) {
+		update(document, this.updatePolicy);
+	}
+
+	@Override
+	public void update(Object document, WritePolicy policy) {
+		put(document, policy);
+	}
+
+	private void put(Object document, WritePolicy policy) {
+		Assert.notNull(document, "Document must not be null!");
+		Assert.notNull(policy, "Policy must not be null!");
 		try {
 			AerospikeData data = AerospikeData.forWrite(this.namespace);
-			converter.write(objectToInsert, data);
+			converter.write(document, data);
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
-			client.put(policy == null ? this.insertPolicy : policy, key, bins);
-		}
-		catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator
-					.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
-		}
-		return null;
-	}
-
-	@Override
-	public void update(Object objectToUpdate) {
-		update( objectToUpdate,  null);
-	}
-	
-	@Override
-	public void update(Object objectToUpdate, WritePolicy policy) {
-		Assert.notNull(objectToUpdate, "Object to update must not be null!");
-		try {
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
-			converter.write(objectToUpdate, data);
-			Key key = data.getKey();
-			Bin[] bins = data.getBinsAsArray();
-			client.put(policy == null ? this.updatePolicy : policy, key, bins);
+			client.put(policy, key, bins);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
