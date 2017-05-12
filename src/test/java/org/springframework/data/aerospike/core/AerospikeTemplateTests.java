@@ -700,15 +700,9 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
 
 		Person personSven01 = new Person("Sven-01", "ZLastName", 25);
-		Person personSven02 = new Person("Sven-02", "QLastName", 50);
-		Person personSven03 = new Person("Sven-03", "ALastName", 24);
-		Person personSven04 = new Person("Sven-04", "WLastName", 25);
 		personSven01.setEmailAddress("old@mail.com");
 
 		template.insert(personSven01);
-		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
 
 		Person personWithMail = template.findById("Sven-01", Person.class);
 		assertThat(personWithMail.getEmailAddress(), is("old@mail.com"));
@@ -751,6 +745,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Person appended = template.append(one, "firstName", "tya");
 
+		Assertions.assertThat(appended).isEqualTo(Person.builder().id(id).firstName("Nastya").build());
 		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
 		Assertions.assertThat(template.findById(id, Person.class).getFirstName()).isEqualTo("Nastya");
 	}

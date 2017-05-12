@@ -65,8 +65,7 @@ public abstract class AerospikeSimpleTypes {
 		simpleTypes.add(Date.class);
 		simpleTypes.add(Locale.class);
 		simpleTypes.add(Class.class);
-		simpleTypes.add(List.class);
-		simpleTypes.add(Map.class);
+		simpleTypes.add(Enum.class);
 		simpleTypes.add(Byte[].class);
 		simpleTypes.add(UUID.class);
 		AEROSPIKE_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);

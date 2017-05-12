@@ -22,7 +22,8 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.springframework.data.aerospike.convert.AerospikeConverter;
-import org.springframework.data.aerospike.convert.AerospikeData;
+import org.springframework.data.aerospike.convert.AerospikeReadData;
+import org.springframework.data.aerospike.convert.AerospikeWriteData;
 import org.springframework.data.aerospike.utility.Utils;
 import org.springframework.data.keyvalue.core.AbstractKeyValueAdapter;
 import org.springframework.data.keyvalue.core.KeyValueAdapter;
@@ -79,7 +80,7 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 	 */
 	@Override
 	public Object put(Serializable id, Object item, Serializable keyspace) {
-		AerospikeData data = AerospikeData.forWrite(namespace);
+		AerospikeWriteData data = AerospikeWriteData.forWrite();
 
 		converter.write(item, data);
 
@@ -107,7 +108,10 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 
 		Key key = makeKey(keyspace.toString(), id.toString());
 		Record record = client.get(null, key);
-		AerospikeData data = AerospikeData.forRead(key, record);
+		if(record == null){
+			return null;
+		}
+		AerospikeReadData data = AerospikeReadData.forRead(key, record.bins);
 		return converter.read(Object.class,  data);
 	}
 

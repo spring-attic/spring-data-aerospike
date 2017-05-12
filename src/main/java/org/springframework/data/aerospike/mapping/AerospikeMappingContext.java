@@ -42,6 +42,7 @@ public class AerospikeMappingContext extends
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
 	@SuppressWarnings("unused")
 	private ApplicationContext context;
+	private String defaultNameSpace;
 
 	/**
 	 * Configures the {@link FieldNamingStrategy} to be used to determine the field name if no manual mapping is applied.
@@ -59,7 +60,7 @@ public class AerospikeMappingContext extends
 	 */
 	@Override
 	protected <T> BasicAerospikePersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
-		BasicAerospikePersistentEntity<T> entity = new  BasicAerospikePersistentEntity<T>(typeInformation);
+		BasicAerospikePersistentEntity<T> entity = new  BasicAerospikePersistentEntity<T>(typeInformation, defaultNameSpace);
 		if (context != null) {
 			entity.setEnvironment(context.getEnvironment());
 		}
@@ -84,5 +85,8 @@ public class AerospikeMappingContext extends
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.context = applicationContext;
 	}
-	
+
+	public void setDefaultNameSpace(String defaultNameSpace) {
+		this.defaultNameSpace = defaultNameSpace;
+	}
 }

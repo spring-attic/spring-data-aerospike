@@ -15,16 +15,17 @@
  */
 package org.springframework.data.aerospike.convert;
 
-import org.springframework.data.aerospike.core.AerospikeWriter;
-import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
-import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.convert.EntityConverter;
+import org.springframework.data.convert.EntityReader;
+import org.springframework.data.convert.EntityWriter;
 
 /**
  * Interface of an Aerospike-specific {@link EntityConverter}.
- * 
+ *
  * @author Oliver Gierke
  */
-public interface AerospikeConverter extends
-		EntityConverter<AerospikePersistentEntity<?>, AerospikePersistentProperty, Object, AerospikeData>,AerospikeWriter<Object> {
+public interface AerospikeConverter extends EntityReader<Object, AerospikeReadData>, EntityWriter<Object, AerospikeWriteData> {
+
+	ConversionService getConversionService();
 }

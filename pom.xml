@@ -58,6 +58,11 @@
                 <artifactId>aerospike-helper-java</artifactId>
                 <version>${aerospike-helper-java.version}</version>
             </dependency>
+            <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>${joda-time.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -97,6 +102,11 @@
             <groupId>com.aerospike</groupId>
             <artifactId>aerospike-helper-java</artifactId>
         </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -116,12 +126,7 @@
             <version>${docker-java.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-            <version>${joda-time.version}</version>
-            <scope>test</scope>
-        </dependency>
+
     </dependencies>
 
     <build>

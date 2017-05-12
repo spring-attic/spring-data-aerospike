@@ -16,7 +16,6 @@ import org.junit.runners.Suite.SuiteClasses;
  */
 @RunWith(Suite.class)
 @SuiteClasses({ AerospikeMappingContextTest.class,
-		AerospikeMetadataBinTest.class,
 		CachingAerospikePersistentPropertyTest.class })
 public class AllTests {
 

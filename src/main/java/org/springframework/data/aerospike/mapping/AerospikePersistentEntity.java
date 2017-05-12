@@ -32,6 +32,8 @@ public interface AerospikePersistentEntity<T> extends PersistentEntity<T, Aerosp
 	 * 
 	 * @return
 	 */
+	String getNamespace();
+
 	String getSetName();
 
 	Key getKey();

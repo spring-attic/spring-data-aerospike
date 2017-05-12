@@ -9,6 +9,7 @@ public class AsyncUtils {
 
 	public static void executeConcurrently(int numThreads, Callable<Void> task) throws Exception {
 		ExecutorService pool = Executors.newFixedThreadPool(numThreads);
+
 		try {
 			Collection<Callable<Void>> tasks = Collections.nCopies(numThreads, task);
 
@@ -19,5 +20,6 @@ public class AsyncUtils {
 		} finally {
 			pool.shutdownNow();
 		}
+
 	}
 }

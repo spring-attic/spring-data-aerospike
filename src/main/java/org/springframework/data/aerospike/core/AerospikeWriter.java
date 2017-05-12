@@ -3,7 +3,7 @@
  */
 package org.springframework.data.aerospike.core;
 
-import org.springframework.data.aerospike.convert.AerospikeData;
+import org.springframework.data.aerospike.convert.AerospikeWriteData;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.convert.EntityWriter;
 import org.springframework.data.util.TypeInformation;
@@ -15,7 +15,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Jean Mercier
  *
  */
-public interface AerospikeWriter<T> extends EntityWriter<T, AerospikeData> {
+public interface AerospikeWriter<T> extends EntityWriter<T, AerospikeWriteData> {
 	/**
 	 * Converts the given object into one Aerospike will be able to store natively. If the given object can already be stored
 	 * as is, no conversion will happen.
@@ -36,12 +36,12 @@ public interface AerospikeWriter<T> extends EntityWriter<T, AerospikeData> {
 	Object convertToAerospikeType(Object obj, TypeInformation<?> typeInformation);
 
 	/**
-	 * Creates a {@link Aerospike} to refer to the given object.
+	 * Creates a {@link AerospikeWriteData} to refer to the given object.
 	 * 
-	 * @param object the object to create a {@link Aerospike} to link to. The object's type has to carry an id attribute.
+	 * @param object the object to create a {@link AerospikeWriteData} to link to. The object's type has to carry an id attribute.
 	 * @param referingProperty the client-side property referring to the object which might carry additional metadata for
-	 *          the {@link Aerospike} object to create. Can be {@literal null}.
+	 *          the {@link AerospikeWriteData} object to create. Can be {@literal null}.
 	 * @return will never be {@literal null}.
 	 */
-	AerospikeData toAerospikeData(Object object, AerospikePersistentProperty referingProperty);
+	AerospikeWriteData toAerospikeData(Object object, AerospikePersistentProperty referingProperty);
 }

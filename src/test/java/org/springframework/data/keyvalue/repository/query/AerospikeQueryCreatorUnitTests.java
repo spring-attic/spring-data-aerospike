@@ -47,8 +47,8 @@ public class AerospikeQueryCreatorUnitTests extends BaseRepositoriesIntegrationT
 	public void createsQueryCorrectly() throws Exception {
 		PartTree tree = new PartTree("findByFirstName", Person.class);
 
-		AerospikeQueryCreator creator = new AerospikeQueryCreator(tree, getAccessor(converter, "Oliver"), context);
-		Query query = creator.createQuery();
+//		AerospikeQueryCreator creator = new AerospikeQueryCreator(tree, getAccessor(converter, "Oliver"), context);
+//		Query query = creator.createQuery();
 		//assertThat(query, is(Query.query(Criteria.where("firstName").is("Oliver"))));
 	}
 

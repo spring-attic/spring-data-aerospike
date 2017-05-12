@@ -28,9 +28,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.support.SimpleValueWrapper;
 import org.springframework.cache.transaction.AbstractTransactionSupportingCacheManager;
 import org.springframework.cache.transaction.TransactionAwareCacheDecorator;
-import org.springframework.data.aerospike.convert.AerospikeConverter;
-import org.springframework.data.aerospike.convert.AerospikeData;
-import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
+import org.springframework.data.aerospike.convert.*;
 import org.springframework.util.Assert;
 
 import com.aerospike.client.AerospikeClient;
@@ -175,7 +173,7 @@ public class AerospikeCacheManager extends AbstractTransactionSupportingCacheMan
 			Key dbKey = getKey(key);
 			Record record =  client.get(null, dbKey);
 			if (record != null) {
-				AerospikeData data = AerospikeData.forRead(dbKey, record);
+				AerospikeReadData data = AerospikeReadData.forRead(dbKey, record.bins);
 				T value = aerospikeConverter.read(type,  data);
 				return value;
 			}
@@ -189,8 +187,7 @@ public class AerospikeCacheManager extends AbstractTransactionSupportingCacheMan
 		}
 
 		private void serializeAndPut(WritePolicy writePolicy, Object key, Object value) {
-			AerospikeData data = AerospikeData.forWrite(namespace);
-			data.setID(key.toString());
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			aerospikeConverter.write(value, data);
 			client.put(writePolicy, getKey(key), data.getBinsAsArray());
 		}

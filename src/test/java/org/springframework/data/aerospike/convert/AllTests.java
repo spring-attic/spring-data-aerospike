@@ -15,9 +15,10 @@ import org.junit.runners.Suite.SuiteClasses;
  *
  */
 @RunWith(Suite.class)
-@SuiteClasses({ AerospikeDataTest.class,
-		MappingAerospikeConverterConversionTest.class,
-		MappingAerospikeConverterTest.class })
+@SuiteClasses({
+		AerospikeReadDataTest.class,
+		MappingAerospikeConverterTest.class,
+		MappingAerospikeConverterDeprecatedTest.class })
 public class AllTests {
 
 }

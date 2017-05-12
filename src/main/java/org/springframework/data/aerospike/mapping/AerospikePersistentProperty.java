@@ -26,5 +26,6 @@ public interface AerospikePersistentProperty extends PersistentProperty<Aerospik
 	 */
 	boolean usePropertyAccess();
 	boolean isExplicitIdProperty();
+	String getFieldName();
 
 }

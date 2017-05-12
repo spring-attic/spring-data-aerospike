@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.data.aerospike.convert.CustomConversions;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
 import org.springframework.data.aerospike.core.AerospikeExceptionTranslator;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
@@ -22,9 +23,7 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Configuration
 public abstract class AbstractAerospikeDataConfiguration {
@@ -39,7 +38,16 @@ public abstract class AbstractAerospikeDataConfiguration {
 
     @Bean(name = "mappingAerospikeConverter")
     public MappingAerospikeConverter mappingAerospikeConverter(AerospikeMappingContext aerospikeMappingContext) {
-        return new MappingAerospikeConverter(aerospikeMappingContext, simpleTypeHolder());
+        return new MappingAerospikeConverter(aerospikeMappingContext, customConversions());
+    }
+
+    @Bean(name = "aerospikeCustomConversions")
+    public CustomConversions customConversions() {
+        return new CustomConversions(customConverters(), simpleTypeHolder());
+    }
+
+    protected List<?> customConverters() {
+        return Collections.emptyList();
     }
 
     @Bean(name = "aerospikeMappingContext")
@@ -48,6 +56,7 @@ public abstract class AbstractAerospikeDataConfiguration {
         context.setInitialEntitySet(getInitialEntitySet());
         context.setSimpleTypeHolder(simpleTypeHolder());
         context.setFieldNamingStrategy(fieldNamingStrategy());
+        context.setDefaultNameSpace(nameSpace());
         return context;
     }
 

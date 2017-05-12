@@ -32,7 +32,8 @@ import org.springframework.beans.support.PropertyComparator;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.aerospike.convert.AerospikeData;
+import org.springframework.data.aerospike.convert.AerospikeReadData;
+import org.springframework.data.aerospike.convert.AerospikeWriteData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
 import org.springframework.data.aerospike.mapping.*;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
@@ -98,11 +99,14 @@ public class AerospikeTemplate implements AerospikeOperations {
 		this.insertPolicy = new WritePolicy(this.client.writePolicyDefault);
 		this.updatePolicy = new WritePolicy(this.client.writePolicyDefault);
 		this.insertPolicy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
+		this.insertPolicy.sendKey = true;
 		this.updatePolicy.recordExistsAction = RecordExistsAction.UPDATE_ONLY;
+		this.updatePolicy.sendKey = true;
 
 		this.createOrUpdatePolicy = new WritePolicy();
 		this.createOrUpdatePolicy.generationPolicy = GenerationPolicy.NONE;
 		this.createOrUpdatePolicy.recordExistsAction = RecordExistsAction.UPDATE;
+		this.createOrUpdatePolicy.sendKey = true;
 
 		this.queryEngine = new QueryEngine(this.client);
 
@@ -149,7 +153,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public void save(Object document) {
 		Assert.notNull(document, "Object to insert must not be null!");
 		try {
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(document, data);
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
@@ -180,6 +184,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 		WritePolicy policy = new WritePolicy();
 		policy.generationPolicy = GenerationPolicy.EXPECT_GEN_EQUAL;
+		policy.sendKey = true;
 		if (existingDocument) {
 			//Updating existing document with generation
 			policy.recordExistsAction = RecordExistsAction.REPLACE_ONLY;
@@ -226,7 +231,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(document, "Document must not be null!");
 		Assert.notNull(policy, "Policy must not be null!");
 		try {
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(document, data);
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
@@ -278,10 +283,11 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> T delete(Serializable id, Class<T> type) {
 		Assert.notNull(id, "Id must not be null!");
 		try {
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
-			data.setID(id);
-			data.setSetName(AerospikeSimpleTypes.getColletionName(type));
-			this.client.delete(null, data.getKey());
+			AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
+			Key key = new Key(this.namespace, entity.getSetName(),
+					id.toString());
+
+			this.client.delete(null, key);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
@@ -295,7 +301,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> T delete(T objectToDelete) {
 		Assert.notNull(objectToDelete, "Object to delete must not be null!");
 		try {
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToDelete, data);
 			this.client.delete(null, data.getKey());
 		}
@@ -331,7 +337,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> T findById(Serializable id, Class<T> type) {
 		Assert.notNull(id, "Id must not be null!");
 		try {
-			AerospikePersistentEntity<?> entity = converter.getMappingContext()
+			AerospikePersistentEntity<?> entity = mappingContext
 					.getPersistentEntity(type);
 			Key key = new Key(this.namespace, entity.getSetName(),
 					id.toString());
@@ -353,7 +359,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 			String module, String function, List<Value> arguments) {
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		AerospikePersistentEntity<?> entity = converter.getMappingContext()
+		AerospikePersistentEntity<?> entity = mappingContext
 				.getPersistentEntity(outputType);
 
 		Statement statement = new Statement();
@@ -372,7 +378,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	@Override
 	public String getSetName(Class<?> entityClass) {
-		AerospikePersistentEntity<?> entity = converter.getMappingContext()
+		AerospikePersistentEntity<?> entity = mappingContext
 				.getPersistentEntity(entityClass);
 		return entity.getSetName();
 	}
@@ -570,7 +576,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public long count(Class<?> type) {
 		Assert.notNull(type, "Type for count must not be null!");
-		AerospikePersistentEntity<?> entity = converter.getMappingContext()
+		AerospikePersistentEntity<?> entity = mappingContext
 				.getPersistentEntity(type);
 		return count(type, entity.getSetName());
 	}
@@ -669,7 +675,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 				"Object to prepend to must not be null!");
 		try {
 
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToPrependTo, data);
 			Record record = this.client.operate(null, data.getKey(),
 					Operation.prepend(new Bin(fieldName, value)),
@@ -690,7 +696,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(objectToPrependTo,
 				"Object to prepend to must not be null!");
 		try {
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToPrependTo, data);
 			Operation[] ops = new Operation[values.size() + 1];
 			int x = 0;
@@ -717,7 +723,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(objectToAppendTo,
 				"Object to append to must not be null!");
 		try {
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToAppendTo, data);
 			Operation[] ops = new Operation[values.size() + 1];
 			int x = 0;
@@ -745,7 +751,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 				"Object to append to must not be null!");
 		try {
 
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToAppendTo, data);
 			Record record = this.client.operate(null, data.getKey(),
 					Operation.append(new Bin(binName, value)),
@@ -765,7 +771,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
 		try {
 
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToAddTo, data);
 			Operation[] operations = new Operation[values.size() + 1];
 			int x = 0;
@@ -792,7 +798,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
 		try {
 
-			AerospikeData data = AerospikeData.forWrite(this.namespace);
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToAddTo, data);
 			Record record = this.client.operate(null, data.getKey(),
 					Operation.add(new Bin(binName, value)), Operation.get());
@@ -810,13 +816,13 @@ public class AerospikeTemplate implements AerospikeOperations {
 		if(record == null) {
 			return null;
 		}
-		AerospikeData data = AerospikeData.forRead(key, record);
+		AerospikeReadData data = AerospikeReadData.forRead(key, record.bins);
 		T readEntity = converter.read(type, data);
 
 		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
 		if (entity.hasVersionProperty()) {
 			final ConvertingPropertyAccessor accessor = getPropertyAccessor(entity, readEntity);
-			accessor.setProperty(entity.getVersionProperty(), data.getRecord().generation);
+			accessor.setProperty(entity.getVersionProperty(), record.generation);
 		}
 
 		return readEntity;
