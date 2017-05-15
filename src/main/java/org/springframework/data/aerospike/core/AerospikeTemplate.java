@@ -71,9 +71,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 	private final QueryEngine queryEngine;
 
 	private AerospikeExceptionTranslator exceptionTranslator;
-	private final WritePolicy createOrUpdatePolicy;
-	private final WritePolicy insertPolicy;
-	private final WritePolicy updatePolicy;
 
 	/**
 	 * Creates a new {@link AerospikeTemplate} for the given
@@ -96,17 +93,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 		this.exceptionTranslator = exceptionTranslator;
 		this.namespace = namespace;
 		this.mappingContext = mappingContext;
-		this.insertPolicy = new WritePolicy(this.client.writePolicyDefault);
-		this.updatePolicy = new WritePolicy(this.client.writePolicyDefault);
-		this.insertPolicy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
-		this.insertPolicy.sendKey = true;
-		this.updatePolicy.recordExistsAction = RecordExistsAction.UPDATE_ONLY;
-		this.updatePolicy.sendKey = true;
-
-		this.createOrUpdatePolicy = new WritePolicy();
-		this.createOrUpdatePolicy.generationPolicy = GenerationPolicy.NONE;
-		this.createOrUpdatePolicy.recordExistsAction = RecordExistsAction.UPDATE;
-		this.createOrUpdatePolicy.sendKey = true;
 
 		this.queryEngine = new QueryEngine(this.client);
 
@@ -152,53 +138,16 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public void save(Object document) {
 		Assert.notNull(document, "Object to insert must not be null!");
-		try {
-			AerospikeWriteData data = AerospikeWriteData.forWrite();
-			converter.write(document, data);
-			Key key = data.getKey();
-			Bin[] bins = data.getBinsAsArray();
 
-			final AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(document.getClass());
+		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(document.getClass());
 
-			if (entity.hasVersionProperty()) {
-				createOrUpdateUsingCas(document, key, bins, entity);
-			} else {
-				client.put(createOrUpdatePolicy, key, bins);
-			}
-
-		} catch (AerospikeException e) {
-			int code = e.getResultCode();
-			if (code == ResultCode.KEY_EXISTS_ERROR
-					|| code == ResultCode.GENERATION_ERROR) {
-				throw new OptimisticLockingFailureException("Save document with version value failed", e);
-			}
-			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
-			throw translatedException == null ? e : translatedException;
-		}
-	}
-
-	private void createOrUpdateUsingCas(Object document, Key key, Bin[] bins, AerospikePersistentEntity<?> entity) {
-		final ConvertingPropertyAccessor accessor = getPropertyAccessor(entity, document);
-		Integer version = entity.hasVersionProperty() ? accessor.getProperty(entity.getVersionProperty(), Integer.class) : null;
-		boolean existingDocument = version != null && version > 0L;
-
-		WritePolicy policy = new WritePolicy();
-		policy.generationPolicy = GenerationPolicy.EXPECT_GEN_EQUAL;
-		policy.sendKey = true;
-		if (existingDocument) {
-			//Updating existing document with generation
-			policy.recordExistsAction = RecordExistsAction.REPLACE_ONLY;
-			policy.generation = version;
+		if (entity.hasVersionProperty()) {
+			doPersistWithCas(document, entity);
 		} else {
-			// create new document. if exists we should fail with optimistic locking
-			policy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
-		}
-
-		Operation[] operations = OperationUtils.operations(bins, Operation::put, Operation.get());
-		Record newRecord = client.operate(policy, key, operations);
-
-		if (entity.hasVersionProperty() && newRecord != null && newRecord.generation != 0) {
-			accessor.setProperty(entity.getVersionProperty(), newRecord.generation);
+			WritePolicyBuilder builder = WritePolicyBuilder.builder(this.client.writePolicyDefault)
+					.sendKey(true)
+					.recordExistsAction(RecordExistsAction.UPDATE);
+			doPersist(document, builder);
 		}
 	}
 
@@ -209,39 +158,40 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	@Override
 	public void insert(Object document) {
-		insert(document, this.insertPolicy);
+		Assert.notNull(document, "Document must not be null!");
+
+		WritePolicyBuilder writePolicyBuilder = WritePolicyBuilder.builder(this.client.writePolicyDefault)
+				.sendKey(true)
+				.recordExistsAction(RecordExistsAction.CREATE_ONLY);
+
+		doPersist(document, writePolicyBuilder);
 	}
 
 	@Override
 	public void insert(Object document, WritePolicy policy) {
-		put(document, policy);
+		Assert.notNull(document, "Document must not be null!");
+		Assert.notNull(policy, "Policy must not be null!");
+
+		doPersist(document, WritePolicyBuilder.builder(policy));
 	}
 
 	@Override
 	public void update(Object document) {
-		update(document, this.updatePolicy);
+		Assert.notNull(document, "Document must not be null!");
+
+		WritePolicyBuilder writePolicyBuilder = WritePolicyBuilder.builder(this.client.writePolicyDefault)
+				.sendKey(true)
+				.recordExistsAction(RecordExistsAction.UPDATE_ONLY);
+
+		doPersist(document, writePolicyBuilder);
 	}
 
 	@Override
 	public void update(Object document, WritePolicy policy) {
-		put(document, policy);
-	}
-
-	private void put(Object document, WritePolicy policy) {
 		Assert.notNull(document, "Document must not be null!");
 		Assert.notNull(policy, "Policy must not be null!");
-		try {
-			AerospikeWriteData data = AerospikeWriteData.forWrite();
-			converter.write(document, data);
-			Key key = data.getKey();
-			Bin[] bins = data.getBinsAsArray();
-			client.put(policy, key, bins);
-		}
-		catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator
-					.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
-		}
+
+		doPersist(document, WritePolicyBuilder.builder(policy));
 	}
 
 	@Override
@@ -631,7 +581,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		private KeyRecordIterator keyRecordIterator;
 		private MappingAerospikeConverter converter;
 		private Class<T> type;
-		
+
 		public EntityIterator(Class<T> type,
 				MappingAerospikeConverter converter,
 				KeyRecordIterator keyRecordIterator) {
@@ -831,6 +781,70 @@ public class AerospikeTemplate implements AerospikeOperations {
 	private ConvertingPropertyAccessor getPropertyAccessor(AerospikePersistentEntity<?> entity, Object source) {
 		PersistentPropertyAccessor accessor = entity.getPropertyAccessor(source);
 		return new ConvertingPropertyAccessor(accessor, converter.getConversionService());
+	}
+
+	private void doPersist(Object document, WritePolicyBuilder policyBuilder) {
+		try {
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
+			converter.write(document, data);
+
+			Key key = data.getKey();
+			Bin[] bins = data.getBinsAsArray();
+			WritePolicy policy = policyBuilder.expiration(data.getExpiration())
+					.build();
+
+			client.put(policy, key, bins);
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
+		}
+	}
+
+	private void doPersistWithCas(Object document, AerospikePersistentEntity<?> entity) {
+		try {
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
+			converter.write(document, data);
+
+			Key key = data.getKey();
+			Bin[] bins = data.getBinsAsArray();
+
+			ConvertingPropertyAccessor accessor = getPropertyAccessor(entity, document);
+			WritePolicy policy = getCasAwareWritePolicy(data, entity, accessor);
+
+			Operation[] operations = OperationUtils.operations(bins, Operation::put, Operation.getHeader());
+
+			Record newRecord = client.operate(policy, key, operations);
+			accessor.setProperty(entity.getVersionProperty(), newRecord.generation);
+		} catch (AerospikeException e) {
+			int code = e.getResultCode();
+			if (code == ResultCode.KEY_EXISTS_ERROR || code == ResultCode.GENERATION_ERROR) {
+				throw new OptimisticLockingFailureException("Save document with version value failed", e);
+			}
+
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
+		}
+	}
+
+	private WritePolicy getCasAwareWritePolicy(AerospikeWriteData data, AerospikePersistentEntity<?> entity,
+											   ConvertingPropertyAccessor accessor) {
+		WritePolicyBuilder builder = WritePolicyBuilder.builder(this.client.writePolicyDefault)
+				.sendKey(true)
+				.generationPolicy(GenerationPolicy.EXPECT_GEN_EQUAL)
+				.expiration(data.getExpiration());
+
+		Integer version = accessor.getProperty(entity.getVersionProperty(), Integer.class);
+		boolean existingDocument = version != null && version > 0L;
+		if (existingDocument) {
+			//Updating existing document with generation
+			builder.recordExistsAction(RecordExistsAction.REPLACE_ONLY)
+					.generation(version);
+		} else {
+			// create new document. if exists we should fail with optimistic locking
+			builder.recordExistsAction(RecordExistsAction.CREATE_ONLY);
+		}
+
+		return builder.build();
 	}
 
 }

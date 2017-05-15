@@ -617,6 +617,14 @@ public class MappingAerospikeConverterTest {
 		assertThat(result).isEqualTo(expected);
 	}
 
+	@Test
+	public void shouldWriteExpirationValue() {
+		Person person = new Person("personId", Collections.emptySet());
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		converter.write(person, forWrite);
+		assertThat(forWrite.getExpiration()).isEqualTo(42);
+	}
+
 	private void assertThatKeyIsEqualTo(Key key, String namespace, String myset, Object expected) {
 		assertThat(key.namespace).isEqualTo(namespace);
 		assertThat(key.setName).isEqualTo(myset);

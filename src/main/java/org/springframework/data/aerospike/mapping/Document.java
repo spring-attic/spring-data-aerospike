@@ -20,8 +20,11 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.annotation.Persistent;
+
+import static org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity.DEFAULT_EXPIRATION;
 
 /**
  * Identifies a domain object to be persisted to Aerospike.
@@ -47,4 +50,24 @@ public @interface Document {
 	 */
 	String language() default "";
 
+	/**
+	 * An optional expiry time for the document. Default is no expiry.
+	 * Only one of two might might be set at the same time: either {@link #expiry()} or {@link #expiryExpression()}
+	 * See {@link com.aerospike.client.policy.WritePolicy#expiration} for possible values.
+	 */
+	int expiry() default DEFAULT_EXPIRATION;
+
+	/**
+	 * Same as {@link #expiry} but allows the actual value to be set using standard Spring property sources mechanism.
+	 * Only one might be set at the same time: either {@link #expiry()} or {@link #expiryExpression()}. <br />
+	 * Syntax is the same as for {@link org.springframework.core.env.Environment#resolveRequiredPlaceholders(String)}.
+	 * <br /><br />
+	 * SpEL is NOT supported.
+	 */
+	String expiryExpression() default "";
+
+	/**
+	 * An optional time unit for the document's {@link #expiry()}, if set. Default is {@link TimeUnit#SECONDS}.
+	 */
+	TimeUnit expiryUnit() default TimeUnit.SECONDS;
 }

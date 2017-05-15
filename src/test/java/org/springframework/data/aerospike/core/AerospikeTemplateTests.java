@@ -4,6 +4,7 @@
 package org.springframework.data.aerospike.core;
 
 import com.aerospike.client.*;
+import com.aerospike.client.Value;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
@@ -11,9 +12,7 @@ import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.Qualifier.FilterOperation;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 import org.assertj.core.api.Assertions;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -799,6 +798,20 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 	}
 
+	//TODO: Potentially unstable test. Instead of sleeping, we need somehow do time travel like in CouchbaseMock.
+	@Test
+	public void shouldExpire() throws InterruptedException {
+		String id = nextId();
+		template.insert(new DocumentWithExpiration(id));
+		DocumentWithExpiration shouldNotExpire = template.findById(id, DocumentWithExpiration.class);
+		Assertions.assertThat(shouldNotExpire).isNotNull();
+
+		Thread.sleep(2000L);
+
+		DocumentWithExpiration shouldExpire = template.findById(id, DocumentWithExpiration.class);
+		Assertions.assertThat(shouldExpire).isNull();
+	}
+
 	@Getter
 	@EqualsAndHashCode
 	@ToString
@@ -840,5 +853,14 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 			this.id = id;
 			this.data = data;
 		}
+	}
+
+	@Data
+	@AllArgsConstructor
+	@Document(collection = "expiry-set", expiry = 1)
+	static class DocumentWithExpiration {
+
+		@Id
+		private String id;
 	}
 }

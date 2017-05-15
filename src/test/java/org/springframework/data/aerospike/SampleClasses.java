@@ -201,6 +201,7 @@ public class SampleClasses {
 		public int id;
 	}
 
+	@Document(expiry = 42)
 	@AllArgsConstructor
 	@ToString
 	@EqualsAndHashCode

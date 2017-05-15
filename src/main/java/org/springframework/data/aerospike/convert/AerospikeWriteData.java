@@ -6,12 +6,6 @@ import com.aerospike.client.Key;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Stream.concat;
-import static java.util.stream.Stream.of;
 
 /**
  * Value object to carry data to be written in object conversion.
@@ -23,6 +17,7 @@ public class AerospikeWriteData {
 
 	private Key key;
 	private Collection<Bin> bins;
+	private int expiration;
 
 	public AerospikeWriteData(Key key, Collection<Bin> bins) {
 		this.key = key;
@@ -57,4 +52,11 @@ public class AerospikeWriteData {
 		this.bins.add(bin);
 	}
 
+	public int getExpiration() {
+		return expiration;
+	}
+
+	public void setExpiration(int expiration) {
+		this.expiration = expiration;
+	}
 }

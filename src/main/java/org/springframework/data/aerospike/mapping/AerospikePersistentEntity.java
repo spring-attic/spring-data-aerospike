@@ -38,7 +38,5 @@ public interface AerospikePersistentEntity<T> extends PersistentEntity<T, Aerosp
 
 	Key getKey();
 
-	long getGeneration();
-
-	int getTTL();
+	int getExpiration();
 }

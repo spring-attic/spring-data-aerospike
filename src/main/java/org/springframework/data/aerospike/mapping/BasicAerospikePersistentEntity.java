@@ -21,6 +21,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Default implementation of {@link AerospikePersistentEntity}.
@@ -29,6 +30,8 @@ import org.springframework.util.Assert;
  */
 public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, AerospikePersistentProperty> implements
 		AerospikePersistentEntity<T>, EnvironmentAware {
+
+	static final int DEFAULT_EXPIRATION = 0;
 
 	private Environment environment;
 	private final TypeInformation<?> typeInformation;
@@ -68,19 +71,37 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 	}
 
 	@Override
-	public long getGeneration() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+	public int getExpiration() {
+		Document annotation = getType().getAnnotation(Document.class);
+		if (annotation == null) {
+			return DEFAULT_EXPIRATION;
+		}
 
-	@Override
-	public int getTTL() {
-		// TODO Auto-generated method stub
-		return 0;
+		int expiryValue = getExpiryValue(annotation);
+		return (int) annotation.expiryUnit().toSeconds(expiryValue);
 	}
 
 	@Override
 	public void setEnvironment(Environment environment) {
 		this.environment = environment;
+	}
+
+	private int getExpiryValue(Document annotation) {
+		int expiry = annotation.expiry();
+		String expressionString = annotation.expiryExpression();
+
+		if (StringUtils.hasLength(expressionString)) {
+			Assert.state(expiry == DEFAULT_EXPIRATION, "Both 'expiry' and 'expiryExpression' are set");
+			Assert.notNull(environment, "Environment must be set to use 'expiryExpression'");
+
+			String resolvedExpression = environment.resolveRequiredPlaceholders(expressionString);
+			try {
+				return Integer.parseInt(resolvedExpression);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Invalid Integer value for expiry expression: " + resolvedExpression);
+			}
+		}
+
+		return expiry;
 	}
 }

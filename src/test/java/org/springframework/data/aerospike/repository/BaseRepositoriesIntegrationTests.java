@@ -10,7 +10,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = TestConfig.class)
+@SpringBootTest(
+        classes = TestConfig.class,
+        properties = "expirationProperty: 42"
+)
 public abstract class BaseRepositoriesIntegrationTests {
 
     private static AtomicLong counter = new AtomicLong();
