@@ -19,24 +19,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.aerospike.config.TestConfig;
-import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
+import org.springframework.data.aerospike.BaseIntegrationTests;
 import org.springframework.data.aerospike.sample.Customer;
 import org.springframework.data.aerospike.sample.CustomerRepository;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * @author Oliver Gierke
  */
-public class CustomerRepositoriesIntegrationTests extends BaseRepositoriesIntegrationTests {
+public class CustomerRepositoriesIntegrationTests extends BaseIntegrationTests {
 
 	@Autowired CustomerRepository repository;
 

@@ -241,16 +241,6 @@ public class MappingAerospikeConverterDeprecatedTest {
 		assertThat(result.addresses, hasSize(0));
 	}
 
-	@Test
-	public void convertsObjectIdStringsToObjectIdCorrectly() {
-		PersonPojoStringId p1 = new PersonPojoStringId("1234567890", "Text-1");
-		AerospikeWriteData dbObject = AerospikeWriteData.forWrite();
-
-		converter.write(p1, dbObject);
-		Object userKey = getMetaData("@user_key", dbObject.getBins());
-		assertThat(userKey, is(instanceOf(String.class)));
-	}
-
 	@SuppressWarnings("serial")
 	@Test
 	public void convertsCustomEmptyMapCorrectly() {

@@ -1,4 +1,4 @@
-package org.springframework.data.aerospike.repository;
+package org.springframework.data.aerospike.sample;
 
 import lombok.Builder;
 import lombok.Value;

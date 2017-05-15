@@ -26,6 +26,7 @@ import com.aerospike.client.task.IndexTask;
 import com.aerospike.helper.query.KeyRecordIterator;
 import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.QueryEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.support.PropertyComparator;
@@ -62,6 +63,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Oliver Gierke
  * @author Peter Milne
  */
+@Slf4j
 public class AerospikeTemplate implements AerospikeOperations {
 
 	private final MappingContext<BasicAerospikePersistentEntity<?>, AerospikePersistentProperty> mappingContext;
@@ -217,13 +219,12 @@ public class AerospikeTemplate implements AerospikeOperations {
 							 * count.
 							 */
 							if (count.get() % 10000 == 0) {
-								System.out.println("Deleted " + count.get());
+								log.trace("Deleted {}", count.get());
 							}
 
 						}
 					}, new String[] {});
-			System.out.println("Deleted " + count + " records from set "
-					+ type.getSimpleName());
+			log.debug("Deleted {} records from set {}", count, type.getSimpleName());
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator

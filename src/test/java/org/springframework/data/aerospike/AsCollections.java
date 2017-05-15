@@ -1,4 +1,4 @@
-package org.springframework.data;
+package org.springframework.data.aerospike;
 
 import java.util.HashMap;
 import java.util.List;

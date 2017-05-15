@@ -1,15 +1,13 @@
 package org.springframework.data.aerospike;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.aerospike.mapping.Document;
 import org.springframework.data.aerospike.mapping.Field;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 
@@ -217,6 +215,56 @@ public class SampleClasses {
 		public Person(Set<Address> addresses) {
 			this.addresses = addresses;
 		}
+	}
+
+	@Data
+	@Document(collection = "versioned-set")
+	public static class VersionedClass {
+
+		@Id
+		private String id;
+
+		@Version
+		public long version;
+
+		public String field;
+
+		@PersistenceConstructor
+		public VersionedClass(String id, String field, long version) {
+			this.id = id;
+			this.field = field;
+			this.version = version;
+		}
+
+		public VersionedClass(String id, String field) {
+			this.id = id;
+			this.field = field;
+		}
+	}
+
+	@Getter
+	@EqualsAndHashCode
+	@ToString
+	@Document(collection = "custom-set")
+	public static class CustomCollectionClass {
+
+		@Id
+		private String id;
+		private String data;
+
+		public CustomCollectionClass(String id, String data) {
+			this.id = id;
+			this.data = data;
+		}
+	}
+
+	@Data
+	@AllArgsConstructor
+	@Document(expiry = 1)
+	public static class DocumentWithExpiration {
+
+		@Id
+		private String id;
 	}
 
 	@AllArgsConstructor

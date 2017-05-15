@@ -16,15 +16,17 @@
 /**
  * 
  */
-package org.springframework.data.aerospike.repository;
+package org.springframework.data.aerospike.sample;
+
+import org.springframework.data.aerospike.repository.AerospikeRepository;
 
 /**
- *
+ * Simple repository interface managing {@link Contact}s.
  *
  * @author Peter Milne
  * @author Jean Mercier
  *
  */
-public interface Credentials {
+public interface ContactRepository extends AerospikeRepository<Contact, String> {
 
 }

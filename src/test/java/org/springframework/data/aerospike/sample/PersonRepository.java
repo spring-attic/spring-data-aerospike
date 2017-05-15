@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.springframework.data.aerospike.repository;
+package org.springframework.data.aerospike.sample;
 
 import java.util.Collection;
 import java.util.Date;
@@ -9,7 +9,7 @@ import java.util.List;
 //import java.util.stream.Stream;
 import java.util.Set;
 
-import org.springframework.data.aerospike.repository.Person.Sex;
+import org.springframework.data.aerospike.repository.AerospikeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -59,9 +59,9 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	List<Person> findByAgeOrLastnameLikeAndFirstnameLike(int age, String lastname, String firstname);
 
-	List<Person> findBySex(Sex sex);
+	List<Person> findBySex(Person.Sex sex);
 
-	List<Person> findBySex(Sex sex, Pageable pageable);
+	List<Person> findBySex(Person.Sex sex, Pageable pageable);
 
 //	List<Person> findByNamedQuery(String firstname);
 

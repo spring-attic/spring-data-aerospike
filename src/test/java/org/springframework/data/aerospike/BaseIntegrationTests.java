@@ -1,4 +1,4 @@
-package org.springframework.data.aerospike.repository;
+package org.springframework.data.aerospike;
 
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
         classes = TestConfig.class,
         properties = "expirationProperty: 42"
 )
-public abstract class BaseRepositoriesIntegrationTests {
+public abstract class BaseIntegrationTests {
 
     private static AtomicLong counter = new AtomicLong();
 

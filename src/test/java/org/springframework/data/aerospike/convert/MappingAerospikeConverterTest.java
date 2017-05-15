@@ -15,7 +15,7 @@ import java.util.*;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.data.AsCollections.*;
+import static org.springframework.data.aerospike.AsCollections.*;
 import static org.springframework.data.aerospike.SampleClasses.SimpleClass.SIMPLESET;
 import static org.springframework.data.aerospike.SampleClasses.SimpleClassWithPersistenceConstructor.SIMPLESET2;
 import static org.springframework.data.aerospike.SampleClasses.User.SIMPLESET3;

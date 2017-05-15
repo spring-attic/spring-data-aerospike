@@ -31,7 +31,7 @@ import org.springframework.cache.transaction.TransactionAwareCacheDecorator;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
-import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
+import org.springframework.data.aerospike.BaseIntegrationTests;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Key;
@@ -40,7 +40,7 @@ import com.aerospike.client.Key;
  * 
  * @author Venil Noronha
  */
-public class AerospikeCacheMangerTests extends BaseRepositoriesIntegrationTests {
+public class AerospikeCacheMangerTests extends BaseIntegrationTests {
 
 	@Autowired AerospikeClient client;
 	@Autowired MappingAerospikeConverter converter;

@@ -14,7 +14,7 @@ import org.springframework.data.aerospike.EmbeddedAerospikeInfo;
 import org.springframework.data.aerospike.cache.AerospikeCacheManager;
 import org.springframework.data.aerospike.cache.AerospikeCacheMangerTests.CachingComponent;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
-import org.springframework.data.aerospike.repository.ContactRepository;
+import org.springframework.data.aerospike.sample.ContactRepository;
 import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 
 import com.aerospike.client.AerospikeClient;

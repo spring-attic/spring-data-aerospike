@@ -19,18 +19,18 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.aerospike.client.policy.WritePolicy;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.aerospike.repository.*;
-import org.springframework.data.aerospike.repository.Person;
+import org.springframework.data.aerospike.BaseIntegrationTests;
+import org.springframework.data.aerospike.sample.ContactRepository;
+import org.springframework.data.aerospike.sample.Person;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
+import org.springframework.data.aerospike.sample.PersonRepository;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -39,11 +39,9 @@ import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.ObjectUtils;
 
 import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
-import com.aerospike.client.ScanCallback;
 import com.aerospike.client.policy.ScanPolicy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
@@ -57,7 +55,7 @@ import com.aerospike.client.task.IndexTask;
  * @author Oliver Gierke
  * 
  */
-public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrationTests {
+public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 	
 	protected static final String SET_NAME_PERSON = "Person";
 
@@ -71,24 +69,8 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 	public void cleanUp(){
 		ScanPolicy scanPolicy = new ScanPolicy();
 		scanPolicy.includeBinData = false;
-		final AtomicLong count = new AtomicLong();
-		client.scanAll(	scanPolicy, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON,  new ScanCallback() {
-				@Override
-				public void scanCallback(Key key, Record record)
-						throws AerospikeException {
-
-					if (client.delete(null, key)) 
-						count.addAndGet(1);
-						/*
-						 * after 10,000 records delete, return print the count.
-						 */
-						if (count.get() % 10000 == 0){
-							System.out.println("Deleted "+ count.get());
-						}
-
-				}
-		}, new String[] {});
-		System.out.println("Deleted "+ count + " records from set " + AerospikeTemplateIntegrationTests.SET_NAME_PERSON);
+		client.scanAll(	scanPolicy, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON,
+				(key, record) -> client.delete(null, key), new String[] {});
 	}
 
 	@Test
@@ -224,7 +206,6 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
 		for (Person customer : it){
-			System.out.print(customer+"\n");
 			count++;
 		}
 		Assert.assertEquals(10, count);
@@ -274,7 +255,6 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
 		for (Person person : it){
-			System.out.print(person+"\n");
 			count++;
 		}
 		Assert.assertEquals(10, count);
@@ -324,7 +304,6 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
 		for (Person person : it){
-			System.out.print(person+"\n");
 			count++;
 		}
 		Assert.assertEquals(10, count);
@@ -372,7 +351,6 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		Iterable<Person> it = template.find(query, Person.class);
 		int count = 0;
 		for (Person person : it){
-			System.out.print(person.toString()+"\n");
 			count++;
 		}
 		Assert.assertEquals(6, count);
@@ -415,7 +393,6 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		int count = 0;
 		while (rs.next()) {
 			Record r = rs.getRecord();
-			System.out.print(r.getValue("lastname")+ ","+r.getValue("firstname"));
 			count++;
 		}
 

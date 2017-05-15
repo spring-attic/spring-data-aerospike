@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.springframework.data.aerospike.core;
 
@@ -13,8 +13,6 @@ import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.Qualifier.FilterOperation;
-import lombok.*;
-import org.assertj.core.api.Assertions;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,21 +20,20 @@ import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.AsyncUtils;
-import org.springframework.data.aerospike.mapping.Document;
-import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
+import org.springframework.data.aerospike.BaseIntegrationTests;
+import org.springframework.data.aerospike.SampleClasses;
+import org.springframework.data.aerospike.SampleClasses.CustomCollectionClass;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithExpiration;
+import org.springframework.data.aerospike.SampleClasses.VersionedClass;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.PersistenceConstructor;
-import org.springframework.data.annotation.Version;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  *
@@ -45,7 +42,7 @@ import static org.junit.Assert.*;
  * @author Jean Mercier
  *
  */
-public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
+public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
@@ -87,8 +84,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.save(new VersionedClass(id, "foo2", 2));
 
 		Record record2 = client.get(new Policy(), key);
-		Assertions.assertThat(record2.bins.get("notPresent")).isNull();
-		Assertions.assertThat(record2.bins.get("field")).isEqualTo("foo2");
+		assertThat(record2.bins.get("notPresent")).isNull();
+		assertThat(record2.bins.get("field")).isEqualTo("foo2");
 	}
 
 	private void addNewFieldToSavedDataInAerospike(Key key) {
@@ -102,7 +99,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		client.put(policy, key, bins);
 
 		Record updated = client.get(new Policy(), key);
-		Assertions.assertThat(updated.bins.get("notPresent")).isEqualTo("cats");
+		assertThat(updated.bins.get("notPresent")).isEqualTo("cats");
 	}
 
 	@Test
@@ -110,8 +107,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		VersionedClass first = new VersionedClass(id, "foo");
 		template.save(first);
 
-		Assertions.assertThat(first.getVersion()).isEqualTo(1);
-		Assertions.assertThat(template.findById(id, VersionedClass.class).version).isEqualTo(1);
+		assertThat(first.version).isEqualTo(1);
+		assertThat(template.findById(id, VersionedClass.class).version).isEqualTo(1);
 	}
 
 	@Test
@@ -147,8 +144,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.save(new VersionedClass(id, "foo1", one.version));
 
 		VersionedClass value = template.findById(id, VersionedClass.class);
-		Assertions.assertThat(value.version).isEqualTo(2);
-		Assertions.assertThat(value.field).isEqualTo("foo1");
+		assertThat(value.version).isEqualTo(2);
+		assertThat(value.field).isEqualTo("foo1");
 	}
 
 	@Test
@@ -158,7 +155,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.save(one);
 		template.save(one);
 
-		Assertions.assertThat(one.version).isEqualTo(3);
+		assertThat(one.version).isEqualTo(3);
 	}
 
 	@Test
@@ -168,7 +165,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		VersionedClass initial = new VersionedClass(id, "value-0");
 		template.save(initial);
-		Assertions.assertThat(initial.version).isEqualTo(1);
+		assertThat(initial.version).isEqualTo(1);
 
 		AsyncUtils.executeConcurrently(numberOfConcurrentSaves, () -> {
             boolean saved = false;
@@ -187,9 +184,9 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		VersionedClass actual = template.findById(id, VersionedClass.class);
 
-		Assertions.assertThat(actual.field).isNotEqualTo(initial.field);
-		Assertions.assertThat(actual.version).isNotEqualTo(initial.version);
-		Assertions.assertThat(actual.version).isEqualTo(initial.version + numberOfConcurrentSaves);
+		assertThat(actual.field).isNotEqualTo(initial.field);
+		assertThat(actual.version).isNotEqualTo(initial.version);
+		assertThat(actual.version).isEqualTo(initial.version + numberOfConcurrentSaves);
 	}
 
 	@Test
@@ -210,7 +207,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
             return null;
         });
 
-		Assertions.assertThat(optimisticLockCounter.intValue()).isEqualTo(numberOfConcurrentSaves - 1);
+		assertThat(optimisticLockCounter.intValue()).isEqualTo(numberOfConcurrentSaves - 1);
 	}
 
 	@Test
@@ -220,9 +217,9 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.update(new VersionedClass(id, "foobar2"));
 
 		Record raw = client.get(new Policy(), new Key(info.getNamespace(), "versioned-set", id));
-		Assertions.assertThat(raw.generation).isEqualTo(3);
+		assertThat(raw.generation).isEqualTo(3);
 		VersionedClass actual = template.findById(id, VersionedClass.class);
-		Assertions.assertThat(actual.getVersion()).isEqualTo(3);
+		assertThat(actual.version).isEqualTo(3);
 	}
 
 	@Test
@@ -232,7 +229,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.save(one);
 		template.save(one);
 
-		Assertions.assertThat(template.findById(id, CustomCollectionClass.class)).isEqualTo(one);
+		assertThat(template.findById(id, CustomCollectionClass.class)).isEqualTo(one);
 	}
 
 	@Test
@@ -243,14 +240,14 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.save(first);
 		template.save(second);
 
-		Assertions.assertThat(template.findById(id, CustomCollectionClass.class)).isEqualTo(second);
+		assertThat(template.findById(id, CustomCollectionClass.class)).isEqualTo(second);
 	}
 
 	@Test
 	public void findById_shouldReturnNullForNonExistingKey() throws Exception {
 		Person one = template.findById("person-non-existing-key", Person.class);
 
-		Assertions.assertThat(one).isNull();
+		assertThat(one).isNull();
 	}
 
 	@Test
@@ -265,7 +262,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		for (Person person : it) {
 			count++;
 		}
-		Assertions.assertThat(count).isZero();
+		assertThat(count).isZero();
 	}
 
 	@Test
@@ -275,8 +272,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Record record = client.get(new Policy(), new Key(info.getNamespace(), "custom-set", id));
 
-		Assertions.assertThat(record.getString("data")).isEqualTo("data0");
-		Assertions.assertThat(template.findById(id, CustomCollectionClass.class)).isEqualTo(initial);
+		assertThat(record.getString("data")).isEqualTo("data0");
+		assertThat(template.findById(id, CustomCollectionClass.class)).isEqualTo(initial);
 	}
 
 	@Test
@@ -286,7 +283,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.insert(person);
 
 		Person person1 =  template.findById("Person-01", Person.class);
-		assertThat(person1 , is(person));
+		assertThat(person1).isEqualTo(person);
 	}
 
 	@Test
@@ -296,7 +293,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.insert(person);
 
 		Person person1 =  template.findById("Person", Person.class);
-		assertNull(person1);
+		assertThat(person1).isNull();
 	}
 
 	@Test (expected = DuplicateKeyException.class)
@@ -320,7 +317,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.insertAll(records);
 	}
 
-	@Test 
+	@Test
 	public void findMultipleFiltersQualifierOnly(){
 		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
 
@@ -337,16 +334,13 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		Qualifier qual1 = new Qualifier("age", FilterOperation.EQ, Value.get(25));
 		Iterable<Person> it = template.findAllUsingQuery(Person.class, null, qual1);
 		int count = 0;
-		Person firstPerson = null;
 		for (Person person : it){
-			firstPerson = person;
-			System.out.print(firstPerson+"\n");
 			count++;
 		}
-		assertEquals(2, count);
+		assertThat(count).isEqualTo(2);
 	}
 
-	@Test 
+	@Test
 	public void findMultipleFiltersFilterAndQualifier(){
 		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
 
@@ -372,17 +366,14 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		Qualifier qual1 = new Qualifier("age", FilterOperation.EQ, Value.get(25));
 		Iterable<Person> it = template.findAllUsingQuery(Person.class, filter, qual1);
 		int count = 0;
-		Person firstPerson = null;
 		for (Person person : it){
-			firstPerson = person;
-			System.out.print(firstPerson+"\n");
 			count++;
 		}
-		assertEquals(2, count);
+		assertThat(count).isEqualTo(2);
 	}
 
 	@SuppressWarnings("rawtypes")
-	@Test 
+	@Test
 	public void checkIndexingString() {
 		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
 
@@ -403,15 +394,14 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		Person firstPerson = null;
 		for (Person person : it){
 			firstPerson = person;
-			System.out.print(person+"\n");
 			count++;
 		}
-		assertEquals(1, count);
-		assertEquals(firstPerson, personSven03);
+		assertThat(count).isEqualTo(1);
+		assertThat(firstPerson).isEqualTo(personSven03);
 	}
 
 	@SuppressWarnings("rawtypes")
-	@Test 
+	@Test
 	public void checkIndexingViaNumeric() {
 		template.createIndex(Person.class, "Person_age_index", "age",IndexType.NUMERIC );
 
@@ -432,11 +422,10 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		Person firstPerson = null;
 		for (Person person : it){
 			firstPerson = person;
-			System.out.print(person+"\n");
 			count++;
 		}
-		assertEquals(1, count);
-		assertEquals(firstPerson, personSven04);
+		assertThat(count).isEqualTo(1);
+		assertThat(firstPerson).isEqualTo(personSven04);
 	}
 
 
@@ -445,7 +434,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.update(new Person("Sven-06","svenfirstName",11));
 	}
 
-	@Test 
+	@Test
 	public void testUpdateSuccess(){
 		Person person = new Person("Sven-04","WLastName",11);
 		template.insert(person);
@@ -454,10 +443,10 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Person result = template.findById("Sven-04", Person.class);
 
-		assertEquals(result.getAge(), 11);
+		assertThat(result.getAge()).isEqualTo(11);
 	}
 
-	@Test 
+	@Test
 	public void testSimpleDeleteByObject(){
 		Person personSven01 = new Person("Sven-01","ZLastName",25);
 		Person personSven02 = new Person("Sven-02","QLastName",21);
@@ -472,10 +461,10 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.delete(personSven02);
 
 		Person result = template.findById("Sven-02", Person.class);
-		assertNull(result);
+		assertThat(result).isNull();
 	}
 
-	@Test 
+	@Test
 	public void testSimpleDeleteById(){
 		Person personSven01 = new Person("Sven-01","ZLastName",25);
 		Person personSven02 = new Person("Sven-02","QLastName",21);
@@ -490,10 +479,10 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.delete("Sven-02", Person.class);
 
 		Person result = template.findById("Sven-02", Person.class);
-		assertNull(result);
+		assertThat(result).isNull();
 	}
 
-	@Test 
+	@Test
 	public void StoreAndRetrieveDate(){
 		template.createIndex(Person.class, "Person_dateOfBirth_index", "dateOfBirth",IndexType.STRING );
 
@@ -521,10 +510,10 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Person findDate = template.findById("Sven-02", Person.class);
 
-		assertEquals(findDate.getDateOfBirth(), birthday1);
+		assertThat(findDate.getDateOfBirth()).isEqualTo(birthday1);
 	}
 
-	@Test 
+	@Test
 	public void StoreAndRetrieveMap(){
 		Person personSven01 = new Person("Sven-01","ZLastName",25);
 		Person personSven02 = new Person("Sven-02","QLastName",50);
@@ -541,10 +530,10 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Person findDate = template.findById("Sven-02", Person.class);
 
-		assertEquals(findDate.getMap(), map);
+		assertThat(findDate.getMap()).isEqualTo(map);
 	}
 
-	@Test 
+	@Test
 	public void StoreAndRetrieveList(){
 		Person personSven01 = new Person("Sven-01", "ZLastName", 25);
 		Person personSven02 = new Person("Sven-02", "QLastName", 50);
@@ -568,8 +557,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Person findDate = template.findById("Sven-02", Person.class);
 
-		assertEquals(findDate.getMap(), map);
-		assertEquals(findDate.getList(), list);
+		assertThat(findDate.getMap()).isEqualTo(map);
+		assertThat(findDate.getList()).isEqualTo(list);
 	}
 
 	@Test
@@ -599,8 +588,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.update(personWithList);
 		Person personWithList2 = template.findById("Sven-02", Person.class);
 
-		assertEquals(personWithList2, personWithList);
-		assertEquals(personWithList2.getList().size(), 4);
+		assertThat(personWithList2).isEqualTo(personWithList);
+		assertThat(personWithList2.getList()).hasSize(4);
 	}
 
 	@Test
@@ -631,9 +620,9 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.update(personWithList);
 		Person personWithList2 = template.findById("Sven-02", Person.class);
 
-		assertEquals(personWithList2, personWithList);
-		assertEquals(personWithList2.getMap().size(), 4);
-		assertEquals(personWithList2.getMap().get("key4"), "Added something new");
+		assertThat(personWithList2).isEqualTo(personWithList);
+		assertThat(personWithList2.getMap()).hasSize(4);
+		assertThat(personWithList2.getMap().get("key4")).isEqualTo("Added something new");
 
 	}
 
@@ -659,8 +648,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Query query = new Query(Criteria.where("firstName").is("ALastName","firstName"));
 		int qCount = template.count(query, Person.class);
-		assertThat(qCount, is(1));
-		assertThat(template.count(Person.class), is(4L));
+		assertThat(qCount).isEqualTo(1);
+		assertThat(template.count(Person.class)).isEqualTo(4L);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -690,8 +679,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		Query queryExist = new Query(Criteria.where("firstName").is("ALastName","firstName"));
 		Query queryNotExist = new Query(Criteria.where("firstName").is("Biff","firstName"));
-		assertThat(template.exists(queryExist, Person.class),is(true));
-		assertThat(template.exists(queryNotExist, Person.class),is(false));
+		assertThat(template.exists(queryExist, Person.class)).isTrue();
+		assertThat(template.exists(queryNotExist, Person.class)).isFalse();
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -705,7 +694,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.insert(personSven01);
 
 		Person personWithMail = template.findById("Sven-01", Person.class);
-		assertThat(personWithMail.getEmailAddress(), is("old@mail.com"));
+		assertThat(personWithMail.getEmailAddress()).isEqualTo("old@mail.com");
 
 		personWithMail.setEmailAddress("new@mail.com");
 
@@ -718,41 +707,37 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		Person firstPerson = null;
 		for (Person person : it){
 			firstPerson = person;
-			System.out.print(person+"\n");
 			count++;
 		}
-		assertEquals(1, count);
-		assertEquals(firstPerson, personWithMail);
-		assertThat(personWithMail.getEmailAddress(), is("new@mail.com"));
+		assertThat(count).isEqualTo(1);
+		assertThat(firstPerson).isEqualTo(personWithMail);
+		assertThat(personWithMail.getEmailAddress()).isEqualTo("new@mail.com");
 	}
 
 	@Test
 	public void shouldAdd() {
-		String id = nextId();
 		Person one = Person.builder().id(id).age(25).build();
 		template.insert(one);
 
 		Person updated = template.add(one, "age", 1);
 
-		Assertions.assertThat(updated.getAge()).isEqualTo(26);
+		assertThat(updated.getAge()).isEqualTo(26);
 	}
 
 	@Test
 	public void shouldAppend() throws Exception {
-		String id = nextId();
 		Person one = Person.builder().id(id).firstName("Nas").build();
 		template.insert(one);
 
 		Person appended = template.append(one, "firstName", "tya");
 
-		Assertions.assertThat(appended).isEqualTo(Person.builder().id(id).firstName("Nastya").build());
-		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
-		Assertions.assertThat(template.findById(id, Person.class).getFirstName()).isEqualTo("Nastya");
+		assertThat(appended).isEqualTo(Person.builder().id(id).firstName("Nastya").build());
+		assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		assertThat(template.findById(id, Person.class).getFirstName()).isEqualTo("Nastya");
 	}
 
 	@Test
 	public void shouldAppendMultipleFields() throws Exception {
-		String id = nextId();
 		Person one = Person.builder().id(id).firstName("Nas").emailAddress("nastya@").build();
 		template.insert(one);
 
@@ -761,28 +746,26 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		toBeUpdated.put("email", "gmail.com");
 		Person appended = template.append(one, toBeUpdated);
 
-		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
-		Assertions.assertThat(appended.getEmailAddress()).isEqualTo("nastya@gmail.com");
+		assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		assertThat(appended.getEmailAddress()).isEqualTo("nastya@gmail.com");
 		Person actual = template.findById(id, Person.class);
-		Assertions.assertThat(actual.getFirstName()).isEqualTo("Nastya");
-		Assertions.assertThat(actual.getEmailAddress()).isEqualTo("nastya@gmail.com");
+		assertThat(actual.getFirstName()).isEqualTo("Nastya");
+		assertThat(actual.getEmailAddress()).isEqualTo("nastya@gmail.com");
 	}
 
 	@Test
 	public void shouldPrepend() throws Exception {
-		String id = nextId();
 		Person one = Person.builder().id(id).firstName("tya").build();
 		template.insert(one);
 
 		Person appended = template.prepend(one, "firstName", "Nas");
 
-		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
-		Assertions.assertThat(template.findById(id, Person.class).getFirstName()).isEqualTo("Nastya");
+		assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		assertThat(template.findById(id, Person.class).getFirstName()).isEqualTo("Nastya");
 	}
 
 	@Test
 	public void shouldPrependMultipleFields() throws Exception {
-		String id = nextId();
 		Person one = Person.builder().id(id).firstName("tya").emailAddress("gmail.com").build();
 		template.insert(one);
 
@@ -791,26 +774,25 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		toBeUpdated.put("email", "nastya@");
 		Person appended = template.prepend(one, toBeUpdated);
 
-		Assertions.assertThat(appended.getFirstName()).isEqualTo("Nastya");
-		Assertions.assertThat(appended.getEmailAddress()).isEqualTo("nastya@gmail.com");
+		assertThat(appended.getFirstName()).isEqualTo("Nastya");
+		assertThat(appended.getEmailAddress()).isEqualTo("nastya@gmail.com");
 		Person actual = template.findById(id, Person.class);
-		Assertions.assertThat(actual.getFirstName()).isEqualTo("Nastya");
-		Assertions.assertThat(actual.getEmailAddress()).isEqualTo("nastya@gmail.com");
+		assertThat(actual.getFirstName()).isEqualTo("Nastya");
+		assertThat(actual.getEmailAddress()).isEqualTo("nastya@gmail.com");
 
 	}
 
 	//TODO: Potentially unstable test. Instead of sleeping, we need somehow do time travel like in CouchbaseMock.
 	@Test
-	public void shouldExpire() throws InterruptedException {
-		String id = nextId();
+	public void shouldExpire() throws Exception {
 		template.insert(new DocumentWithExpiration(id));
 		DocumentWithExpiration shouldNotExpire = template.findById(id, DocumentWithExpiration.class);
-		Assertions.assertThat(shouldNotExpire).isNotNull();
+		assertThat(shouldNotExpire).isNotNull();
 
 		Thread.sleep(2000L);
 
 		DocumentWithExpiration shouldExpire = template.findById(id, DocumentWithExpiration.class);
-		Assertions.assertThat(shouldExpire).isNull();
+		assertThat(shouldExpire).isNull();
 	}
 
 	@Test
@@ -824,7 +806,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.persist(initial, writePolicy);
 
 		CustomCollectionClass actual = template.findById(id, CustomCollectionClass.class);
-		Assertions.assertThat(actual).isEqualTo(initial);
+		assertThat(actual).isEqualTo(initial);
 	}
 
 	@Test(expected = DataRetrievalFailureException.class)
@@ -838,55 +820,4 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.persist(initial, writePolicy);
 	}
 
-	@Getter
-	@EqualsAndHashCode
-	@ToString
-	@Document(collection = "versioned-set")
-	static class VersionedClass {
-
-		@Id
-		private String id;
-
-		@Version
-		private long version;
-
-		private String field;
-
-		@PersistenceConstructor
-		private VersionedClass(String id, String field, long version) {
-			this.id = id;
-			this.field = field;
-			this.version = version;
-		}
-
-		public VersionedClass(String id, String field) {
-			this.id = id;
-			this.field = field;
-		}
-	}
-
-	@Getter
-	@EqualsAndHashCode
-	@ToString
-	@Document(collection = "custom-set")
-	static class CustomCollectionClass {
-
-		@Id
-		private String id;
-		private String data;
-
-		public CustomCollectionClass(String id, String data) {
-			this.id = id;
-			this.data = data;
-		}
-	}
-
-	@Data
-	@AllArgsConstructor
-	@Document(collection = "expiry-set", expiry = 1)
-	static class DocumentWithExpiration {
-
-		@Id
-		private String id;
-	}
 }

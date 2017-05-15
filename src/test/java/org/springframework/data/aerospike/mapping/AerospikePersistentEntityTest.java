@@ -3,13 +3,13 @@ package org.springframework.data.aerospike.mapping;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
+import org.springframework.data.aerospike.BaseIntegrationTests;
 
 import java.util.concurrent.TimeUnit;
 
 import static org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity.DEFAULT_EXPIRATION;
 
-public class AerospikePersistentEntityTest extends BaseRepositoriesIntegrationTests {
+public class AerospikePersistentEntityTest extends BaseIntegrationTests {
 
     @Autowired
     private AerospikeMappingContext context;

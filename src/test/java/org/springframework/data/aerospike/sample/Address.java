@@ -6,7 +6,7 @@
  * You may obtain a copy of the License at
  *  
  * 		http://www.apache.org/licenses/LICENSE-2.0
- *  	
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,15 +16,26 @@
 /**
  * 
  */
-package org.springframework.data.aerospike.repository;
+package org.springframework.data.aerospike.sample;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+import java.io.Serializable;
 
 /**
- * Simple repository interface managing {@link Contact}s.
+ *
  *
  * @author Peter Milne
  * @author Jean Mercier
  *
  */
-public interface ContactRepository extends AerospikeRepository<Contact, String> {
+@Data
+@AllArgsConstructor
+public class Address implements Serializable {
+
+	private String street;
+	private String zipCode;
+	private String city;
 
 }
