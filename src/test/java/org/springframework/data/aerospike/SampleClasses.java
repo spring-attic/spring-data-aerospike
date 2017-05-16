@@ -296,4 +296,13 @@ public class SampleClasses {
 			return new ComplexId(id);
 		}
 	}
+
+	@Data
+	@AllArgsConstructor
+	@Document(collection = "expiry-set", expiry = 1, touchOnRead = true)
+	public static class DocumentWithTouchOnRead {
+
+		@Id
+		private String id;
+	}
 }

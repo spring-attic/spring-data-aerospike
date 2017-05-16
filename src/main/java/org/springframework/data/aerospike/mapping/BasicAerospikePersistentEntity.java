@@ -82,6 +82,12 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 	}
 
 	@Override
+	public boolean isTouchOnRead() {
+		Document annotation = getType().getAnnotation(Document.class);
+		return annotation != null && annotation.touchOnRead();
+	}
+
+	@Override
 	public void setEnvironment(Environment environment) {
 		this.environment = environment;
 	}

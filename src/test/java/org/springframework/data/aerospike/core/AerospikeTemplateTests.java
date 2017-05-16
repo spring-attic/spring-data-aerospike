@@ -21,9 +21,9 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.AsyncUtils;
 import org.springframework.data.aerospike.BaseIntegrationTests;
-import org.springframework.data.aerospike.SampleClasses;
 import org.springframework.data.aerospike.SampleClasses.CustomCollectionClass;
 import org.springframework.data.aerospike.SampleClasses.DocumentWithExpiration;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnRead;
 import org.springframework.data.aerospike.SampleClasses.VersionedClass;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
@@ -784,12 +784,32 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	//TODO: Potentially unstable test. Instead of sleeping, we need somehow do time travel like in CouchbaseMock.
 	@Test
+	public void shouldNotExpireWhenTouchOnRead() throws InterruptedException {
+		String id = nextId();
+		template.insert(new DocumentWithTouchOnRead(id));
+
+		Thread.sleep(500L);
+
+		DocumentWithTouchOnRead shouldNotExpire = template.findById(id, DocumentWithTouchOnRead.class);
+		assertThat(shouldNotExpire).isNotNull();
+
+		Thread.sleep(1500L);
+
+		shouldNotExpire = template.findById(id, DocumentWithTouchOnRead.class);
+		assertThat(shouldNotExpire).isNotNull();
+	}
+
+	//TODO: Potentially unstable test. Instead of sleeping, we need somehow do time travel like in CouchbaseMock.
+	@Test
 	public void shouldExpire() throws Exception {
 		template.insert(new DocumentWithExpiration(id));
+
+		Thread.sleep(500L);
+
 		DocumentWithExpiration shouldNotExpire = template.findById(id, DocumentWithExpiration.class);
 		assertThat(shouldNotExpire).isNotNull();
 
-		Thread.sleep(2000L);
+		Thread.sleep(1500L);
 
 		DocumentWithExpiration shouldExpire = template.findById(id, DocumentWithExpiration.class);
 		assertThat(shouldExpire).isNull();

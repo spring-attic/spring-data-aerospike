@@ -296,7 +296,9 @@ public class AerospikeTemplate implements AerospikeOperations {
 			Key key = new Key(this.namespace, entity.getSetName(),
 					id.toString());
 
-			Record record = this.client.get(null, key);
+			Record record = entity.isTouchOnRead()
+					? this.client.operate(null, key, Operation.touch(), Operation.get())
+					: this.client.get(null, key);
 
 			return mapToEntity(key, type, record);
 		}

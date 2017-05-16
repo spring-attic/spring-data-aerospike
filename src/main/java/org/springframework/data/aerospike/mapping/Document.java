@@ -70,4 +70,9 @@ public @interface Document {
 	 * An optional time unit for the document's {@link #expiry()}, if set. Default is {@link TimeUnit#SECONDS}.
 	 */
 	TimeUnit expiryUnit() default TimeUnit.SECONDS;
+
+	/**
+	 * An optional flag associated indicating whether the expiry timer should be reset whenever the document is directly read
+	 */
+	boolean touchOnRead() default false;
 }
