@@ -151,6 +151,25 @@ public class AerospikeTemplate implements AerospikeOperations {
 		}
 	}
 
+	@Override
+	public void persist(Object document, WritePolicy policy) {
+		Assert.notNull(document, "Document must not be null!");
+		Assert.notNull(policy, "Policy must not be null!");
+
+		try {
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
+			converter.write(document, data);
+
+			Key key = data.getKey();
+			Bin[] bins = data.getBinsAsArray();
+
+			client.put(policy, key, bins);
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
+		}
+	}
+
 	public <T> void insertAll(Collection<? extends T> documents) {
 		Assert.notNull(documents, "Documents must not be null!");
 		documents.stream().filter(Objects::nonNull).forEach(this::insert);
@@ -168,14 +187,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 	}
 
 	@Override
-	public void insert(Object document, WritePolicy policy) {
-		Assert.notNull(document, "Document must not be null!");
-		Assert.notNull(policy, "Policy must not be null!");
-
-		doPersist(document, WritePolicyBuilder.builder(policy));
-	}
-
-	@Override
 	public void update(Object document) {
 		Assert.notNull(document, "Document must not be null!");
 
@@ -184,14 +195,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 				.recordExistsAction(RecordExistsAction.UPDATE_ONLY);
 
 		doPersist(document, writePolicyBuilder);
-	}
-
-	@Override
-	public void update(Object document, WritePolicy policy) {
-		Assert.notNull(document, "Document must not be null!");
-		Assert.notNull(policy, "Policy must not be null!");
-
-		doPersist(document, WritePolicyBuilder.builder(policy));
 	}
 
 	@Override

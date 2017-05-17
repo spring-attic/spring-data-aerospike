@@ -5,6 +5,7 @@ package org.springframework.data.aerospike.core;
 
 import com.aerospike.client.*;
 import com.aerospike.client.Value;
+import com.aerospike.client.policy.GenerationPolicy;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
@@ -270,7 +271,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 	@Test
 	public void shouldInsertAndFindWithCustomCollectionSet() throws Exception {
 		CustomCollectionClass initial = new CustomCollectionClass(id, "data0");
-		template.insert(initial, new WritePolicy());
+		template.insert(initial);
 
 		Record record = client.get(new Policy(), new Key(info.getNamespace(), "custom-set", id));
 
@@ -810,6 +811,31 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 		DocumentWithExpiration shouldExpire = template.findById(id, DocumentWithExpiration.class);
 		Assertions.assertThat(shouldExpire).isNull();
+	}
+
+	@Test
+	public void shouldPersistWithCustomWritePolicy() throws Exception {
+		String id = nextId();
+		CustomCollectionClass initial = new CustomCollectionClass(id, "data");
+
+		WritePolicy writePolicy = new WritePolicy();
+		writePolicy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
+
+		template.persist(initial, writePolicy);
+
+		CustomCollectionClass actual = template.findById(id, CustomCollectionClass.class);
+		Assertions.assertThat(actual).isEqualTo(initial);
+	}
+
+	@Test(expected = DataRetrievalFailureException.class)
+	public void shouldNotPersistWithCustomWritePolicy() throws Exception {
+		String id = nextId();
+		CustomCollectionClass initial = new CustomCollectionClass(id, "data");
+
+		WritePolicy writePolicy = new WritePolicy();
+		writePolicy.recordExistsAction = RecordExistsAction.UPDATE_ONLY;
+
+		template.persist(initial, writePolicy);
 	}
 
 	@Getter

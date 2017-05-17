@@ -50,13 +50,6 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 * @param document
 	 */
 	void insert(Object document);
-	
-	/**
-	 * Insert operation using the WritePolicy specified. 
-	 * @param document
-	 * @param policy
-	 */
-	void insert(Object document, WritePolicy policy);
 
 	/**
 	 * @return mapping context in use.
@@ -77,9 +70,19 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 * @param document
 	 */
 	void save(Object document);
-	
+
+	/**
+	 * Persist document using specified WritePolicy
+	 * @param document
+	 * @param writePolicy
+	 */
+	void persist(Object document, WritePolicy writePolicy);
+
+	/**
+	 * Update operation using the WritePolicy.recordExisits policy of UPDATE_ONLY
+	 * @param objectToUpdate
+	 */
 	void update(Object objectToUpdate);
-	void update(Object objectToUpdate, WritePolicy policy);
 
 	void delete(Class<?> type);
 	
