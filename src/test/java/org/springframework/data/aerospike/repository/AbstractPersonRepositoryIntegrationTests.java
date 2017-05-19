@@ -58,7 +58,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests extends BaseRepos
 	@Before
 	public void setUp() throws InterruptedException {
 		repository.deleteAll();
-
+		Thread.sleep(1000);
 		dave = new Person("Dave-01", "Dave", "Matthews", 42);
 		donny = new Person("Dave-02", "Donny", "Macintire", 39);
 		oliver = new Person("Oliver-01", "Oliver August", "Matthews", 4);

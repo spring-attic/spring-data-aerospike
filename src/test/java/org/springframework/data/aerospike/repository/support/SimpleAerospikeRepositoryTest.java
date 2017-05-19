@@ -284,6 +284,9 @@ public class SimpleAerospikeRepositoryTest {
 		SimpleAerospikeRepository<Person, String> aerospikeRepository = (SimpleAerospikeRepository<Person, String>) mock(SimpleAerospikeRepository.class);
 		doNothing().when(aerospikeRepository).deleteAll();
 		aerospikeRepository.deleteAll();
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {}
 	}
 
 	/**

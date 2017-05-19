@@ -14,15 +14,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.aerospike.client.Key;
-import com.aerospike.client.Record;
-import com.aerospike.client.policy.Policy;
-import com.aerospike.client.policy.WritePolicy;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 import org.assertj.core.api.Assertions;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.RecoverableDataAccessException;
@@ -35,11 +31,20 @@ import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
 
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
 import com.aerospike.client.Value;
+import com.aerospike.client.policy.Policy;
+import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.Qualifier.FilterOperation;
+import com.google.common.collect.Lists;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  *
@@ -63,7 +68,9 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 
 	private void cleanDb() {
 		template.delete(Person.class);
-
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {}
 	}
 
 	/**
@@ -99,14 +106,8 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.createIndex(Person.class, "Person_age_index", "age",IndexType.NUMERIC );
 		Query query = new Query(
 				Criteria.where("age").is(-10, "age"));
-
 		Iterable<Person> it = template.find(query, Person.class);
-
-		int count = 0;
-		for (Person person : it) {
-			count++;
-		}
-		Assertions.assertThat(count).isZero();
+		Assertions.assertThat(Lists.newArrayList(it).size()).isZero();
 	}
 
 	@Test
@@ -223,7 +224,6 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		Assert.assertEquals(2, count);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Test 
 	public void checkIndexingString() {
 		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
@@ -252,7 +252,6 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		Assert.assertEquals(firstPerson, personSven03);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Test 
 	public void checkIndexingViaNumeric() {
 		template.createIndex(Person.class, "Person_age_index", "age",IndexType.NUMERIC );
@@ -484,7 +483,6 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.delete(null);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Test
 	public void countsDocumentsCorrectly() {
 		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
@@ -520,7 +518,6 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		template.save(null,null);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Test
 	public void executesExistsCorrectly() {
 		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
@@ -541,7 +538,6 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 		assertThat(template.exists(queryNotExist, Person.class),is(false));
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Test
 	public void updateConsidersMappingAnnotations() {
 		template.createIndex(Person.class, "Person_firstName_index", "firstName",IndexType.STRING );
