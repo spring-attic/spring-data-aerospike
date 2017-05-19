@@ -63,6 +63,7 @@ public class AerospikeData implements Serializable {
 		this.metaData = metadata;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static AerospikeData forRead(Key key, Record record) {
 		AerospikeMetadataBin metadata = new AerospikeMetadataBin();
 		if (record != null) {

@@ -97,7 +97,7 @@ public class AerospikeTemplateTests extends BaseRepositoriesIntegrationTests {
 	@Test
 	public void find_shouldReturnEmptyResultForQueryWithNoResults() throws Exception {
 		template.createIndex(Person.class, "Person_age_index", "age",IndexType.NUMERIC );
-		Query<?> query = new Query<Object>(
+		Query query = new Query(
 				Criteria.where("age").is(-10, "age"));
 
 		Iterable<Person> it = template.find(query, Person.class);

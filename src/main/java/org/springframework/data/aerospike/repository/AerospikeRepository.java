@@ -38,6 +38,7 @@ public interface AerospikeRepository<T, ID extends Serializable> extends PagingA
 	 * @param binName
 	 * @param indexType
 	 */
+	@SuppressWarnings("hiding")
 	<T> void createIndex(Class<T> domainType, String indexName, String binName,	IndexType indexType);
 
 }

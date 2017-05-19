@@ -24,13 +24,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.aerospike.config.TestConfig;
-import org.springframework.data.aerospike.repository.*;
+import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
+import org.springframework.data.aerospike.repository.ContactRepository;
 import org.springframework.data.aerospike.repository.Person;
-import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
+import org.springframework.data.aerospike.repository.PersonRepository;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -38,8 +36,6 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
 
 import com.aerospike.client.AerospikeClient;
@@ -183,8 +179,7 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		Assert.assertEquals(10, list.size());
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T> Query<T> createQueryForMethodWithArgs(String methodName, Object... args)
+	private Query createQueryForMethodWithArgs(String methodName, Object... args)
 			throws NoSuchMethodException, SecurityException {
 
 		Class<?>[] argTypes = new Class<?>[args.length];
@@ -200,12 +195,11 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		PartTree partTree = new PartTree(method.getName(), Person.class);
 		AerospikeQueryCreator creator = new AerospikeQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,repositoryMetaData, new SpelAwareProxyProjectionFactory()).getParameters(), args));
 
-		Query<T> q = (Query<T>) creator.createQuery();
+		Query q = creator.createQuery();
 
 		return q;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Test
 	public void testFindWithFilterEqual() throws NoSuchMethodException, Exception{
 		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "first_name_index", "firstname", IndexType.STRING);
@@ -233,7 +227,6 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		Assert.assertEquals(10, count);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Test 
 	public void testFindWithFilterEqualOrderBy() throws NoSuchMethodException, Exception{
 		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);
@@ -283,7 +276,6 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		Assert.assertEquals(10, count);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Test 
 	public void testFindWithFilterEqualOrderByDesc() throws NoSuchMethodException, Exception{
 		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);
@@ -333,7 +325,6 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 		Assert.assertEquals(10, count);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Test
 	public void testFindWithFilterRange() throws NoSuchMethodException, Exception{
 		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);

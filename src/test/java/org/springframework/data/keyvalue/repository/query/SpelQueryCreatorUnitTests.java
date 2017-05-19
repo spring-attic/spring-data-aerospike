@@ -14,10 +14,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.keyvalue.core.query.KeyValueQuery;
@@ -29,8 +27,6 @@ import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.expression.spel.standard.SpelExpression;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
 
 /**

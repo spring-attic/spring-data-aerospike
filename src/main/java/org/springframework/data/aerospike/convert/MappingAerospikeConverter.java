@@ -136,7 +136,6 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 
 			entity.doWithProperties(new PropertyHandler<AerospikePersistentProperty>() {
 
-				@SuppressWarnings("rawtypes")
 				@Override
 				public void doWithPersistentProperty(AerospikePersistentProperty persistentProperty) {
 					PreferredConstructor<?, AerospikePersistentProperty> constructor = entity.getPersistenceConstructor();
@@ -493,8 +492,8 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 				return null;
 			}
 
-			if (propertyObject instanceof HashMap<?, ?> && ((Map) propertyObject).containsKey(MappingAerospikeConverter.SPRING_ID_BIN)) {
-				AerospikeData aerospikeData = AerospikeData.convertToAerospikeData((Map) propertyObject);
+			if (propertyObject instanceof HashMap<?, ?> && ((Map<?, ?>) propertyObject).containsKey(MappingAerospikeConverter.SPRING_ID_BIN)) {
+				AerospikeData aerospikeData = AerospikeData.convertToAerospikeData((Map<?, ?>) propertyObject);
 				return (T) read(property.getType(), aerospikeData);
 			}
 
@@ -516,9 +515,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		}
 	}
 
-
 	private static enum AerospikeTypeAliasAccessor implements TypeAliasAccessor<AerospikeData> {
-
 		INSTANCE;
 
 		private static final String TYPE_BIN_NAME = "spring_class";
@@ -529,7 +526,7 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		 */
 		@Override
 		public Object readAliasFrom(AerospikeData source) {
-			Assert.notNull(source);
+			Assert.notNull(source, "AerospikeData source can not be NULL");
 			if (source.getRecord() == null) return null;
 			return source.getMetaData() == null ? null : source.getMetaData().getAerospikeMetaDataUsingKey(TYPE_BIN_NAME);
 		}
@@ -544,32 +541,4 @@ public class MappingAerospikeConverter implements AerospikeConverter {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.aerospike.core.AerospikeWriter#convertToAerospikeType(java.lang.Object)
-	 */
-	@Override
-	public Object convertToAerospikeType(Object obj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.aerospike.core.AerospikeWriter#convertToAerospikeType(java.lang.Object, org.springframework.data.util.TypeInformation)
-	 */
-	@Override
-	public Object convertToAerospikeType(Object obj,
-										 TypeInformation<?> typeInformation) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.aerospike.core.AerospikeWriter#toAerospikeData(java.lang.Object, org.springframework.data.aerospike.mapping.AerospikePersistentProperty)
-	 */
-	@Override
-	public AerospikeData toAerospikeData(Object object,
-										 AerospikePersistentProperty referingProperty) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

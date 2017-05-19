@@ -40,7 +40,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 
 	@Override
 	public <S extends T> S save(S entity) {
-		Assert.notNull(entity);
+		Assert.notNull(entity, "Cannot save NULL entity");
 		operations.save(entity);
 		return entity;
 	}
@@ -185,6 +185,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	/* (non-Javadoc)
 	 * @see org.springframework.data.aerospike.repository.AerospikeRepository#createIndex(java.lang.Class, java.lang.String, java.lang.String, com.aerospike.client.query.IndexType)
 	 */
+	@SuppressWarnings("hiding")
 	@Override
 	public <T> void createIndex(Class<T> domainType, String indexName,String binName, IndexType indexType) {
 		operations.createIndex(domainType, indexName, binName, indexType);

@@ -430,11 +430,6 @@ public class MappingAerospikeConverterTest {
 	}
 
 	@Test
-	public void maybeConvertHandlesNullValuesCorrectly() {
-		assertThat(converter.convertToAerospikeType(null), is(nullValue()));
-	}
-
-	@Test
 	public void writesIntIdCorrectly() {
 		ClassWithIntId value = new ClassWithIntId();
 		value.id = 5;

@@ -52,7 +52,7 @@ public class AerospikeApp {
 			aerospikeTemplate.insert(personSven03);
 			aerospikeTemplate.insert(personSven04);
 
-			Query<?> query = new Query<Object>(
+			Query query = new Query(
 					Criteria.where("Person").is("WName", "name"));
 
 			Iterable<Person> it = aerospikeTemplate.find(query, Person.class);

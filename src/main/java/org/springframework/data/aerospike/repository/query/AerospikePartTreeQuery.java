@@ -35,7 +35,7 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 	private final AerospikeOperations aerospikeOperations;
 	private final Class<? extends AbstractQueryCreator<?, ?>> queryCreator;
 
-	private Query<?> query;
+	private Query query;
 
 	public AerospikePartTreeQuery(QueryMethod queryMethod, EvaluationContextProvider evalContextProvider,
 			AerospikeOperations aerospikeOperations, Class<? extends AbstractQueryCreator<?, ?>> queryCreator) {
@@ -60,21 +60,17 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Object execute(Object[] parameters) {
-		Query<?> query = prepareQuery(parameters);
+		Query query = prepareQuery(parameters);
 
 		if (queryMethod.isPageQuery() || queryMethod.isSliceQuery()) {
-
 			Pageable page = (Pageable) parameters[queryMethod.getParameters().getPageableIndex()];
 			query.setOffset(page.getOffset());
 			query.setRows(page.getPageSize());
 
 			Iterable<?> result = this.aerospikeOperations.find(query, queryMethod.getEntityInformation().getJavaType());
-
-			long count = queryMethod.isSliceQuery() ? 0 : aerospikeOperations.count(query, queryMethod.getEntityInformation()
-					.getJavaType());
+			long count = queryMethod.isSliceQuery() ? 0 : aerospikeOperations.count(query, queryMethod.getEntityInformation().getJavaType());
 
 			return new PageImpl(IterableConverter.toList(result), page, count);
-
 		} else if (queryMethod.isCollectionQuery()) {
 
 			return this.aerospikeOperations.find(query, queryMethod.getEntityInformation().getJavaType());
@@ -93,14 +89,13 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 	 * @param parameters
 	 * @return
 	 */
-	@SuppressWarnings("rawtypes")
-	private Query<?> prepareQuery(Object[] parameters) {
+	private Query prepareQuery(Object[] parameters) {
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(getQueryMethod().getParameters(), parameters);
 
 		this.query = createQuery(accessor);
 
-		Criteria criteria = (Criteria) query.getCritieria();
-		Query<?> q = new Query(criteria);
+		AerospikeCriteria criteria = (AerospikeCriteria) query.getCritieria();
+		Query q = new Query(criteria);
 
 		if (accessor.getPageable() != null) {
 			q.setOffset(accessor.getPageable().getOffset());
@@ -126,13 +121,13 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 	}
 
 
-	public Query<?> createQuery(ParametersParameterAccessor accessor) {
+	public Query createQuery(ParametersParameterAccessor accessor) {
 
 		PartTree tree = new PartTree(getQueryMethod().getName(), getQueryMethod().getEntityInformation().getJavaType());
 
 		Constructor<? extends AbstractQueryCreator<?, ?>> constructor = (Constructor<? extends AbstractQueryCreator<?, ?>>) ClassUtils
 				.getConstructorIfAvailable(queryCreator, PartTree.class, ParameterAccessor.class);
-		return (Query<?>) BeanUtils.instantiateClass(constructor, tree, accessor).createQuery();
+		return (Query) BeanUtils.instantiateClass(constructor, tree, accessor).createQuery();
 	}
 
 }

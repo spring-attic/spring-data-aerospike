@@ -86,7 +86,7 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	<T> T delete(Serializable id, Class<T> type);
 	<T> T delete(T objectToDelete);
 	
-	<T> Iterable<T> find(Query<?> query, Class<T> type);
+	<T> Iterable<T> find(Query query, Class<T> type);
 	<T> List<T> findAll(Class<T> type);
 
 	<T> T findById(Serializable id, Class<T> type);
@@ -107,7 +107,7 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 * @param javaType
 	 * @return
 	 */
-	int count(Query<?> query, Class<?> javaType);
+	int count(Query query, Class<?> javaType);
 
 	/**
 	 * Execute operation against underlying store.

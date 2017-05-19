@@ -18,7 +18,6 @@ package org.springframework.data.aerospike.core;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -61,11 +60,9 @@ import com.aerospike.client.Info;
 import com.aerospike.client.Key;
 import com.aerospike.client.Operation;
 import com.aerospike.client.Record;
-import com.aerospike.client.ScanCallback;
 import com.aerospike.client.Value;
 import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.RecordExistsAction;
-import com.aerospike.client.policy.ScanPolicy;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
@@ -241,7 +238,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public void delete(Class<?> type) {
 		try {
-			client.truncate(null, getNamespace(), type.getSimpleName(), Calendar.getInstance());
+			client.truncate(null, getNamespace(), type.getSimpleName(), null);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
@@ -376,7 +373,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 				: ClassUtils.isAssignable(requiredType, candidate.getClass());
 	}
 
-	public boolean exists(Query<?> query, Class<?> entityClass) {
+	public boolean exists(Query query, Class<?> entityClass) {
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException(
 					"Query passed in to exist can't be null");
@@ -415,7 +412,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 */
 	@SuppressWarnings("rawtypes")
 	@Override
-	public int count(Query<?> query, Class<?> type) {
+	public int count(Query query, Class<?> type) {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(type, "Type must not be null!");
 		int i = 0;
@@ -434,20 +431,11 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public <T> Iterable<T> find(Query<?> query, Class<T> type) {
+	public <T> Iterable<T> find(Query query, Class<T> type) {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(type, "Type must not be null!");
-		List<Qualifier> qualifiers = null;
-		Filter secondaryFilter = null;
-		qualifiers = query.getQueryObject();
-		if (qualifiers != null && qualifiers.size() > 0) {
-			secondaryFilter = qualifiers.get(0).asFilter();
-			if (secondaryFilter != null) {
-				qualifiers.remove(0);
-			}
-		}
-
-		final Iterable<T> results = findAllUsingQuery(type, secondaryFilter, qualifiers.toArray(new Qualifier[qualifiers.size()]));
+		Qualifier qualifier = query.getCritieria().getCriteriaObject();
+		final Iterable<T> results = findAllUsingQuery(type, null, qualifier);
 		List<?> returnedList = IterableConverter.toList(results);
 		if(results!=null && query.getSort()!=null){
 			Comparator comparator = aerospikePropertyComparator(query);
@@ -456,7 +444,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return (Iterable<T>) returnedList;
 	}
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Comparator<?> aerospikePropertyComparator(Query<?> query ) {
+	public Comparator<?> aerospikePropertyComparator(Query query ) {
 
 		if (query == null || query.getSort() == null) {
 			return null;
@@ -610,13 +598,9 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	public class EntityIterator<T> implements CloseableIterator<T> {
 		private KeyRecordIterator keyRecordIterator;
-		private MappingAerospikeConverter converter;
 		private Class<T> type;
 		
-		public EntityIterator(Class<T> type,
-				MappingAerospikeConverter converter,
-				KeyRecordIterator keyRecordIterator) {
-			this.converter = converter;
+		public EntityIterator(Class<T> type, MappingAerospikeConverter converter, KeyRecordIterator keyRecordIterator) {
 			this.type = type;
 			this.keyRecordIterator = keyRecordIterator;
 		}
