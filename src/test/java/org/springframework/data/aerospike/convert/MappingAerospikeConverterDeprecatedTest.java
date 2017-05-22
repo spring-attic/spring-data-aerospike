@@ -5,6 +5,7 @@ package org.springframework.data.aerospike.convert;
 
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
+import com.aerospike.client.Record;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.beans.HasProperty;
 import org.hamcrest.beans.SamePropertyValuesAs;
@@ -90,7 +91,7 @@ public class MappingAerospikeConverterDeprecatedTest {
 			}
 		};
 
-		AerospikeReadData dbObject = AerospikeReadData.forRead(key, bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(key, record(bins));
 
 		Address convertedAddress = converter.read(Address.class, dbObject);
 		assertThat(convertedAddress, SamePropertyValuesAs.samePropertyValuesAs(address));
@@ -162,7 +163,7 @@ public class MappingAerospikeConverterDeprecatedTest {
 			}
 		};
 
-		AerospikeReadData dbObject = AerospikeReadData.forRead(key, bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(key, record(bins));
 
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
 
@@ -179,7 +180,7 @@ public class MappingAerospikeConverterDeprecatedTest {
 			}
 		};
 
-		AerospikeReadData dbObject = AerospikeReadData.forRead(key, bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(key, record(bins));
 
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
 
@@ -217,7 +218,7 @@ public class MappingAerospikeConverterDeprecatedTest {
 			}
 		};
 
-		AerospikeReadData dbObject = AerospikeReadData.forRead(key, bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(key, record(bins));
 
 		Person result = converter.read(Person.class, dbObject);
 
@@ -235,7 +236,8 @@ public class MappingAerospikeConverterDeprecatedTest {
 
 		converter.write(person, forWrite);
 
-		AerospikeReadData forRead = AerospikeReadData.forRead(key, listToMap(forWrite.getBins()));
+		Map<String, Object> bins = listToMap(forWrite.getBins());
+		AerospikeReadData forRead = AerospikeReadData.forRead(key, record(bins));
 		Person result = converter.read(Person.class, forRead);
 
 		assertThat(result.addresses, hasSize(0));
@@ -256,7 +258,7 @@ public class MappingAerospikeConverterDeprecatedTest {
 				put("map", map);
 			}
 		};
-		AerospikeReadData dbObject = AerospikeReadData.forRead(key, bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(key, record(bins));
 
 		ClassWithSortedMap result = converter.read(ClassWithSortedMap.class, dbObject);
 
@@ -297,6 +299,10 @@ public class MappingAerospikeConverterDeprecatedTest {
 				.filter(bin -> bin.name.equals(name))
 				.map(bin -> bin.value.getObject())
 				.findFirst().orElse(null);
+	}
+
+	private Record record(Map<String, Object> bins) {
+		return new Record(bins, 0, 0);
 	}
 
 	static class GenericType<T> {

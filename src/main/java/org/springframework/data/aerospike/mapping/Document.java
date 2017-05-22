@@ -51,28 +51,30 @@ public @interface Document {
 	String language() default "";
 
 	/**
-	 * An optional expiry time for the document. Default is no expiry.
-	 * Only one of two might might be set at the same time: either {@link #expiry()} or {@link #expiryExpression()}
+	 * An optional expiration time for the document. Default is no expiration. Ignored if entity has field
+	 * annotated by {@link org.springframework.data.aerospike.annotation.Expiration}
+	 * <br/>
+	 * Only one of two might might be set at the same time: either {@link #expiration()} or {@link #expirationExpression()}
 	 * See {@link com.aerospike.client.policy.WritePolicy#expiration} for possible values.
 	 */
-	int expiry() default DEFAULT_EXPIRATION;
+	int expiration() default DEFAULT_EXPIRATION;
 
 	/**
-	 * Same as {@link #expiry} but allows the actual value to be set using standard Spring property sources mechanism.
-	 * Only one might be set at the same time: either {@link #expiry()} or {@link #expiryExpression()}. <br />
+	 * Same as {@link #expiration} but allows the actual value to be set using standard Spring property sources mechanism.
+	 * Only one might be set at the same time: either {@link #expiration()} or {@link #expirationExpression()}. <br />
 	 * Syntax is the same as for {@link org.springframework.core.env.Environment#resolveRequiredPlaceholders(String)}.
 	 * <br /><br />
 	 * SpEL is NOT supported.
 	 */
-	String expiryExpression() default "";
+	String expirationExpression() default "";
 
 	/**
-	 * An optional time unit for the document's {@link #expiry()}, if set. Default is {@link TimeUnit#SECONDS}.
+	 * An optional time unit for the document's {@link #expiration()}, if set. Default is {@link TimeUnit#SECONDS}.
 	 */
-	TimeUnit expiryUnit() default TimeUnit.SECONDS;
+	TimeUnit expirationUnit() default TimeUnit.SECONDS;
 
 	/**
-	 * An optional flag associated indicating whether the expiry timer should be reset whenever the document is directly read
+	 * An optional flag associated indicating whether the expiration timer should be reset whenever the document is directly read
 	 */
 	boolean touchOnRead() default false;
 }

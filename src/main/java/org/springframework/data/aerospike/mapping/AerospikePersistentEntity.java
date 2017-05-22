@@ -41,4 +41,6 @@ public interface AerospikePersistentEntity<T> extends PersistentEntity<T, Aerosp
 	int getExpiration();
 
 	boolean isTouchOnRead();
+
+	AerospikePersistentProperty getExpirationProperty();
 }

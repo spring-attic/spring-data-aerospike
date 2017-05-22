@@ -1,12 +1,15 @@
 package org.springframework.data.aerospike.mapping;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.aerospike.BaseIntegrationTests;
+import org.springframework.data.aerospike.SampleClasses.*;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 
 import java.util.concurrent.TimeUnit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.aerospike.SampleClasses.*;
 import static org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity.DEFAULT_EXPIRATION;
 
 public class AerospikePersistentEntityTest extends BaseIntegrationTests {
@@ -15,67 +18,50 @@ public class AerospikePersistentEntityTest extends BaseIntegrationTests {
     private AerospikeMappingContext context;
 
     @Test
-    public void shouldReturnExpirationForDocumentWithExpiry() {
-        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithExpiry.class);
-        Assertions.assertThat(persistentEntity.getExpiration()).isEqualTo(42);
+    public void shouldReturnExpirationForDocumentWithExpiration() {
+        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithExpiration.class);
+        assertThat(persistentEntity.getExpiration()).isEqualTo(EXPIRATION);
     }
 
     @Test
-    public void shouldReturnExpirationForDocumentWithExpiryExpression() {
-        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithExpiryExpression.class);
-        Assertions.assertThat(persistentEntity.getExpiration()).isEqualTo(42);
+    public void shouldReturnExpirationForDocumentWithExpirationExpression() {
+        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithExpirationExpression.class);
+        assertThat(persistentEntity.getExpiration()).isEqualTo(EXPIRATION);
     }
 
     @Test
-    public void shouldReturnExpirationForDocumentWithExpiryUnit() {
-        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithExpiryUnit.class);
-        Assertions.assertThat(persistentEntity.getExpiration()).isEqualTo((int) TimeUnit.MINUTES.toSeconds(1));
+    public void shouldReturnExpirationForDocumentWithExpirationUnit() {
+        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithExpirationUnit.class);
+        assertThat(persistentEntity.getExpiration()).isEqualTo((int) TimeUnit.MINUTES.toSeconds(1));
     }
 
     @Test
-    public void shouldReturnZeroForDocumentWithoutExpiry() {
-        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithoutExpiry.class);
-        Assertions.assertThat(persistentEntity.getExpiration()).isEqualTo(DEFAULT_EXPIRATION);
+    public void shouldReturnZeroForDocumentWithoutExpiration() {
+        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithoutExpiration.class);
+        assertThat(persistentEntity.getExpiration()).isEqualTo(DEFAULT_EXPIRATION);
     }
 
     @Test
     public void shouldReturnZeroForDocumentWithoutAnnotation() {
         BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithoutAnnotation.class);
-        Assertions.assertThat(persistentEntity.getExpiration()).isEqualTo(DEFAULT_EXPIRATION);
+        assertThat(persistentEntity.getExpiration()).isEqualTo(DEFAULT_EXPIRATION);
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldFailForDocumentWithExpiryAndExpiryExpression() {
-        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithExpiryAndExpiryExpression.class);
+    public void shouldFailForDocumentWithExpirationAndExpression() {
+        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithExpirationAndExpression.class);
         persistentEntity.getExpiration();
     }
 
-    @Document(expiry = 42)
-    public static class DocumentWithExpiry {
+    @Test
+    public void shouldGetExpirationFromField() {
+        BasicAerospikePersistentEntity<?> persistentEntity = context.getPersistentEntity(DocumentWithExpirationAnnotation.class);
+        AerospikePersistentProperty expirationProperty = persistentEntity.getExpirationProperty();
+        assertThat(expirationProperty).isNotNull();
+        assertThat(expirationProperty.isExpirationProperty()).isTrue();
 
-    }
-
-    @Document(expiryExpression = "${expirationProperty}")
-    public static class DocumentWithExpiryExpression {
-
-    }
-
-    @Document(expiry = 1, expiryUnit = TimeUnit.MINUTES)
-    public static class DocumentWithExpiryUnit {
-
-    }
-
-    @Document
-    public static class DocumentWithoutExpiry {
-
-    }
-
-    public static class DocumentWithoutAnnotation {
-
-    }
-
-    @Document(expiry = 1, expiryExpression = "${expirationProperty}")
-    public static class DocumentWithExpiryAndExpiryExpression {
-
+        DocumentWithExpirationAnnotation document = new DocumentWithExpirationAnnotation("docId", EXPIRATION);
+        PersistentPropertyAccessor accessor = persistentEntity.getPropertyAccessor(document);
+        assertThat(accessor.getProperty(expirationProperty)).isEqualTo(EXPIRATION);
     }
 }

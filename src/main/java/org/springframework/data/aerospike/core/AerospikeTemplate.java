@@ -772,7 +772,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		if(record == null) {
 			return null;
 		}
-		AerospikeReadData data = AerospikeReadData.forRead(key, record.bins);
+		AerospikeReadData data = AerospikeReadData.forRead(key, record);
 		T readEntity = converter.read(type, data);
 
 		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);

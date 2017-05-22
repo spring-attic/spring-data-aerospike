@@ -16,25 +16,22 @@
 
 package org.springframework.data.aerospike.cache;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.policy.WritePolicy;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.support.SimpleValueWrapper;
 import org.springframework.cache.transaction.AbstractTransactionSupportingCacheManager;
 import org.springframework.cache.transaction.TransactionAwareCacheDecorator;
-import org.springframework.data.aerospike.convert.*;
+import org.springframework.data.aerospike.convert.AerospikeConverter;
+import org.springframework.data.aerospike.convert.AerospikeReadData;
+import org.springframework.data.aerospike.convert.AerospikeWriteData;
+import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
 import org.springframework.util.Assert;
 
-import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.Key;
-import com.aerospike.client.Record;
-import com.aerospike.client.policy.WritePolicy;
+import java.util.*;
 
 /**
  * {@link CacheManager} implementation for Aerospike. By default {@link AerospikeCache}s
@@ -173,7 +170,7 @@ public class AerospikeCacheManager extends AbstractTransactionSupportingCacheMan
 			Key dbKey = getKey(key);
 			Record record =  client.get(null, dbKey);
 			if (record != null) {
-				AerospikeReadData data = AerospikeReadData.forRead(dbKey, record.bins);
+				AerospikeReadData data = AerospikeReadData.forRead(dbKey, record);
 				T value = aerospikeConverter.read(type,  data);
 				return value;
 			}

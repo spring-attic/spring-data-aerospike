@@ -2,6 +2,7 @@ package org.springframework.data.aerospike;
 
 import lombok.*;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.aerospike.annotation.Expiration;
 import org.springframework.data.aerospike.mapping.Document;
 import org.springframework.data.aerospike.mapping.Field;
 import org.springframework.data.annotation.Id;
@@ -12,12 +13,15 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.springframework.data.aerospike.SampleClasses.SimpleClass.SIMPLESET;
 import static org.springframework.data.aerospike.SampleClasses.SimpleClassWithPersistenceConstructor.SIMPLESET2;
 import static org.springframework.data.aerospike.SampleClasses.User.SIMPLESET3;
 
 public class SampleClasses {
+
+	public static final int EXPIRATION = 1;
 
 	static interface SomeInterface {
 	}
@@ -199,7 +203,7 @@ public class SampleClasses {
 		public int id;
 	}
 
-	@Document(expiry = 42)
+	@Document(expiration = EXPIRATION)
 	@AllArgsConstructor
 	@ToString
 	@EqualsAndHashCode
@@ -260,7 +264,7 @@ public class SampleClasses {
 
 	@Data
 	@AllArgsConstructor
-	@Document(expiry = 1)
+	@Document(expiration = EXPIRATION)
 	public static class DocumentWithExpiration {
 
 		@Id
@@ -299,10 +303,46 @@ public class SampleClasses {
 
 	@Data
 	@AllArgsConstructor
-	@Document(collection = "expiry-set", expiry = 1, touchOnRead = true)
+	@Document(collection = "expiration-set", expiration = 1, touchOnRead = true)
 	public static class DocumentWithTouchOnRead {
 
 		@Id
 		private String id;
+	}
+
+	@Data
+	@AllArgsConstructor
+	@Document(collection = "expiration-set")
+	public static class DocumentWithExpirationAnnotation {
+
+		@Id
+		private String id;
+
+		@Expiration
+		private Integer expiration;
+	}
+
+	@Document(expirationExpression = "${expirationProperty}")
+	public static class DocumentWithExpirationExpression {
+
+	}
+
+	@Document(expiration = EXPIRATION, expirationUnit = TimeUnit.MINUTES)
+	public static class DocumentWithExpirationUnit {
+
+	}
+
+	@Document
+	public static class DocumentWithoutExpiration {
+
+	}
+
+	public static class DocumentWithoutAnnotation {
+
+	}
+
+	@Document(expiration = 1, expirationExpression = "${expirationProperty}")
+	public static class DocumentWithExpirationAndExpression {
+
 	}
 }

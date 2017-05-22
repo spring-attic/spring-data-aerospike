@@ -55,7 +55,7 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 			data.addBin(USER_KEY, id);
 		}
 
-		data.setExpiration(entity.getExpiration());
+		data.setExpiration(getExpiration(entity, accessor));
 
 		Map<String, Object> convertedProperties = convertProperties(type, entity, accessor);
 		convertedProperties.entrySet().forEach(e -> data.addBin(e.getKey(), e.getValue()));
@@ -67,13 +67,17 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 		entity.doWithProperties((PropertyHandler<AerospikePersistentProperty>) property -> {
 
 			Object value = accessor.getProperty(property);
-			if (property.isIdProperty() || !property.isWritable()) {
+			if (isNotWritable(property)) {
 				return;
 			}
 			Object valueToWrite = getValueToWrite(value, property.getTypeInformation());
 			target.put(property.getFieldName(), valueToWrite);
 		});
 		return target;
+	}
+
+	private boolean isNotWritable(AerospikePersistentProperty property) {
+		return property.isIdProperty() || property.isExpirationProperty() || !property.isWritable();
 	}
 
 	private Object getValueToWrite(Object value, TypeInformation<?> type) {
@@ -159,5 +163,18 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 			return (Collection<?>) source;
 		}
 		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
+	}
+
+	private int getExpiration(AerospikePersistentEntity<?> entity, ConvertingPropertyAccessor accessor) {
+		AerospikePersistentProperty expirationProperty = entity.getExpirationProperty();
+		if (expirationProperty != null) {
+			Integer expiration = accessor.getProperty(expirationProperty, Integer.class);
+			Assert.notNull(expiration, "Expiration must not be null!");
+			Assert.isTrue(expiration > 0, "Expiration value must be greater than zero, but was: " + expiration);
+
+			return expiration;
+		}
+
+		return entity.getExpiration();
 	}
 }

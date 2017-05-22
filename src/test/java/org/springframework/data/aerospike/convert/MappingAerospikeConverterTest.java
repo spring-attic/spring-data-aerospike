@@ -2,6 +2,8 @@ package org.springframework.data.aerospike.convert;
 
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.Value;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -11,11 +13,16 @@ import org.springframework.data.aerospike.SampleClasses.*;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
 
+import java.time.Duration;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.data.aerospike.AsCollections.*;
+import static org.springframework.data.aerospike.SampleClasses.*;
 import static org.springframework.data.aerospike.SampleClasses.SimpleClass.SIMPLESET;
 import static org.springframework.data.aerospike.SampleClasses.SimpleClassWithPersistenceConstructor.SIMPLESET2;
 import static org.springframework.data.aerospike.SampleClasses.User.SIMPLESET3;
@@ -65,7 +72,7 @@ public class MappingAerospikeConverterTest {
 				"collectionWithSimpleValues", list("a", "b", "c", "d", null),
 				"@user_key", "10"
 		);
-		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 10L), bins);
+		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 10L), record(bins));
 
 		SetWithSimpleValue actual = converter.read(SetWithSimpleValue.class, forRead);
 
@@ -96,7 +103,7 @@ public class MappingAerospikeConverterTest {
 				"mapWithSimpleValue", of("key1", "value1", "key2", "value2"),
 				"@user_key", "10"
 		);
-		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 10L), bins);
+		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 10L), record(bins));
 
 		MapWithSimpleValue actual = converter.read(MapWithSimpleValue.class, forRead);
 
@@ -127,7 +134,7 @@ public class MappingAerospikeConverterTest {
 				"mapWithCollectionValue", of("key1", list(), "key2", list("a", "b", "c")),
 				"@user_key", "10"
 		);
-		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 10L), bins);
+		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 10L), record(bins));
 
 		MapWithCollectionValue actual = converter.read(MapWithCollectionValue.class, forRead);
 
@@ -165,7 +172,7 @@ public class MappingAerospikeConverterTest {
 						"key2", of("street", of("name", "Shakespeare str.", "number", 40), "apartment", 765)),
 				"@user_key", "10"
 		);
-		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 10L), bins);
+		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 10L), record(bins));
 
 		MapWithNonSimpleValue actual = converter.read(MapWithNonSimpleValue.class, forRead);
 
@@ -215,7 +222,7 @@ public class MappingAerospikeConverterTest {
 		bins.put("field8", "SECOND");
 		bins.put("field9", list("val1", "val2"));
 		bins.put("field10", list(list(), list("1", "2"), list("3", "4")));
-		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 867), bins);
+		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 867), record(bins));
 
 		SimpleClass actual = converter.read(SimpleClass.class, forRead);
 
@@ -243,7 +250,7 @@ public class MappingAerospikeConverterTest {
 		Map<String, Object> bins = new HashMap<>();
 		bins.put("field1", "abyrvalg");
 		bins.put("field2", 13);
-		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 555), bins);
+		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 555), record(bins));
 
 		SimpleClassWithPersistenceConstructor actual = converter.read(SimpleClassWithPersistenceConstructor.class, forRead);
 
@@ -260,7 +267,7 @@ public class MappingAerospikeConverterTest {
 						of("name", "Gogolya street", "number", 24),
 						"apartment", 777)
 		);
-		AerospikeReadData data = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 555), bins);
+		AerospikeReadData data = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 555), record(bins));
 
 		User actual = converter.read(User.class, data);
 
@@ -308,7 +315,7 @@ public class MappingAerospikeConverterTest {
 	public void shouldReadIntId() throws Exception {
 		Map<String, Object> data = of();
 
-		ClassWithIntId actual = converter.read(ClassWithIntId.class, AerospikeReadData.forRead(new Key(NAMESPACE, "ClassWithIntId", 5), data));
+		ClassWithIntId actual = converter.read(ClassWithIntId.class, AerospikeReadData.forRead(new Key(NAMESPACE, "ClassWithIntId", 5), record(data)));
 
 		ClassWithIntId expected = new ClassWithIntId();
 		expected.id = 5;
@@ -351,7 +358,7 @@ public class MappingAerospikeConverterTest {
 								"apartment", 13)
 				)
 		);
-		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "Person", "kate-01"), bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "Person", "kate-01"), record(bins));
 
 		Person result = converter.read(Person.class, dbObject);
 
@@ -391,7 +398,7 @@ public class MappingAerospikeConverterTest {
 				"set", list("FIRST", "SECOND", "THIRD"),
 				"map", of("FIRST", "a", "SECOND", "b")
 		);
-		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "EnumProperties", 10L), bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "EnumProperties", 10L), record(bins));
 
 		EnumProperties result = converter.read(EnumProperties.class, dbObject);
 
@@ -423,7 +430,7 @@ public class MappingAerospikeConverterTest {
 				"@_class", SortedMapWithSimpleValue.class.getName(),
 				"map", of("a", "b", "c", "d")
 		);
-		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "SortedMapWithSimpleValue", 10L), bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "SortedMapWithSimpleValue", 10L), record(bins));
 
 		SortedMapWithSimpleValue result = converter.read(SortedMapWithSimpleValue.class, dbObject);
 
@@ -459,7 +466,7 @@ public class MappingAerospikeConverterTest {
 						"level-1", of("level-1-1", of("1", "2")),
 						"level-2", of("level-2-2", of("1", "2")))
 		);
-		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "NestedMapsWithSimpleValue", 10L), bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "NestedMapsWithSimpleValue", 10L), record(bins));
 
 		NestedMapsWithSimpleValue result = converter.read(NestedMapsWithSimpleValue.class, dbObject);
 
@@ -490,7 +497,7 @@ public class MappingAerospikeConverterTest {
 				  "@_class", GenericType.class.getName(),
 				  "content", "string"
 		);
-		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "GenericType", 10L), bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "GenericType", 10L), record(bins));
 
 		GenericType result = converter.read(GenericType.class, dbObject);
 
@@ -518,7 +525,7 @@ public class MappingAerospikeConverterTest {
 				"@_class", ListOfLists.class.getName(),
 				"listOfLists", list(list("a", "b", "c"), list("d", "e"), list())
 		);
-		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "ListOfLists", 10L), bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "ListOfLists", 10L), record(bins));
 
 		ListOfLists result = converter.read(ListOfLists.class, dbObject);
 
@@ -551,7 +558,7 @@ public class MappingAerospikeConverterTest {
 						of("nastya", of("firstName", "Nastya", "lastName", "Smirnova", "@_class", Name.class.getName()))
 				)
 		);
-		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "ListOfMaps", 10L), bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "ListOfMaps", 10L), record(bins));
 
 		ListOfMaps result = converter.read(ListOfMaps.class, dbObject);
 
@@ -581,7 +588,7 @@ public class MappingAerospikeConverterTest {
 				"property", "value",
 				"customFieldNames", of("property1", 1, "property2", "2", "@_class", CustomFieldNames.class.getName())
 		);
-		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "ContainerOfCustomFieldNames", 10L), bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "ContainerOfCustomFieldNames", 10L), record(bins));
 
 		ContainerOfCustomFieldNames result = converter.read(ContainerOfCustomFieldNames.class, dbObject);
 
@@ -609,7 +616,7 @@ public class MappingAerospikeConverterTest {
 				"@_class", ClassWithComplexId.class.getName(),
 				"@user_key", "id::10"
 		);
-		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "ClassWithComplexId", 10L), bins);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "ClassWithComplexId", 10L), record(bins));
 
 		ClassWithComplexId result = converter.read(ClassWithComplexId.class, dbObject);
 
@@ -622,7 +629,64 @@ public class MappingAerospikeConverterTest {
 		Person person = new Person("personId", Collections.emptySet());
 		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
 		converter.write(person, forWrite);
-		assertThat(forWrite.getExpiration()).isEqualTo(42);
+		assertThat(forWrite.getExpiration()).isEqualTo(EXPIRATION);
+	}
+
+	@Test
+	public void shouldReadExpirationFieldValue() {
+		Key key = new Key(NAMESPACE, "docId", 10L);
+
+		int recordExpiration = toRecordExpiration(EXPIRATION);
+		Record record = new Record(Collections.emptyMap(), 0, recordExpiration);
+
+		AerospikeReadData readData = AerospikeReadData.forRead(key, record);
+
+		DocumentWithExpirationAnnotation forRead = converter.read(DocumentWithExpirationAnnotation.class, readData);
+		// Because of converting record expiration to TTL in Record.getTimeToLive method,
+		// we may have expected expiration minus one second
+		assertThat(forRead.getExpiration()).isIn(EXPIRATION, EXPIRATION - 1);
+	}
+
+	private int toRecordExpiration(int expiration) {
+		ZonedDateTime documentExpiration = ZonedDateTime.now(ZoneOffset.UTC).plus(expiration, ChronoUnit.SECONDS);
+		ZonedDateTime aerospikeExpirationOffset = ZonedDateTime.of(2010, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+		return (int) Duration.between(aerospikeExpirationOffset, documentExpiration).getSeconds();
+	}
+
+	@Test
+	public void shouldWriteExpirationFieldValue() {
+		DocumentWithExpirationAnnotation document = new DocumentWithExpirationAnnotation("docId", EXPIRATION);
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		converter.write(document, forWrite);
+		assertThat(forWrite.getExpiration()).isEqualTo(EXPIRATION);
+	}
+
+	@Test
+	public void shouldNotSaveExpirationFieldAsBin() {
+		DocumentWithExpirationAnnotation document = new DocumentWithExpirationAnnotation("docId", EXPIRATION);
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		converter.write(document, forWrite);
+		assertThat(forWrite.getBins()).doesNotContain(new Bin("expiration", Value.get(EXPIRATION)));
+	}
+
+	@Test
+	public void shouldFailWithNullExpirationFieldValue() {
+		expectedException.expect(IllegalArgumentException.class);
+		expectedException.expectMessage("Expiration must not be null!");
+
+		DocumentWithExpirationAnnotation document = new DocumentWithExpirationAnnotation("docId", null);
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		converter.write(document, forWrite);
+	}
+
+	@Test
+	public void shouldFailWithIllegalExpirationFieldValue() {
+		expectedException.expect(IllegalArgumentException.class);
+		expectedException.expectMessage("Expiration value must be greater than zero, but was: -1");
+
+		DocumentWithExpirationAnnotation document = new DocumentWithExpirationAnnotation("docId", -1);
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		converter.write(document, forWrite);
 	}
 
 	private void assertThatKeyIsEqualTo(Key key, String namespace, String myset, Object expected) {
@@ -631,5 +695,7 @@ public class MappingAerospikeConverterTest {
 		assertThat(key.userKey.getObject()).isEqualTo(String.valueOf(expected));
 	}
 
-
+	private Record record(Map<String, Object> bins) {
+		return new Record(bins, 0, 0);
+	}
 }

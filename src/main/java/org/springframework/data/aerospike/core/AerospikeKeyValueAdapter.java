@@ -15,12 +15,14 @@
  */
 package org.springframework.data.aerospike.core;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map.Entry;
-
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.Value;
+import com.aerospike.client.policy.RecordExistsAction;
+import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.client.query.RecordSet;
+import com.aerospike.client.query.Statement;
 import org.springframework.data.aerospike.convert.AerospikeConverter;
 import org.springframework.data.aerospike.convert.AerospikeReadData;
 import org.springframework.data.aerospike.convert.AerospikeWriteData;
@@ -31,14 +33,11 @@ import org.springframework.data.keyvalue.core.KeyValueTemplate;
 import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 import org.springframework.data.util.CloseableIterator;
 
-import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.Key;
-import com.aerospike.client.Record;
-import com.aerospike.client.Value;
-import com.aerospike.client.policy.RecordExistsAction;
-import com.aerospike.client.policy.WritePolicy;
-import com.aerospike.client.query.RecordSet;
-import com.aerospike.client.query.Statement;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map.Entry;
 
 /**
  * An Aerospike-specific {@link KeyValueAdapter} to implement core sore interactions to be used by the
@@ -111,7 +110,7 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 		if(record == null){
 			return null;
 		}
-		AerospikeReadData data = AerospikeReadData.forRead(key, record.bins);
+		AerospikeReadData data = AerospikeReadData.forRead(key, record);
 		return converter.read(Object.class,  data);
 	}
 
