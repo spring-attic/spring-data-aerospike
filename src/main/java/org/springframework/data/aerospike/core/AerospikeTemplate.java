@@ -43,7 +43,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.keyvalue.core.IterableConverter;
-import org.springframework.data.keyvalue.core.KeyValueCallback;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -56,6 +55,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 /**
  * Primary implementation of {@link AerospikeOperations}.
@@ -364,20 +364,18 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
-	 * org.springframework.data.keyvalue.core.KeyValueOperations#execute(org.
-	 * springframework.data.keyvalue.core.KeyValueCallback)
+	 * org.springframework.data.aerospike.core.AerospikeOperations#execute(java.util.function.Supplier)
 	 */
 	@Override
-	public <T> T execute(KeyValueCallback<T> action) {
-		Assert.notNull(action, "KeyValueCallback must not be null!");
-
+	public <T> T execute(Supplier<T> supplier) {
+		Assert.notNull(supplier, "Callback must not be null!");
 		try {
-			return action.doInKeyValue(null);
-		}
-		catch (RuntimeException e) {
-			throw e;
+			return supplier.get();
+		} catch (RuntimeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
 		}
 	}
 
@@ -535,6 +533,11 @@ public class AerospikeTemplate implements AerospikeOperations {
 		AerospikePersistentEntity<?> entity = mappingContext
 				.getPersistentEntity(type);
 		return count(type, entity.getSetName());
+	}
+
+	@Override
+	public AerospikeClient getAerospikeClient() {
+		return client;
 	}
 
 	/*

@@ -18,10 +18,11 @@ package org.springframework.data.aerospike.core;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
+import com.aerospike.client.AerospikeClient;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.keyvalue.core.KeyValueCallback;
 import org.springframework.data.mapping.context.MappingContext;
 
 import com.aerospike.client.Value;
@@ -115,10 +116,10 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	/**
 	 * Execute operation against underlying store.
 	 * 
-	 * @param action must not be {@literal null}.
+	 * @param supplier must not be {@literal null}.
 	 * @return
 	 */
-	<T> T execute(KeyValueCallback<T> action);
+	<T> T execute(Supplier<T> supplier);
 
 	/**
 	 * @param sort
@@ -158,4 +159,5 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 */
 	long count(Class<?> type);
 
+	AerospikeClient getAerospikeClient();
 }

@@ -779,7 +779,6 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	@Test
 	public void shouldPersistWithCustomWritePolicy() throws Exception {
-		String id = nextId();
 		CustomCollectionClass initial = new CustomCollectionClass(id, "data");
 
 		WritePolicy writePolicy = new WritePolicy();
@@ -793,13 +792,28 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	@Test(expected = DataRetrievalFailureException.class)
 	public void shouldNotPersistWithCustomWritePolicy() throws Exception {
-		String id = nextId();
 		CustomCollectionClass initial = new CustomCollectionClass(id, "data");
 
 		WritePolicy writePolicy = new WritePolicy();
 		writePolicy.recordExistsAction = RecordExistsAction.UPDATE_ONLY;
 
 		template.persist(initial, writePolicy);
+	}
+
+	@Test(expected = DuplicateKeyException.class)
+	public void shouldTranslateException() {
+		Key key = new Key(template.getNamespace(), "shouldTranslateException", "shouldTranslateException");
+		Bin bin = new Bin("bin_name", "bin_value");
+
+		template.getAerospikeClient().add(null, key, bin);
+		template.execute(() -> {
+			AerospikeClient client = template.getAerospikeClient();
+			WritePolicy writePolicy = new WritePolicy(client.getWritePolicyDefault());
+			writePolicy.recordExistsAction = RecordExistsAction.CREATE_ONLY;
+
+			client.add(writePolicy, key, bin);
+			return true;
+		});
 	}
 
 }
