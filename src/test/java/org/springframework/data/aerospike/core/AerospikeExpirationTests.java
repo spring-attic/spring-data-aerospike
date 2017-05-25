@@ -1,5 +1,6 @@
 package org.springframework.data.aerospike.core;
 
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,6 +10,7 @@ import org.springframework.data.aerospike.BaseIntegrationTests;
 import org.springframework.data.aerospike.SampleClasses.DocumentWithExpiration;
 import org.springframework.data.aerospike.SampleClasses.DocumentWithExpirationAnnotation;
 import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnRead;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithUnixTimeExpiration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +28,21 @@ public class AerospikeExpirationTests extends BaseIntegrationTests {
     @Before
     public void setUp() throws Exception {
         this.id = nextId();
+    }
+
+    @Test
+    public void shouldExpireBasedOnUnixTimeValue() throws InterruptedException {
+        template.insert(new DocumentWithUnixTimeExpiration(id, DateTime.now().plusSeconds(1)));
+
+        Thread.sleep(500L);
+
+        DocumentWithUnixTimeExpiration shouldNotExpire = template.findById(id, DocumentWithUnixTimeExpiration.class);
+        assertThat(shouldNotExpire).isNotNull();
+
+        Thread.sleep(1500L);
+
+        DocumentWithUnixTimeExpiration shouldExpire = template.findById(id, DocumentWithUnixTimeExpiration.class);
+        assertThat(shouldExpire).isNull();
     }
 
     @Test

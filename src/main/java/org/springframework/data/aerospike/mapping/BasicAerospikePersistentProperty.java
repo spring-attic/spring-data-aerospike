@@ -22,6 +22,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.*;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.beans.PropertyDescriptor;
@@ -93,6 +94,14 @@ public class BasicAerospikePersistentProperty extends AnnotationBasedPersistentP
 	@Override
 	public boolean isExpirationProperty() {
 		return isAnnotationPresent(Expiration.class);
+	}
+
+	@Override
+	public boolean isExpirationSpecifiedAsUnixTime() {
+		Expiration expiration = findAnnotation(Expiration.class);
+		Assert.state(expiration != null, "Property " + getName() + " is not expiration property");
+
+		return expiration.unixTime();
 	}
 
 	/**

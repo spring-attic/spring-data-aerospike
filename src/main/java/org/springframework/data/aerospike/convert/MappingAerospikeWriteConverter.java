@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.data.aerospike.convert.AerospikeMetaData.USER_KEY;
+import static org.springframework.data.aerospike.utility.TimeUtils.unixTimeToOffsetInSeconds;
 
 public class MappingAerospikeWriteConverter implements EntityWriter<Object, AerospikeWriteData> {
 
@@ -168,13 +169,25 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 	private int getExpiration(AerospikePersistentEntity<?> entity, ConvertingPropertyAccessor accessor) {
 		AerospikePersistentProperty expirationProperty = entity.getExpirationProperty();
 		if (expirationProperty != null) {
-			Integer expiration = accessor.getProperty(expirationProperty, Integer.class);
-			Assert.notNull(expiration, "Expiration must not be null!");
+			int expiration = getExpirationFromProperty(accessor, expirationProperty);
 			Assert.isTrue(expiration > 0, "Expiration value must be greater than zero, but was: " + expiration);
-
 			return expiration;
 		}
 
 		return entity.getExpiration();
+	}
+
+	private int getExpirationFromProperty(ConvertingPropertyAccessor accessor, AerospikePersistentProperty expirationProperty) {
+		if (expirationProperty.isExpirationSpecifiedAsUnixTime()) {
+			Long unixTime = accessor.getProperty(expirationProperty, Long.class);
+			Assert.notNull(unixTime, "Expiration must not be null!");
+
+			return unixTimeToOffsetInSeconds(unixTime);
+        }
+
+		Integer expirationInSeconds = accessor.getProperty(expirationProperty, Integer.class);
+		Assert.notNull(expirationInSeconds, "Expiration must not be null!");
+
+		return expirationInSeconds;
 	}
 }

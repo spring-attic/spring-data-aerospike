@@ -4,6 +4,8 @@ import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.client.Value;
+import org.assertj.core.data.Offset;
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -629,14 +631,14 @@ public class MappingAerospikeConverterTest {
 		Person person = new Person("personId", Collections.emptySet());
 		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
 		converter.write(person, forWrite);
-		assertThat(forWrite.getExpiration()).isEqualTo(EXPIRATION);
+		assertThat(forWrite.getExpiration()).isEqualTo(EXPIRATION_ONE_SECOND);
 	}
 
 	@Test
 	public void shouldReadExpirationFieldValue() {
 		Key key = new Key(NAMESPACE, "docId", 10L);
 
-		int recordExpiration = toRecordExpiration(EXPIRATION);
+		int recordExpiration = toRecordExpiration(EXPIRATION_ONE_MINUTE);
 		Record record = new Record(Collections.emptyMap(), 0, recordExpiration);
 
 		AerospikeReadData readData = AerospikeReadData.forRead(key, record);
@@ -644,7 +646,44 @@ public class MappingAerospikeConverterTest {
 		DocumentWithExpirationAnnotation forRead = converter.read(DocumentWithExpirationAnnotation.class, readData);
 		// Because of converting record expiration to TTL in Record.getTimeToLive method,
 		// we may have expected expiration minus one second
-		assertThat(forRead.getExpiration()).isIn(EXPIRATION, EXPIRATION - 1);
+		assertThat(forRead.getExpiration()).isIn(EXPIRATION_ONE_MINUTE, EXPIRATION_ONE_MINUTE - 1);
+	}
+
+	@Test
+	public void shouldReadUnixTimeExpirationFieldValue() {
+		Key key = new Key(NAMESPACE, "docId", 10L);
+		int recordExpiration = toRecordExpiration(EXPIRATION_ONE_MINUTE);
+		Record record = new Record(Collections.emptyMap(), 0, recordExpiration);
+
+		AerospikeReadData readData = AerospikeReadData.forRead(key, record);
+		DocumentWithUnixTimeExpiration forRead = converter.read(DocumentWithUnixTimeExpiration.class, readData);
+
+		DateTime actual = forRead.getExpiration();
+		DateTime expected = DateTime.now().plusSeconds(EXPIRATION_ONE_MINUTE);
+		assertThat(actual.getMillis()).isCloseTo(expected.getMillis(), Offset.offset(100L));
+	}
+
+	@Test
+	public void shouldWriteUnixTimeExpirationFieldValue() {
+		DateTime unixTimeExpiration = DateTime.now().plusSeconds(EXPIRATION_ONE_MINUTE);
+		DocumentWithUnixTimeExpiration document = new DocumentWithUnixTimeExpiration("docId", unixTimeExpiration);
+
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		converter.write(document, forWrite);
+
+		assertThat(forWrite.getExpiration()).isIn(EXPIRATION_ONE_MINUTE, EXPIRATION_ONE_MINUTE - 1);
+	}
+
+	@Test
+	public void shouldFailWriteUnixTimeExpirationFieldValue() {
+		expectedException.expect(IllegalArgumentException.class);
+		expectedException.expectMessage("Expiration value must be greater than zero");
+
+		DateTime unixTimeExpiration = DateTime.now().minusSeconds(EXPIRATION_ONE_MINUTE);
+		DocumentWithUnixTimeExpiration document = new DocumentWithUnixTimeExpiration("docId", unixTimeExpiration);
+
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		converter.write(document, forWrite);
 	}
 
 	private int toRecordExpiration(int expiration) {
@@ -655,18 +694,18 @@ public class MappingAerospikeConverterTest {
 
 	@Test
 	public void shouldWriteExpirationFieldValue() {
-		DocumentWithExpirationAnnotation document = new DocumentWithExpirationAnnotation("docId", EXPIRATION);
+		DocumentWithExpirationAnnotation document = new DocumentWithExpirationAnnotation("docId", EXPIRATION_ONE_SECOND);
 		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
 		converter.write(document, forWrite);
-		assertThat(forWrite.getExpiration()).isEqualTo(EXPIRATION);
+		assertThat(forWrite.getExpiration()).isEqualTo(EXPIRATION_ONE_SECOND);
 	}
 
 	@Test
 	public void shouldNotSaveExpirationFieldAsBin() {
-		DocumentWithExpirationAnnotation document = new DocumentWithExpirationAnnotation("docId", EXPIRATION);
+		DocumentWithExpirationAnnotation document = new DocumentWithExpirationAnnotation("docId", EXPIRATION_ONE_SECOND);
 		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
 		converter.write(document, forWrite);
-		assertThat(forWrite.getBins()).doesNotContain(new Bin("expiration", Value.get(EXPIRATION)));
+		assertThat(forWrite.getBins()).doesNotContain(new Bin("expiration", Value.get(EXPIRATION_ONE_SECOND)));
 	}
 
 	@Test

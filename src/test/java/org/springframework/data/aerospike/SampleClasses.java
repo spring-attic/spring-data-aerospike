@@ -1,6 +1,7 @@
 package org.springframework.data.aerospike;
 
 import lombok.*;
+import org.joda.time.DateTime;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.aerospike.annotation.Expiration;
 import org.springframework.data.aerospike.mapping.Document;
@@ -21,7 +22,8 @@ import static org.springframework.data.aerospike.SampleClasses.User.SIMPLESET3;
 
 public class SampleClasses {
 
-	public static final int EXPIRATION = 1;
+	public static final int EXPIRATION_ONE_SECOND = 1;
+	public static final int EXPIRATION_ONE_MINUTE = 60;
 
 	static interface SomeInterface {
 	}
@@ -203,7 +205,7 @@ public class SampleClasses {
 		public int id;
 	}
 
-	@Document(expiration = EXPIRATION)
+	@Document(expiration = EXPIRATION_ONE_SECOND)
 	@AllArgsConstructor
 	@ToString
 	@EqualsAndHashCode
@@ -264,7 +266,7 @@ public class SampleClasses {
 
 	@Data
 	@AllArgsConstructor
-	@Document(expiration = EXPIRATION)
+	@Document(expiration = EXPIRATION_ONE_SECOND)
 	public static class DocumentWithExpiration {
 
 		@Id
@@ -322,12 +324,24 @@ public class SampleClasses {
 		private Integer expiration;
 	}
 
+	@Data
+	@AllArgsConstructor
+	@Document(collection = "expiration-set")
+	public static class DocumentWithUnixTimeExpiration {
+
+		@Id
+		private String id;
+
+		@Expiration(unixTime = true)
+		private DateTime expiration;
+	}
+
 	@Document(expirationExpression = "${expirationProperty}")
 	public static class DocumentWithExpirationExpression {
 
 	}
 
-	@Document(expiration = EXPIRATION, expirationUnit = TimeUnit.MINUTES)
+	@Document(expiration = EXPIRATION_ONE_SECOND, expirationUnit = TimeUnit.MINUTES)
 	public static class DocumentWithExpirationUnit {
 
 	}
