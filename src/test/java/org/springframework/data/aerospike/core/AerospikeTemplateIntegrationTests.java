@@ -16,6 +16,8 @@
 package org.springframework.data.aerospike.core;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -370,6 +372,53 @@ public class AerospikeTemplateIntegrationTests extends BaseRepositoriesIntegrati
 			count++;
 		}
 		Assert.assertEquals(6, count);
+	}
+
+	@Test
+	public void testFindWithFilterIn() throws NoSuchMethodException, Exception{
+		IndexTask task = client.createIndex(null, AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);
+		task.waitTillComplete();
+
+		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
+				"firstname", "Dave01"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 21));
+		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"), new Bin(
+				"firstname", "Dave02"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 22));
+		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-003"), new Bin(
+				"firstname", "Dave03"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 23));
+		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-004"), new Bin(
+				"firstname", "Dave04"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 24));
+		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-005"), new Bin(
+				"firstname", "Dave05"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 25));
+		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-006"), new Bin(
+				"firstname", "Dave06"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 26));
+		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-007"), new Bin(
+				"firstname", "Dave07"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 27));
+		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-008"), new Bin(
+				"firstname", "Dave08"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 28));
+		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-009"), new Bin(
+				"firstname", "Dave09"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 29));
+		client.put(null, new Key(AerospikeTemplateIntegrationTests.NAME_SPACE_TEST, AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin(
+				"firstname", "Dave10"), new Bin("lastname", "Matthews"), new Bin(
+				"age", 30));
+		List<Integer> ages = new ArrayList<Integer>(Arrays.asList(25, 30));
+		Query query = createQueryForMethodWithArgs("findByAgeIn", ages);
+
+		Iterable<Person> it = template.find(query, Person.class);
+		int count = 0;
+		for (Person person : it){
+			System.out.print(person.toString()+"\n");
+			count++;
+		}
+		Assert.assertEquals(2, count);
 	}
 
 	@Test

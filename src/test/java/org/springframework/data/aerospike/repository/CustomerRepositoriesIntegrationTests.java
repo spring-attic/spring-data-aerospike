@@ -19,19 +19,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Before;
+import java.util.Arrays;
+
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.aerospike.config.TestConfig;
-import org.springframework.data.aerospike.repository.config.EnableAerospikeRepositories;
 import org.springframework.data.aerospike.sample.Customer;
 import org.springframework.data.aerospike.sample.CustomerRepository;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * @author Oliver Gierke
@@ -67,4 +62,13 @@ public class CustomerRepositoriesIntegrationTests extends BaseRepositoriesIntegr
 		assertEquals(customer.getFirstname(), findById.getFirstname());
 	}
 
+	@Test
+	public void testFindAllByIDs(){
+		repository.save(new Customer("dave-001", "Dave", "AMatthews"));
+		repository.save(new Customer("dave-002", "Dave", "BMatthews"));
+		repository.save(new Customer("dave-003", "Dave", "CMatthews"));
+		repository.save(new Customer("dave-004", "Dave", "DMatthews"));
+		Iterable<Customer> customers = repository.findAll(Arrays.asList("dave-001", "dave-004"));
+		assertEquals(Lists.newArrayList(customers).size(), 2);
+	}
 }

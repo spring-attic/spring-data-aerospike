@@ -319,6 +319,18 @@ public class AerospikeTemplate implements AerospikeOperations {
 			throw translatedException == null ? o_O : translatedException;
 		}
 	}
+	
+	@Override
+	public 	<T> List<T> findByIDs(Iterable<Serializable> IDs, Class<T> type){
+		AerospikePersistentEntity<?> entity = converter.getMappingContext().getPersistentEntity(type);
+		List<Key> kList = new ArrayList<Key>();
+		IDs.forEach(id -> kList.add(new Key(this.namespace, entity.getSetName(), id.toString())));
+		Record[] rs = this.client.get(null, kList.toArray(new Key[kList.size()]));
+		final List<T> tList = new ArrayList<T>();
+		for(int i=0; i < rs.length; i++)
+			tList.add(mapToEntity(kList.get(i), type, rs[i]));
+		return tList;
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override

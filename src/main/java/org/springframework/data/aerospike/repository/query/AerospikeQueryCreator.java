@@ -100,6 +100,8 @@ public class AerospikeQueryCreator extends 	AbstractQueryCreator<Query, Aerospik
 			op = FilterOperation.EQ; break;
 		case NEGATING_SIMPLE_PROPERTY:
 			op = FilterOperation.NOTEQ; break;
+		case IN:
+			op = FilterOperation.IN; break;
 		default:
 			throw new IllegalArgumentException("Unsupported keyword!");
 		}

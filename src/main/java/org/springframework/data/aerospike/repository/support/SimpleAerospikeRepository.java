@@ -128,20 +128,10 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#findAll(java.lang.Iterable)
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public Iterable<T> findAll(Iterable<ID> ids) {
-		List<T> result = new ArrayList<T>();
-
-		for (ID id : ids) {
-
-			T candidate = findOne(id);
-
-			if (candidate != null) {
-				result.add(candidate);
-			}
-		}
-
-		return result;
+		return operations.findByIDs((Iterable<Serializable>)ids, entityInformation.getJavaType());
 	}
 
 	/* (non-Javadoc)
