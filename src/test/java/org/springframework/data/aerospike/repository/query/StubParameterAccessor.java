@@ -26,18 +26,6 @@ public class StubParameterAccessor implements AerospikeParameterAccessor {
 	@SuppressWarnings("unused")
 	private Range<Distance> range = new Range<Distance>(null, null);
 	
-	/**
-	 * Creates a new {@link ConvertingParameterAccessor} backed by a {@link StubParameterAccessor} simply returning the
-	 * given parameters converted but unfiltered.
-	 * 
-	 * @param converter
-	 * @param parameters
-	 * @return
-	 */
-	public static ConvertingParameterAccessor getAccessor(AerospikeWriter<Object> converter, Object... parameters) {
-		return new ConvertingParameterAccessor(converter, new StubParameterAccessor(parameters));
-		//ParametersParameterAccessor(Parameters<?, ?> parameters, Object[] values) {
-	}
 	@SuppressWarnings("unchecked")
 	public StubParameterAccessor(Object... values) {
 
@@ -89,14 +77,6 @@ public class StubParameterAccessor implements AerospikeParameterAccessor {
 	@Override
 	public Iterator<Object> iterator() {
 		return Arrays.asList(values).iterator();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.aerospike.repository.query.AerospikeParameterAccessor#getFullText()
-	 */
-	@Override
-	public TextCriteria getFullText() {
-		return null;
 	}
 
 	/* (non-Javadoc)
