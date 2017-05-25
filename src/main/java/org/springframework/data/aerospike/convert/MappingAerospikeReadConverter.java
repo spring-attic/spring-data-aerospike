@@ -94,7 +94,7 @@ public class MappingAerospikeReadConverter implements EntityReader<Object, Aeros
 
 			PreferredConstructor<?, AerospikePersistentProperty> constructor = entity.getPersistenceConstructor();
 
-			if (constructor.isConstructorParameter(persistentProperty) || persistentProperty.isIdProperty()) {
+			if (isNotReadable(constructor, persistentProperty)) {
 				return;
 			}
 
@@ -107,6 +107,11 @@ public class MappingAerospikeReadConverter implements EntityReader<Object, Aeros
 		});
 
 		return (R) accessor.getBean();
+	}
+
+	private boolean isNotReadable(PreferredConstructor<?, AerospikePersistentProperty> constructor,
+								  AerospikePersistentProperty property) {
+		return constructor.isConstructorParameter(property) || property.isIdProperty() || property.isExpirationProperty();
 	}
 
 	private <T> T readValue(Object source, TypeInformation<?> propertyType) {

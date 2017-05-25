@@ -728,6 +728,19 @@ public class MappingAerospikeConverterTest {
 		converter.write(document, forWrite);
 	}
 
+	@Test
+	public void shouldReadExpirationForDocumentWithDefaultConstructor() {
+		int recordExpiration = toRecordExpiration(EXPIRATION_ONE_MINUTE);
+		Record record = new Record(Collections.emptyMap(), 0, recordExpiration);
+		Key key = new Key(NAMESPACE, "DocumentWithDefaultConstructor", "docId");
+		AerospikeReadData forRead = AerospikeReadData.forRead(key, record);
+
+		DocumentWithDefaultConstructor document = converter.read(DocumentWithDefaultConstructor.class, forRead);
+		DateTime actual = document.getExpiration();
+		DateTime expected = DateTime.now().plusSeconds(EXPIRATION_ONE_MINUTE);
+		assertThat(actual.getMillis()).isCloseTo(expected.getMillis(), Offset.offset(100L));
+	}
+
 	private void assertThatKeyIsEqualTo(Key key, String namespace, String myset, Object expected) {
 		assertThat(key.namespace).isEqualTo(namespace);
 		assertThat(key.setName).isEqualTo(myset);

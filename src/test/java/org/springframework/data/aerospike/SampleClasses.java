@@ -359,4 +359,12 @@ public class SampleClasses {
 	public static class DocumentWithExpirationAndExpression {
 
 	}
+
+	@Data
+	@Document
+	public static class DocumentWithDefaultConstructor {
+
+		@Expiration(unixTime = true)
+		private DateTime expiration;
+	}
 }
