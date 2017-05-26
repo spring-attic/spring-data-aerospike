@@ -234,37 +234,32 @@ public class AerospikeTemplate implements AerospikeOperations {
 	}
 
 	@Override
-	public <T> T delete(Serializable id, Class<T> type) {
+	public boolean delete(Serializable id, Class<?> type) {
 		Assert.notNull(id, "Id must not be null!");
+		Assert.notNull(type, "Type must not be null!");
 		try {
 			AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
-			Key key = new Key(this.namespace, entity.getSetName(),
-					id.toString());
+			Key key = new Key(this.namespace, entity.getSetName(), id.toString());
 
-			this.client.delete(null, key);
+			return this.client.delete(null, key);
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
 		}
-		catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator
-					.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
-		}
-		return null;
 	}
 
 	@Override
-	public <T> T delete(T objectToDelete) {
+	public boolean delete(Object objectToDelete) {
 		Assert.notNull(objectToDelete, "Object to delete must not be null!");
 		try {
 			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToDelete, data);
-			this.client.delete(null, data.getKey());
+
+			return this.client.delete(null, data.getKey());
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
 		}
-		catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator
-					.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
-		}
-		return null;
 	}
 
 	@Override

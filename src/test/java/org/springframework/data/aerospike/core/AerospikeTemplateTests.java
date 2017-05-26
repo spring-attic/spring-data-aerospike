@@ -453,7 +453,8 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		template.insert(personSven03);
 		template.insert(personSven04);
 
-		template.delete(personSven02);
+		boolean deleted = template.delete(personSven02);
+		assertThat(deleted).isTrue();
 
 		Person result = template.findById("Sven-02", Person.class);
 		assertThat(result).isNull();
@@ -471,7 +472,8 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		template.insert(personSven03);
 		template.insert(personSven04);
 
-		template.delete("Sven-02", Person.class);
+		boolean deleted = template.delete("Sven-02", Person.class);
+		assertThat(deleted).isTrue();
 
 		Person result = template.findById("Sven-02", Person.class);
 		assertThat(result).isNull();
@@ -827,5 +829,14 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	@Test
 	public void exists_shouldReturnFalseIfValueIsAbsent() {
 		assertThat(template.exists(id, Person.class)).isFalse();
+	}
+
+	public void deleteById_shouldReturnFalseIfValueIsAbsent() {
+		assertThat(template.delete(id, Person.class)).isFalse();
+	}
+
+	public void deleteByObject_shouldReturnFalseIfValueIsAbsent() {
+		Person one = Person.builder().id(id).firstName("tya").emailAddress("gmail.com").build();
+		assertThat(template.delete(one)).isFalse();
 	}
 }

@@ -86,9 +86,9 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	void update(Object objectToUpdate);
 
 	void delete(Class<?> type);
-	
-	<T> T delete(Serializable id, Class<T> type);
-	<T> T delete(T objectToDelete);
+
+	boolean delete(Serializable id, Class<?> type);
+	boolean delete(Object objectToDelete);
 
 	boolean exists(Serializable id, Class<?> type);
 	
