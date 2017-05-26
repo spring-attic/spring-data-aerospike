@@ -5,7 +5,7 @@
 
     <groupId>com.aerospike</groupId>
     <artifactId>spring-data-aerospike</artifactId>
-    <version>1.1.0.BUILD_SNAPSHOT</version>
+    <version>1.1.0.RELEASE</version>
     <name>Spring Data Aerospike</name>
     <organization>
         <name>Aerospike Inc.</name>
