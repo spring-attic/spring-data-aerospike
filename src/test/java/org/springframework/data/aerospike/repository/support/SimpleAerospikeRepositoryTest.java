@@ -203,7 +203,7 @@ public class SimpleAerospikeRepositoryTest {
 	 */
 	@Test
 	public void testExists() {
-		Mockito.when(operations.findById("21",Person.class)).thenReturn(testPerson);
+		Mockito.when(operations.exists("21",Person.class)).thenReturn(true);
 		Boolean exits = simpleAerospikeRepository.exists("21");
 		assertThat("Exits is true", exits);
 	}

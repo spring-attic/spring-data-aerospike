@@ -89,6 +89,8 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	
 	<T> T delete(Serializable id, Class<T> type);
 	<T> T delete(T objectToDelete);
+
+	boolean exists(Serializable id, Class<?> type);
 	
 	<T> Iterable<T> find(Query<?> query, Class<T> type);
 	<T> List<T> findAll(Class<T> type);
@@ -96,7 +98,7 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	<T> T findById(Serializable id, Class<T> type);
 
 	<T> T add(T objectToAddTo, Map<String, Long> values);
-	<T> T add(T objectToAddTo, String binName, int value);
+	<T> T add(T objectToAddTo, String binName, long value);
 
 	<T> T append(T objectToAppendTo, Map<String, String> values);
 	<T> T append(T objectToAppendTo, String binName, String value);

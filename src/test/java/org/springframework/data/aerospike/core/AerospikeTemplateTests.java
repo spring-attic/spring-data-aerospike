@@ -816,4 +816,16 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		});
 	}
 
+	@Test
+	public void exists_shouldReturnTrueIfValueIsPresent() {
+		Person one = Person.builder().id(id).firstName("tya").emailAddress("gmail.com").build();
+		template.insert(one);
+
+		assertThat(template.exists(id, Person.class)).isTrue();
+	}
+
+	@Test
+	public void exists_shouldReturnFalseIfValueIsAbsent() {
+		assertThat(template.exists(id, Person.class)).isFalse();
+	}
 }

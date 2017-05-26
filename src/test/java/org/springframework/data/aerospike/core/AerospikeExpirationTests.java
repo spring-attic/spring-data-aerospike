@@ -1,5 +1,6 @@
 package org.springframework.data.aerospike.core;
 
+import com.google.common.collect.ImmutableMap;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Rule;
@@ -7,10 +8,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.aerospike.BaseIntegrationTests;
-import org.springframework.data.aerospike.SampleClasses.DocumentWithExpiration;
-import org.springframework.data.aerospike.SampleClasses.DocumentWithExpirationAnnotation;
-import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnRead;
-import org.springframework.data.aerospike.SampleClasses.DocumentWithUnixTimeExpiration;
+import org.springframework.data.aerospike.SampleClasses.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,6 +26,44 @@ public class AerospikeExpirationTests extends BaseIntegrationTests {
     @Before
     public void setUp() throws Exception {
         this.id = nextId();
+    }
+
+    @Test
+    public void shouldAddValuesMapAndExpire() throws InterruptedException {
+        DocumentWithDefaultConstructor document = new DocumentWithDefaultConstructor();
+        document.setId(id);
+        document.setExpiration(DateTime.now().plusSeconds(1));
+
+        template.add(document, ImmutableMap.of("intField", 10L));
+        Thread.sleep(500L);
+
+        DocumentWithDefaultConstructor shouldNotExpire = template.findById(id, DocumentWithDefaultConstructor.class);
+        assertThat(shouldNotExpire).isNotNull();
+        assertThat(shouldNotExpire.getIntField()).isEqualTo(10);
+
+        Thread.sleep(1500L);
+
+        DocumentWithDefaultConstructor shouldExpire = template.findById(id, DocumentWithDefaultConstructor.class);
+        assertThat(shouldExpire).isNull();
+    }
+
+    @Test
+    public void shouldAddValueAndExpire() throws InterruptedException {
+        DocumentWithDefaultConstructor document = new DocumentWithDefaultConstructor();
+        document.setId(id);
+        document.setExpiration(DateTime.now().plusSeconds(1));
+
+        template.add(document, "intField", 10L);
+        Thread.sleep(500L);
+
+        DocumentWithDefaultConstructor shouldNotExpire = template.findById(id, DocumentWithDefaultConstructor.class);
+        assertThat(shouldNotExpire).isNotNull();
+        assertThat(shouldNotExpire.getIntField()).isEqualTo(10);
+
+        Thread.sleep(1500L);
+
+        DocumentWithDefaultConstructor shouldExpire = template.findById(id, DocumentWithDefaultConstructor.class);
+        assertThat(shouldExpire).isNull();
     }
 
     @Test

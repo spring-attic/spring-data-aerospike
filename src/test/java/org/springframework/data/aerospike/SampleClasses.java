@@ -364,7 +364,12 @@ public class SampleClasses {
 	@Document
 	public static class DocumentWithDefaultConstructor {
 
+		@Id
+		private String id;
+
 		@Expiration(unixTime = true)
 		private DateTime expiration;
+
+		private int intField;
 	}
 }

@@ -268,6 +268,22 @@ public class AerospikeTemplate implements AerospikeOperations {
 	}
 
 	@Override
+	public boolean exists(Serializable id, Class<?> type) {
+		Assert.notNull(id, "Id must not be null!");
+		Assert.notNull(type, "Type must not be null!");
+		try {
+			AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
+			Key key = new Key(this.namespace, entity.getSetName(), id.toString());
+
+			Record record = this.client.operate(null, key, Operation.getHeader());
+			return record != null;
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
+		}
+	}
+
+	@Override
 	public <T> List<T> findAll(final Class<T> type) {
 
 		// TODO returning a list is dangerous because
@@ -728,8 +744,8 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@SuppressWarnings("unchecked")
 	public <T> T add(T objectToAddTo, Map<String, Long> values) {
 		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
+		Assert.notNull(values, "Values must not be null!");
 		try {
-
 			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToAddTo, data);
 			Operation[] operations = new Operation[values.size() + 1];
@@ -740,34 +756,38 @@ public class AerospikeTemplate implements AerospikeOperations {
 				x++;
 			}
 			operations[x] = Operation.get();
-			Record record = this.client.operate(null, data.getKey(),
+
+			WritePolicy writePolicy = new WritePolicy(this.client.writePolicyDefault);
+			writePolicy.expiration = data.getExpiration();
+
+			Record record = this.client.operate(writePolicy, data.getKey(),
 					operations);
 
 			return mapToEntity(data.getKey(), (Class<T>) objectToAddTo.getClass(), record);
-		}
-		catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator
-					.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T add(T objectToAddTo, String binName, int value) {
+	public <T> T add(T objectToAddTo, String binName, long value) {
 		Assert.notNull(objectToAddTo, "Object to add to must not be null!");
+		Assert.notNull(binName, "Bin name must not be null!");
 		try {
-
 			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToAddTo, data);
-			Record record = this.client.operate(null, data.getKey(),
+
+			WritePolicy writePolicy = new WritePolicy(this.client.writePolicyDefault);
+			writePolicy.expiration = data.getExpiration();
+
+			Record record = this.client.operate(writePolicy, data.getKey(),
 					Operation.add(new Bin(binName, value)), Operation.get());
 
 			return mapToEntity(data.getKey(), (Class<T>) objectToAddTo.getClass(), record);
-		}
-		catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator
-					.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
 		}
 	}
 

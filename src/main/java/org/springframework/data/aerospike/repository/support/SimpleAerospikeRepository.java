@@ -114,7 +114,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	 */
 	@Override
 	public boolean exists(ID id) {
-		return findOne(id) != null;
+		return operations.exists(id, entityInformation.getJavaType());
 	}
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#findAll()
