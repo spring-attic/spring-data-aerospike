@@ -19,13 +19,14 @@ public class AerospikeWriteData {
 	private Collection<Bin> bins;
 	private int expiration;
 
-	public AerospikeWriteData(Key key, Collection<Bin> bins) {
+	public AerospikeWriteData(Key key, Collection<Bin> bins, int expiration) {
 		this.key = key;
 		this.bins = bins;
+		this.expiration = expiration;
 	}
 
 	public static AerospikeWriteData forWrite() {
-		return new AerospikeWriteData(null, new ArrayList<>());
+		return new AerospikeWriteData(null, new ArrayList<>(), 0);
 	}
 
 	public void setKey(Key key) {
@@ -58,5 +59,9 @@ public class AerospikeWriteData {
 
 	public void setExpiration(int expiration) {
 		this.expiration = expiration;
+	}
+
+	public void setBins(Collection<Bin> bins) {
+		this.bins = bins;
 	}
 }

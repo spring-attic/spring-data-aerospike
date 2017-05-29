@@ -43,6 +43,12 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 			return;
 		}
 
+		boolean hasCustomConverter = conversions.hasCustomWriteTarget(source.getClass(), AerospikeWriteData.class);
+		if (hasCustomConverter) {
+			convertToAerospikeWriteData(source, data);
+			return;
+		}
+
 		TypeInformation<?> type = ClassTypeInformation.from(source.getClass());
 		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(source.getClass());
 		ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(source), conversionService);
@@ -60,6 +66,13 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 
 		Map<String, Object> convertedProperties = convertProperties(type, entity, accessor);
 		convertedProperties.entrySet().forEach(e -> data.addBin(e.getKey(), e.getValue()));
+	}
+
+	private void convertToAerospikeWriteData(Object source, AerospikeWriteData data) {
+		AerospikeWriteData converted = conversionService.convert(source, AerospikeWriteData.class);
+		data.setBins(converted.getBins());
+		data.setKey(converted.getKey());
+		data.setExpiration(converted.getExpiration());
 	}
 
 	private Map<String, Object> convertProperties(TypeInformation<?> type, AerospikePersistentEntity<?> entity, ConvertingPropertyAccessor accessor) {
@@ -111,7 +124,7 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 			return convertMap(asMap(value), type);
 		}
 
-		Class<?> basicTargetType = conversions.getCustomWriteTarget(value.getClass(), null);
+		Class<?> basicTargetType = conversions.getCustomWriteTarget(value.getClass());
 		if (basicTargetType != null) {
 			return conversionService.convert(value, basicTargetType);
 		}

@@ -60,7 +60,11 @@ public class MappingAerospikeReadConverter implements EntityReader<Object, Aeros
 		}
 
 		Map<String, Object> record = data.getRecord();
-		TypeInformation<?> typeToUse = typeMapper.readType(record, ClassTypeInformation.from(targetClass));
+		TypeInformation<? extends R> typeToUse = typeMapper.readType(record, ClassTypeInformation.from(targetClass));
+		Class<? extends R> rawType = typeToUse.getType();
+		if (conversions.hasCustomReadTarget(AerospikeReadData.class, rawType)) {
+			return conversionService.convert(data, rawType);
+		}
 
 		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(typeToUse);
 		RecordReadingPropertyValueProvider propertyValueProvider = new RecordReadingPropertyValueProvider(data.getKey(), record);
@@ -124,7 +128,7 @@ public class MappingAerospikeReadConverter implements EntityReader<Object, Aeros
 		if (conversions.hasCustomReadTarget(source.getClass(), targetClass)) {
 			return (T) conversionService.convert(source, targetClass);
 		} else if (propertyType.isCollectionLike()) {
-			return convertCollection((List) source, propertyType);
+			return convertCollection((Collection) source, propertyType);
 		} else if (propertyType.isMap()) {
 			return (T) convertMap((Map<String, Object>) source, propertyType);
 		} else if (source instanceof Map) { // custom type
@@ -134,7 +138,8 @@ public class MappingAerospikeReadConverter implements EntityReader<Object, Aeros
 	}
 
 	private <T> T convertCustomType(Map<String, Object> source, TypeInformation<?> propertyType) {
-		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(propertyType);
+		TypeInformation<?> typeToUse = typeMapper.readType(source, propertyType);
+		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(typeToUse);
 		RecordReadingPropertyValueProvider propertyValueProvider = new RecordReadingPropertyValueProvider(source);
 		PersistentPropertyAccessor persistentPropertyAccessor = getConvertingPropertyAccessor(entity, propertyValueProvider);
 		return (T) convertProperties(entity, propertyValueProvider, persistentPropertyAccessor);
@@ -158,7 +163,7 @@ public class MappingAerospikeReadConverter implements EntityReader<Object, Aeros
 		return (R) convertIfNeeded(converted, propertyType.getType());
 	}
 
-	private <R> R convertCollection(final List source, final TypeInformation<?> propertyType) {
+	private <R> R convertCollection(final Collection source, final TypeInformation<?> propertyType) {
 		Class<?> collectionClass = propertyType.getType();
 		TypeInformation<?> elementType = propertyType.getComponentType();
 		Class<?> elementClass = elementType == null ? null : elementType.getType();

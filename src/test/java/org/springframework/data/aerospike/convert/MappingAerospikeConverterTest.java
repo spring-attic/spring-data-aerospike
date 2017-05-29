@@ -6,7 +6,6 @@ import com.aerospike.client.Record;
 import com.aerospike.client.Value;
 import org.assertj.core.data.Offset;
 import org.joda.time.DateTime;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -23,6 +22,7 @@ import java.util.*;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.data.aerospike.AsCollections.*;
 import static org.springframework.data.aerospike.SampleClasses.*;
 import static org.springframework.data.aerospike.SampleClasses.SimpleClass.SIMPLESET;
@@ -35,15 +35,15 @@ public class MappingAerospikeConverterTest {
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
-	private AerospikeMappingContext mappingContext = new AerospikeMappingContext();
-	private List<Converter<?, ?>> converters = asList(new ComplexIdToStringConverter(), new StringToComplexIdConverter());
-	private CustomConversions customConversions = new CustomConversions(converters, AerospikeSimpleTypes.HOLDER);
-	private MappingAerospikeConverter converter = new MappingAerospikeConverter(mappingContext, customConversions);
+	private MappingAerospikeConverter converter = getMappingAerospikeConverter(new ComplexIdToStringConverter(), new StringToComplexIdConverter());
 
-	@Before
-	public void setUp() throws Exception {
+	private MappingAerospikeConverter getMappingAerospikeConverter(Converter<?, ?>... customConverters) {
+		AerospikeMappingContext mappingContext = new AerospikeMappingContext();
 		mappingContext.setDefaultNameSpace(NAMESPACE);
+		CustomConversions customConversions = new CustomConversions(asList(customConverters), AerospikeSimpleTypes.HOLDER);
+		MappingAerospikeConverter converter = new MappingAerospikeConverter(mappingContext, customConversions);
 		converter.afterPropertiesSet();
+		return converter;
 	}
 
 	@Test
@@ -624,6 +624,64 @@ public class MappingAerospikeConverterTest {
 
 		ClassWithComplexId expected = new ClassWithComplexId(new ComplexId(10L));
 		assertThat(result).isEqualTo(expected);
+	}
+
+	@Test
+	public void usesDocumentsStoredTypeIfSubtypeOfRequest() {
+		Map<String, Object> bins = of(
+				"@_class", Person.class.getName(),
+				"addresses", list()
+		);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "Person", "kate-01"), record(bins));
+
+		Contact result = converter.read(Contact.class, dbObject);
+		assertThat(result).isInstanceOf(Person.class);
+	}
+
+	@Test
+	public void shouldWriteCollectionOfObjects() throws Exception {
+		CollectionOfObjects object = new CollectionOfObjects(list(new Person(null, Collections.emptySet())));
+
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		converter.write(object, forWrite);
+
+		assertThat(forWrite.getBins()).containsOnly(
+				new Bin("collection", list(of("addresses", list(), "@_class", Person.class.getName()))),
+				new Bin("@_class", CollectionOfObjects.class.getName())
+		);
+	}
+
+	@Test
+	public void shouldReadCollectionOfObjects() throws Exception {
+		Map<String, Object> bins = of(
+				"@_class", CollectionOfObjects.class.getName(),
+				"collection", list(of("@_class", Person.class.getName(), "addresses", set()))
+		);
+		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "CollectionOfObjects", "any"), record(bins));
+
+		CollectionOfObjects result = converter.read(CollectionOfObjects.class, dbObject);
+
+		assertThat(result).isEqualTo(new CollectionOfObjects(new LinkedHashSet<>(list(new Person(null, Collections.emptySet())))));
+	}
+
+	@Test
+	public void shouldWriteAndReadUsingCustomConverter() throws Exception {
+		MappingAerospikeConverter converter =
+				getMappingAerospikeConverter(new UserToAerospikeWriteDataConverter(), new AerospikeReadDataToUserConverter());
+
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		User user = new User(678, new Name("Nastya", "Smirnova"), null);
+		converter.write(user, forWrite);
+
+		assertThatKeyIsEqualTo(forWrite.getKey(), "custom-namespace", "custom-set", 678L);
+		assertThat(forWrite.getBins()).containsOnly(
+				new Bin("fs", "Nastya"), new Bin("ls", "Smirnova")
+		);
+
+		Map<String, Object> bins = of("fs", "Nastya", "ls", "Smirnova");
+		User read = converter.read(User.class, AerospikeReadData.forRead(forWrite.getKey(), record(bins)));
+
+		assertThat(read).isEqualTo(user);
 	}
 
 	@Test

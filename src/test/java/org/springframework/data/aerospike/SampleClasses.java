@@ -1,9 +1,13 @@
 package org.springframework.data.aerospike;
 
+import com.aerospike.client.Bin;
+import com.aerospike.client.Key;
 import lombok.*;
 import org.joda.time.DateTime;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.aerospike.annotation.Expiration;
+import org.springframework.data.aerospike.convert.AerospikeReadData;
+import org.springframework.data.aerospike.convert.AerospikeWriteData;
 import org.springframework.data.aerospike.mapping.Document;
 import org.springframework.data.aerospike.mapping.Field;
 import org.springframework.data.annotation.Id;
@@ -105,6 +109,12 @@ public class SampleClasses {
 
 	@Document
 	@Data
+	public static class CollectionOfObjects {
+		final Collection<Object> collection;
+	}
+
+	@Document
+	@Data
 	public static class ListOfLists {
 		final List<List<String>> listOfLists;
 	}
@@ -173,7 +183,7 @@ public class SampleClasses {
 
 	@Document(collection = SIMPLESET3)
 	@Data
-	public static class User {
+	public static class User implements Contact {
 		public static final String SIMPLESET3 = "simpleset3";
 		@Id
 		final long id;
@@ -205,11 +215,15 @@ public class SampleClasses {
 		public int id;
 	}
 
+	public static interface Contact {
+
+	}
+
 	@Document(expiration = EXPIRATION_ONE_SECOND)
 	@AllArgsConstructor
 	@ToString
 	@EqualsAndHashCode
-	public static class Person {
+	public static class Person implements Contact {
 		@Id
 		String id;
 		Set<Address> addresses;
@@ -300,6 +314,30 @@ public class SampleClasses {
 		public ComplexId convert(String s) {
 			long id = Long.parseLong(s.split("::")[1]);
 			return new ComplexId(id);
+		}
+	}
+
+	@WritingConverter
+	public static class UserToAerospikeWriteDataConverter implements Converter<User, AerospikeWriteData> {
+
+		@Override
+		public AerospikeWriteData convert(User user) {
+			Collection<Bin> bins = new ArrayList<>();
+			bins.add(new Bin("fs", user.name.firstName));
+			bins.add(new Bin("ls", user.name.lastName));
+			return new AerospikeWriteData(new Key("custom-namespace", "custom-set", Long.toString(user.id)), bins, 0);
+		}
+	}
+
+	@ReadingConverter
+	public static class AerospikeReadDataToUserConverter implements Converter<AerospikeReadData, User> {
+
+		@Override
+		public User convert(AerospikeReadData source) {
+			long id = Long.parseLong((String) source.getKey().userKey.getObject());
+			String fs = (String) source.getValue("fs");
+			String ls = (String) source.getValue("ls");
+			return new User(id, new Name(fs, ls), null);
 		}
 	}
 
