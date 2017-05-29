@@ -16,6 +16,7 @@
 package org.springframework.data.aerospike.core;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -96,6 +97,7 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	<T> List<T> findAll(Class<T> type);
 
 	<T> T findById(Serializable id, Class<T> type);
+	<T> List<T> findByIds(Collection<?> ids, Class<T> type);
 
 	<T> T add(T objectToAddTo, Map<String, Long> values);
 	<T> T add(T objectToAddTo, String binName, long value);

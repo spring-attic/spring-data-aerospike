@@ -56,6 +56,8 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Primary implementation of {@link AerospikeOperations}.
@@ -239,7 +241,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(type, "Type must not be null!");
 		try {
 			AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
-			Key key = new Key(this.namespace, entity.getSetName(), id.toString());
+			Key key = getKey(id, entity);
 
 			return this.client.delete(null, key);
 		} catch (AerospikeException e) {
@@ -268,7 +270,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(type, "Type must not be null!");
 		try {
 			AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
-			Key key = new Key(this.namespace, entity.getSetName(), id.toString());
+			Key key = getKey(id, entity);
 
 			Record record = this.client.operate(null, key, Operation.getHeader());
 			return record != null;
@@ -301,11 +303,11 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public <T> T findById(Serializable id, Class<T> type) {
 		Assert.notNull(id, "Id must not be null!");
+		Assert.notNull(type, "Type must not be null!");
 		try {
 			AerospikePersistentEntity<?> entity = mappingContext
 					.getPersistentEntity(type);
-			Key key = new Key(this.namespace, entity.getSetName(),
-					id.toString());
+			Key key = getKey(id, entity);
 
 			Record record = entity.isTouchOnRead()
 					? this.client.operate(null, key, Operation.touch(), Operation.get())
@@ -313,10 +315,36 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 			return mapToEntity(key, type, record);
 		}
-		catch (AerospikeException o_O) {
-			DataAccessException translatedException = exceptionTranslator
-					.translateExceptionIfPossible(o_O);
-			throw translatedException == null ? o_O : translatedException;
+		catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
+		}
+	}
+
+	@Override
+	public <T> List<T> findByIds(Collection<?> ids, Class<T> type) {
+		Assert.notNull(ids, "List of ids must not be null!");
+		Assert.notNull(type, "Type must not be null!");
+
+		if (ids.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		try {
+			AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
+			Key[] keys = ids.stream()
+					.map(id -> getKey(id, entity))
+					.toArray(Key[]::new);
+
+			Record[] records = client.get(null, keys);
+
+			return IntStream.range(0, keys.length)
+					.filter(index -> records[index] != null)
+					.mapToObj(index -> mapToEntity(keys[index], type, records[index]))
+					.collect(Collectors.toList());
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
 		}
 	}
 
@@ -871,4 +899,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return builder.build();
 	}
 
+	private Key getKey(Object id, AerospikePersistentEntity<?> entity) {
+		return new Key(this.namespace, entity.getSetName(), id.toString());
+	}
 }

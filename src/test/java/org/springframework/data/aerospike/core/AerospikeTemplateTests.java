@@ -19,6 +19,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.AsyncUtils;
 import org.springframework.data.aerospike.BaseIntegrationTests;
+import org.springframework.data.aerospike.SampleClasses;
 import org.springframework.data.aerospike.SampleClasses.*;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
@@ -831,12 +832,34 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		assertThat(template.exists(id, Person.class)).isFalse();
 	}
 
+	@Test
 	public void deleteById_shouldReturnFalseIfValueIsAbsent() {
 		assertThat(template.delete(id, Person.class)).isFalse();
 	}
 
+	@Test
 	public void deleteByObject_shouldReturnFalseIfValueIsAbsent() {
 		Person one = Person.builder().id(id).firstName("tya").emailAddress("gmail.com").build();
 		assertThat(template.delete(one)).isFalse();
+	}
+
+	@Test
+	public void findByIds_shouldFindExisting() {
+		Person firstPerson = Person.builder().id(nextId()).firstName("first").emailAddress("gmail.com").build();
+		template.save(firstPerson);
+
+		Person secondPerson = Person.builder().id(nextId()).firstName("second").emailAddress("gmail.com").build();
+		template.save(secondPerson);
+
+		List<String> ids = Arrays.asList(nextId(), firstPerson.getId(), secondPerson.getId());
+
+		List<Person> actual = template.findByIds(ids, Person.class);
+		assertThat(actual).containsExactly(firstPerson, secondPerson);
+	}
+
+	@Test
+	public void findByIds_shouldReturnEmptyList() {
+		List<Person> actual = template.findByIds(Collections.emptyList(), Person.class);
+		assertThat(actual).isEmpty();
 	}
 }
