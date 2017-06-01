@@ -20,8 +20,8 @@
     <properties>
         <bundlor.enabled>false</bundlor.enabled>
         <source.level>1.8</source.level>
-        <aerospike>3.3.4</aerospike>
-        <aerospike-helper-java.version>1.2</aerospike-helper-java.version>
+        <aerospike>4.0.1</aerospike>
+        <aerospike-helper-java.version>1.2.1</aerospike-helper-java.version>
 
         <springdata.commons>1.13.3.RELEASE</springdata.commons>
         <springdata.keyvalue>1.2.3.RELEASE</springdata.keyvalue>

@@ -39,10 +39,10 @@ public class ReadPolicyFactoryBean implements FactoryBean<Policy> {
 
 	/**
 	 * Configures the timeout for an operation.
-	 * @param timeout
+	 * @param totalTimeout
 	 */
-	public void setTimeout(int timeout){
-		this.policy.timeout = timeout;
+	public void setTotalTimeout(int totalTimeout){
+		this.policy.totalTimeout = totalTimeout;
 	}
 	/**
 	 * Configures the maximum number of retries before aborting the current transaction.
