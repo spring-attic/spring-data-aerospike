@@ -2,9 +2,9 @@ package org.springframework.data.aerospike.repository.support;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.springframework.data.aerospike.core.AerospikeOperations;
 import org.springframework.data.aerospike.repository.AerospikeRepository;
@@ -40,7 +40,6 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 
 	@Override
 	public <S extends T> S save(S entity) {
-		Assert.notNull(entity);
 		operations.save(entity);
 		return entity;
 	}
@@ -48,7 +47,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	public <S extends T> List<S> save(Iterable<S> entities) {
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
 
-		List<S> result = convertIterableToList(entities);
+		List<S> result = IterableConverter.toList(entities);
 		for (S entity : result) {
 			save(entity);
 		}
@@ -61,28 +60,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 		operations.delete(entity);
 	}
 
-	static <T> List<T> convertIterableToList(Iterable<T> entities) {
-		if (entities instanceof List) {
-			return (List<T>) entities;
-		}
 
-		int capacity = tryDetermineRealSizeOrReturn(entities, 10);
-
-		if (capacity == 0 || entities == null) {
-			return Collections.<T> emptyList();
-		}
-
-		List<T> list = new ArrayList<T>(capacity);
-		for (T entity : entities) {
-			list.add(entity);
-		}
-
-		return list;
-	}
-
-	private static int tryDetermineRealSizeOrReturn(Iterable<?> iterable, int defaultSize) {
-		return iterable == null ? 0 : (iterable instanceof Collection) ? ((Collection<?>) iterable).size() : defaultSize;
-	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
@@ -130,18 +108,10 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	 */
 	@Override
 	public Iterable<T> findAll(Iterable<ID> ids) {
-		List<T> result = new ArrayList<T>();
+		Assert.notNull(ids, "List of ids must not be null!");
 
-		for (ID id : ids) {
-
-			T candidate = findOne(id);
-
-			if (candidate != null) {
-				result.add(candidate);
-			}
-		}
-
-		return result;
+		List<ID> idList = IterableConverter.toList(ids);
+		return operations.findByIds(idList, entityInformation.getJavaType());
 	}
 
 	/* (non-Javadoc)
@@ -189,5 +159,5 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	public <T> void createIndex(Class<T> domainType, String indexName,String binName, IndexType indexType) {
 		operations.createIndex(domainType, indexName, binName, indexType);
 	}
-	
+
 }
