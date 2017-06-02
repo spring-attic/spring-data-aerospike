@@ -38,12 +38,21 @@ public class ReadPolicyFactoryBean implements FactoryBean<Policy> {
 	}
 
 	/**
+	 * Configures the timeout for each transaction attempt of an operation.
+	 * @param socketTimeout
+	 */
+	public void setSocketTimeout(int socketTimeout){
+		this.policy.socketTimeout = socketTimeout;
+	}
+
+	/**
 	 * Configures the timeout for an operation.
 	 * @param totalTimeout
 	 */
 	public void setTotalTimeout(int totalTimeout){
 		this.policy.totalTimeout = totalTimeout;
 	}
+
 	/**
 	 * Configures the maximum number of retries before aborting the current transaction.
 	 * A retry is attempted when there is a network error other than timeout.  
