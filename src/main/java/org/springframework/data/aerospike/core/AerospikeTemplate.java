@@ -36,7 +36,10 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.convert.AerospikeReadData;
 import org.springframework.data.aerospike.convert.AerospikeWriteData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
-import org.springframework.data.aerospike.mapping.*;
+import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
+import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
@@ -309,10 +312,10 @@ public class AerospikeTemplate implements AerospikeOperations {
 					.getPersistentEntity(type);
 			Key key = getKey(id, entity);
 
-			Record record = entity.isTouchOnRead()
-					? this.client.operate(null, key, Operation.touch(), Operation.get())
-					: this.client.get(null, key);
-
+			Record record = this.client.get(null, key);
+			if (record != null && entity.isTouchOnRead()) {
+				this.client.touch(null, key);
+			}
 			return mapToEntity(key, type, record);
 		}
 		catch (AerospikeException e) {

@@ -247,6 +247,13 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
+	public void findById_shouldReturnNullForNonExistingKeyIfTouchOnReadSetToTrue() throws Exception {
+		DocumentWithTouchOnRead one = template.findById("non-existing-key", DocumentWithTouchOnRead.class);
+
+		assertThat(one).isNull();
+	}
+
+	@Test
 	public void find_shouldReturnEmptyResultForQueryWithNoResults() throws Exception {
 		template.createIndex(Person.class, "Person_age_index", "age", IndexType.NUMERIC );
 		Query<?> query = new Query<Object>(
