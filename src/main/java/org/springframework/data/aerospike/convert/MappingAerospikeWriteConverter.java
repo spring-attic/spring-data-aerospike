@@ -85,7 +85,9 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 				return;
 			}
 			Object valueToWrite = getValueToWrite(value, property.getTypeInformation());
-			target.put(property.getFieldName(), valueToWrite);
+			if(valueToWrite != null) {
+				target.put(property.getFieldName(), valueToWrite);
+			}
 		});
 		return target;
 	}
@@ -96,7 +98,6 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 
 	private Object getValueToWrite(Object value, TypeInformation<?> type) {
 		if (value == null) {
-			// TODO: should we write nulls to storage?
 			return null;
 		} else if (type == null || conversions.isSimpleType(value.getClass())) {
 			return getSimpleValueToWrite(value);

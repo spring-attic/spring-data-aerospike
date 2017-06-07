@@ -5,6 +5,7 @@ import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.client.Value;
 import org.assertj.core.data.Offset;
+import org.hamcrest.MatcherAssert;
 import org.joda.time.DateTime;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,6 +23,7 @@ import java.util.*;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.data.aerospike.AsCollections.*;
 import static org.springframework.data.aerospike.SampleClasses.*;
@@ -85,7 +87,7 @@ public class MappingAerospikeConverterTest {
 
 	@Test
 	public void shouldWriteMapWithSimpleValue() throws Exception {
-		Map<String, String> map = of("key1", "value1", "key2", "value2");
+		Map<String, String> map = of("key1", "value1", "key2", "value2", "key3", null);
 		MapWithSimpleValue object = new MapWithSimpleValue(10L, map);
 		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
 
@@ -93,7 +95,7 @@ public class MappingAerospikeConverterTest {
 
 		assertThatKeyIsEqualTo(forWrite.getKey(), NAMESPACE, MapWithSimpleValue.class.getSimpleName(), 10L);
 		assertThat(forWrite.getBins()).containsOnly(
-				new Bin("mapWithSimpleValue", of("key1", "value1", "key2", "value2")),
+				new Bin("mapWithSimpleValue", of("key1", "value1", "key2", "value2", "key3", null)),
 				new Bin("@user_key", "10"),
 				new Bin("@_class", MapWithSimpleValue.class.getName())
 		);

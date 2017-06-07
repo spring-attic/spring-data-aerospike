@@ -111,20 +111,6 @@ public class MappingAerospikeConverterDeprecatedTest {
 		assertThat((Map<Locale, String>) object, hasEntry(Locale.US.toString(), "Biff"));
 	}
 
-	@SuppressWarnings("unchecked")
-	@Test
-	public void writesNullValuesForMapsCorrectly() {
-		ClassWithMapProperty foo = new ClassWithMapProperty();
-
-		foo.map = Collections.singletonMap(Locale.US, null);
-
-		AerospikeWriteData dbObject = AerospikeWriteData.forWrite();
-		converter.write(foo, dbObject);
-
-		Object object = getBinValue("map", dbObject.getBins());
-		assertThat((Map<Locale, String>) object, hasEntry(Locale.US.toString(), null));
-	}
-
 	@Test
 	public void writesEnumsCorrectly() {
 		ClassWithEnumProperty value = new ClassWithEnumProperty();
@@ -278,16 +264,6 @@ public class MappingAerospikeConverterDeprecatedTest {
 			for (Bin bin : bins) map.put(bin.name, bin.value.getObject());
 		}
 		return map;
-	}
-
-	private Object getMetaData(String name, Collection<Bin> bins) {
-		if (bins == null || bins.isEmpty())
-			return null;
-
-		return bins.stream()
-				.filter(bin -> bin.name.equals(name))
-				.map(bin -> bin.value.getObject())
-				.findFirst().orElseThrow(() -> new IllegalStateException("Property with name: " + name + " not found"));
 	}
 
 	@SuppressWarnings("unchecked")

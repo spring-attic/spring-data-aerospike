@@ -4,6 +4,7 @@
 package org.springframework.data.aerospike.core;
 
 import com.aerospike.client.*;
+import com.aerospike.client.policy.GenerationPolicy;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
@@ -61,9 +62,6 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	}
 
-	/**
-	 * @throws java.lang.Exception
-	 */
 	@After
 	public void tearDown() throws Exception {
 		cleanDb();
@@ -124,12 +122,20 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		template.save(new VersionedClass(id, "foo", 2));
 	}
 
-	@Ignore("this does not work now because of: https://github.com/aerospike/aerospike-client-java/issues/74")
 	@Test
 	public void shouldFailSaveNewDocumentWithVersionGreaterThanZero() throws Exception {
 		expectedException.expect(DataRetrievalFailureException.class);
 
 		template.save(new VersionedClass(id, "foo", 5));
+	}
+
+	@Test
+	public void shouldUpdateNullField() {
+		VersionedClass versionedClass = new VersionedClass(id, null, 0);
+		template.save(versionedClass);
+
+		VersionedClass saved = template.findById(id, VersionedClass.class);
+		template.save(saved);
 	}
 
 	@Test
