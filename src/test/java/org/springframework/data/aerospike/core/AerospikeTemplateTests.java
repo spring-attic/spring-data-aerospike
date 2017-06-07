@@ -4,7 +4,6 @@
 package org.springframework.data.aerospike.core;
 
 import com.aerospike.client.*;
-import com.aerospike.client.policy.GenerationPolicy;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
@@ -12,7 +11,10 @@ import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.Qualifier.FilterOperation;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataRetrievalFailureException;
@@ -20,8 +22,9 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.AsyncUtils;
 import org.springframework.data.aerospike.BaseIntegrationTests;
-import org.springframework.data.aerospike.SampleClasses;
-import org.springframework.data.aerospike.SampleClasses.*;
+import org.springframework.data.aerospike.SampleClasses.CustomCollectionClass;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnRead;
+import org.springframework.data.aerospike.SampleClasses.VersionedClass;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
 
@@ -257,6 +260,16 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		DocumentWithTouchOnRead one = template.findById("non-existing-key", DocumentWithTouchOnRead.class);
 
 		assertThat(one).isNull();
+	}
+
+	@Test
+	public void findById_shouldIncreaseVersionIfTouchOnReadSetToTrue() throws Exception {
+		DocumentWithTouchOnRead doc = new DocumentWithTouchOnRead(String.valueOf(id));
+		template.save(doc);
+
+		DocumentWithTouchOnRead actual = template.findById(doc.getId(), DocumentWithTouchOnRead.class);
+
+		assertThat(actual.getVersion()).isEqualTo(doc.getVersion() + 1);
 	}
 
 	@Test

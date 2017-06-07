@@ -348,6 +348,13 @@ public class SampleClasses {
 
 		@Id
 		private String id;
+		@Version
+		private long version;
+
+		@PersistenceConstructor
+		public DocumentWithTouchOnRead(String id) {
+			this.id = id;
+		}
 	}
 
 	@Data

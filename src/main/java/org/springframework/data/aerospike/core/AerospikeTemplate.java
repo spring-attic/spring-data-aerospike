@@ -314,7 +314,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 			Record record = this.client.get(null, key);
 			if (record != null && entity.isTouchOnRead()) {
-				this.client.touch(null, key);
+				record = getAndTouch(key, record);
 			}
 			return mapToEntity(key, type, record);
 		}
@@ -322,6 +322,11 @@ public class AerospikeTemplate implements AerospikeOperations {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
 			throw translatedException == null ? e : translatedException;
 		}
+	}
+
+	private Record getAndTouch(Key key, Record record) {
+		Record touched = this.client.operate(null, key, Operation.touch(), Operation.getHeader());
+		return new Record(record.bins, touched.generation, touched.expiration);
 	}
 
 	@Override
