@@ -83,10 +83,10 @@ public class SampleClasses {
 
 	@Document
 	@Data
-	public static class MapWithNonSimpleValue {
+	public static class MapWithGenericValue<T> {
 		@Id
 		final long id;
-		final Map<String, Address> mapWithNonSimpleValue;
+		final Map<String, T> mapWithNonSimpleValue;
 	}
 
 	@Document
@@ -409,5 +409,12 @@ public class SampleClasses {
 		private DateTime expiration;
 
 		private int intField;
+	}
+
+	@AllArgsConstructor
+	@Data
+	public static class ClassWithIdField {
+		private long id;
+		private String field;
 	}
 }

@@ -37,9 +37,7 @@ public class BasicAerospikePersistentProperty extends AnnotationBasedPersistentP
 
 	private static final Logger LOG = LoggerFactory.getLogger(BasicAerospikePersistentProperty.class);
 
-	private static final String ID_FIELD_NAME = "_id";
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
-	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
 
 	static {
 
@@ -49,9 +47,6 @@ public class BasicAerospikePersistentProperty extends AnnotationBasedPersistentP
 		SUPPORTED_ID_TYPES.add(byte[].class);
 		SUPPORTED_ID_TYPES.add(Map.class);
 		SUPPORTED_ID_TYPES.add(List.class);
-
-		SUPPORTED_ID_PROPERTY_NAMES.add("id");
-		SUPPORTED_ID_PROPERTY_NAMES.add(ID_FIELD_NAME);
 	}
 
 	private final FieldNamingStrategy fieldNamingStrategy;
@@ -64,26 +59,6 @@ public class BasicAerospikePersistentProperty extends AnnotationBasedPersistentP
 
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
-
-		if (isIdProperty() && getFieldName() != ID_FIELD_NAME) {
-			LOG.warn("Customizing field name for id property not allowed! Custom name will not be considered!");
-		}
-	}
-
-	/**
-	 * Also considers fields as id that are of supported id type and name.
-	 *
-	 */
-	@Override
-	public boolean isIdProperty() {
-
-		if (super.isIdProperty()) {
-			return true;
-		}
-
-		// We need to support a wider range of ID types than just the ones that can be converted to an ObjectId
-		// but still we need to check if there happens to be an explicit name set
-		return SUPPORTED_ID_PROPERTY_NAMES.contains(getName()) && !hasExplicitFieldName();
 	}
 
 	@Override
@@ -105,29 +80,14 @@ public class BasicAerospikePersistentProperty extends AnnotationBasedPersistentP
 	}
 
 	/**
-	 * Returns the key to be used to store the value of the property {@link DBObject}.
-	 *
-	 * @return
+	 * @return the key to be used to store the value of the property
 	 */
 	public String getFieldName() {
+		org.springframework.data.aerospike.mapping.Field annotation =
+				findAnnotation(org.springframework.data.aerospike.mapping.Field.class);
 
-		if (isIdProperty()) {
-
-			if (owner == null) {
-				return ID_FIELD_NAME;
-			}
-
-			if (owner.getIdProperty() == null) {
-				return ID_FIELD_NAME;
-			}
-
-			if (owner.isIdProperty(this)) {
-				return ID_FIELD_NAME;
-			}
-		}
-
-		if (hasExplicitFieldName()) {
-			return getAnnotatedFieldName();
+		if (annotation != null && StringUtils.hasText(annotation.value())) {
+			return annotation.value();
 		}
 
 		String fieldName = fieldNamingStrategy.getFieldName(this);
@@ -138,19 +98,6 @@ public class BasicAerospikePersistentProperty extends AnnotationBasedPersistentP
 		}
 
 		return fieldName;
-	}
-
-	protected boolean hasExplicitFieldName() {
-		return StringUtils.hasText(getAnnotatedFieldName());
-	}
-
-	private String getAnnotatedFieldName() {
-
-		org.springframework.data.aerospike.mapping.Field annotation = findAnnotation(org.springframework.data.aerospike.mapping.Field.class);
-		if (annotation != null && StringUtils.hasText(annotation.value())) {
-			return annotation.value();
-		}
-		return null;
 	}
 
 	@Override

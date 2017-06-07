@@ -149,12 +149,12 @@ public class MappingAerospikeConverterTest {
 	public void shouldWriteMapWithNonSimpleValue() throws Exception {
 		Map<String, Address> map = of("key1", new Address(new Street("Gogolya str.", 15), 567),
 				"key2", new Address(new Street("Shakespeare str.", 40), 765));
-		MapWithNonSimpleValue object = new MapWithNonSimpleValue(10L, map);
+		MapWithGenericValue<Address> object = new MapWithGenericValue<>(10L, map);
 		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
 
 		converter.write(object, forWrite);
 
-		assertThatKeyIsEqualTo(forWrite.getKey(), NAMESPACE, MapWithNonSimpleValue.class.getSimpleName(), 10L);
+		assertThatKeyIsEqualTo(forWrite.getKey(), NAMESPACE, MapWithGenericValue.class.getSimpleName(), 10L);
 		assertThat(forWrite.getBins()).containsOnly(
 				new Bin("mapWithNonSimpleValue", of(
 						"key1", of("street", of("name", "Gogolya str.", "number", 15, "@_class", Street.class.getName()),
@@ -162,7 +162,7 @@ public class MappingAerospikeConverterTest {
 						"key2", of("street", of("name", "Shakespeare str.", "number", 40, "@_class", Street.class.getName()),
 								"apartment", 765, "@_class", Address.class.getName()))),
 				new Bin("@user_key", "10"),
-				new Bin("@_class", MapWithNonSimpleValue.class.getName())
+				new Bin("@_class", MapWithGenericValue.class.getName())
 		);
 	}
 
@@ -170,17 +170,20 @@ public class MappingAerospikeConverterTest {
 	public void shouldReadMapWithNonSimpleValue() throws Exception {
 		Map<String, Object> bins = of(
 				"mapWithNonSimpleValue", of(
-						"key1", of("street", of("name", "Gogolya str.", "number", 15), "apartment", 567),
-						"key2", of("street", of("name", "Shakespeare str.", "number", 40), "apartment", 765)),
+						"key1", of("street", of("name", "Gogolya str.", "number", 15, "@_class", Street.class.getName()),
+								"apartment", 567, "@_class", Address.class.getName()),
+						"key2", of("street", of("name", "Shakespeare str.", "number", 40, "@_class", Street.class.getName()),
+								"apartment", 765, "@_class", Address.class.getName())),
+				"@_class", MapWithGenericValue.class.getName(),
 				"@user_key", "10"
 		);
 		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 10L), record(bins));
 
-		MapWithNonSimpleValue actual = converter.read(MapWithNonSimpleValue.class, forRead);
+		MapWithGenericValue actual = converter.read(MapWithGenericValue.class, forRead);
 
 		Map<String, Address> map = of("key1", new Address(new Street("Gogolya str.", 15), 567),
 				"key2", new Address(new Street("Shakespeare str.", 40), 765));
-		MapWithNonSimpleValue expected = new MapWithNonSimpleValue(10L, map);
+		MapWithGenericValue<Address> expected = new MapWithGenericValue<>(10L, map);
 		assertThat(actual).isEqualTo(expected);
 	}
 
@@ -682,6 +685,33 @@ public class MappingAerospikeConverterTest {
 		User read = converter.read(User.class, AerospikeReadData.forRead(forWrite.getKey(), record(bins)));
 
 		assertThat(read).isEqualTo(user);
+	}
+
+	@Test
+	public void shouldWriteAndReadIdFieldOfNonDocumentClass() throws Exception {
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		MapWithGenericValue<ClassWithIdField> expected = new MapWithGenericValue<>(788L,
+				of("key", new ClassWithIdField(45L, "v")));
+		converter.write(expected, forWrite);
+
+		assertThatKeyIsEqualTo(forWrite.getKey(), NAMESPACE, MapWithGenericValue.class.getSimpleName(), 788L);
+		assertThat(forWrite.getBins()).containsOnly(
+				new Bin("@_class", MapWithGenericValue.class.getName()),
+				new Bin("@user_key", "788"),
+				new Bin("mapWithNonSimpleValue",
+						of("key", of("id", 45L, "field", "v", "@_class", ClassWithIdField.class.getName())))
+		);
+
+		Map<String, Object> bins = of(
+				"@_class", MapWithGenericValue.class.getName(),
+				"@user_key", "788",
+				"mapWithNonSimpleValue",
+				of("key", of("id", 45L, "field", "v", "@_class", ClassWithIdField.class.getName())));
+		MapWithGenericValue actual = converter.read(MapWithGenericValue.class,
+				AerospikeReadData.forRead(forWrite.getKey(), record(bins)));
+
+		assertThat(actual).isEqualTo(expected);
+
 	}
 
 	@Test
