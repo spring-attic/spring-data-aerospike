@@ -5,7 +5,6 @@ import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.client.Value;
 import org.assertj.core.data.Offset;
-import org.hamcrest.MatcherAssert;
 import org.joda.time.DateTime;
 import org.junit.Rule;
 import org.junit.Test;
@@ -829,6 +828,18 @@ public class MappingAerospikeConverterTest {
 		DateTime actual = document.getExpiration();
 		DateTime expected = DateTime.now().plusSeconds(EXPIRATION_ONE_MINUTE);
 		assertThat(actual.getMillis()).isCloseTo(expected.getMillis(), Offset.offset(100L));
+	}
+
+	@Test
+	public void shouldNotWriteVersion() throws Exception {
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		converter.write(new VersionedClass("id", "data", 42), forWrite);
+
+		assertThat(forWrite.getBins()).containsOnly(
+				new Bin("@user_key", "id"),
+				new Bin("@_class", VersionedClass.class.getName()),
+				new Bin("field", "data")
+		);
 	}
 
 	private void assertThatKeyIsEqualTo(Key key, String namespace, String myset, Object expected) {

@@ -249,13 +249,13 @@ public class SampleClasses {
 
 		public String field;
 
-		@PersistenceConstructor
 		public VersionedClass(String id, String field, long version) {
 			this.id = id;
 			this.field = field;
 			this.version = version;
 		}
 
+		@PersistenceConstructor
 		public VersionedClass(String id, String field) {
 			this.id = id;
 			this.field = field;
