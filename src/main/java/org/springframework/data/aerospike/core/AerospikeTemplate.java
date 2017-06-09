@@ -308,13 +308,13 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(id, "Id must not be null!");
 		Assert.notNull(type, "Type must not be null!");
 		try {
-			AerospikePersistentEntity<?> entity = mappingContext
-					.getPersistentEntity(type);
+			AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
 			Key key = getKey(id, entity);
 
 			Record record = this.client.get(null, key);
 			if (record != null && entity.isTouchOnRead()) {
-				record = getAndTouch(key, record);
+				Assert.state(!entity.hasExpirationProperty(), "Touch on read is not supported for expiration property");
+				record = getAndTouch(key, record, entity.getExpiration());
 			}
 			return mapToEntity(key, type, record);
 		}
@@ -324,8 +324,11 @@ public class AerospikeTemplate implements AerospikeOperations {
 		}
 	}
 
-	private Record getAndTouch(Key key, Record record) {
-		Record touched = this.client.operate(null, key, Operation.touch(), Operation.getHeader());
+	private Record getAndTouch(Key key, Record record, int expiration) {
+		WritePolicy writePolicy = new WritePolicy(client.writePolicyDefault);
+		writePolicy.expiration = expiration;
+
+		Record touched = this.client.operate(writePolicy, key, Operation.touch(), Operation.getHeader());
 		return new Record(record.bins, touched.generation, touched.expiration);
 	}
 

@@ -24,6 +24,7 @@ import org.springframework.data.aerospike.AsyncUtils;
 import org.springframework.data.aerospike.BaseIntegrationTests;
 import org.springframework.data.aerospike.SampleClasses.CustomCollectionClass;
 import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnRead;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnReadAndExpirationProperty;
 import org.springframework.data.aerospike.SampleClasses.VersionedClass;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
@@ -34,6 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.aerospike.SampleClasses.EXPIRATION_ONE_MINUTE;
 
 /**
  *
@@ -887,5 +889,12 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	public void findByIds_shouldReturnEmptyList() {
 		List<Person> actual = template.findByIds(Collections.emptyList(), Person.class);
 		assertThat(actual).isEmpty();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void findById_shouldFailOnTouchOnReadWithExpirationProperty() {
+		String id = nextId();
+		template.insert(new DocumentWithTouchOnReadAndExpirationProperty(id, EXPIRATION_ONE_MINUTE));
+		template.findById(id, DocumentWithTouchOnReadAndExpirationProperty.class);
 	}
 }

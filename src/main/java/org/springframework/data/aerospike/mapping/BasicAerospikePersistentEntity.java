@@ -111,6 +111,11 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 	}
 
 	@Override
+	public boolean hasExpirationProperty() {
+		return expirationProperty != null;
+	}
+
+	@Override
 	public void setEnvironment(Environment environment) {
 		this.environment = environment;
 	}

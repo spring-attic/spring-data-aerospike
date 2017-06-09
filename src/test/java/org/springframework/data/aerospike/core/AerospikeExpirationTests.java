@@ -1,5 +1,7 @@
 package org.springframework.data.aerospike.core;
 
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
 import com.google.common.collect.ImmutableMap;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -9,6 +11,8 @@ import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.aerospike.BaseIntegrationTests;
 import org.springframework.data.aerospike.SampleClasses.*;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -107,19 +111,20 @@ public class AerospikeExpirationTests extends BaseIntegrationTests {
     }
 
     @Test
-    public void shouldNotExpireWhenTouchOnRead() throws InterruptedException {
+    public void shouldUpdateExpirationOnTouchOnRead() throws InterruptedException {
         String id = nextId();
-        template.insert(new DocumentWithTouchOnRead(id));
+        template.insert(new DocumentWithExpirationOneDay(id));
 
-        Thread.sleep(500L);
+        Key key = new Key(template.getNamespace(), template.getSetName(DocumentWithExpirationOneDay.class), id);
 
-        DocumentWithTouchOnRead shouldNotExpire = template.findById(id, DocumentWithTouchOnRead.class);
-        assertThat(shouldNotExpire).isNotNull();
+        Record record = template.getAerospikeClient().get(null, key);
+        assertThat(record.getTimeToLive()).isEqualTo((int) TimeUnit.DAYS.toSeconds(1));
 
-        Thread.sleep(1500L);
+        Thread.sleep(2000);
+        template.findById(id, DocumentWithExpirationOneDay.class);
 
-        shouldNotExpire = template.findById(id, DocumentWithTouchOnRead.class);
-        assertThat(shouldNotExpire).isNotNull();
+        record = template.getAerospikeClient().get(null, key);
+        assertThat(record.getTimeToLive()).isEqualTo((int) TimeUnit.DAYS.toSeconds(1));
     }
 
     @Test

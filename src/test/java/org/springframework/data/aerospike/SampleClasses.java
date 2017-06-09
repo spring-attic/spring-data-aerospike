@@ -424,4 +424,31 @@ public class SampleClasses {
 		private long id;
 		private String field;
 	}
+
+	@Data
+	@AllArgsConstructor
+	@Document(collection = "expiration-set", expiration = 1, expirationUnit = TimeUnit.DAYS, touchOnRead = true)
+	public static class DocumentWithExpirationOneDay {
+
+		@Id
+		private String id;
+		@Version
+		private long version;
+
+		@PersistenceConstructor
+		public DocumentWithExpirationOneDay(String id) {
+			this.id = id;
+		}
+	}
+
+	@Data
+	@AllArgsConstructor
+	@Document(collection = "expiration-set", touchOnRead = true)
+	public static class DocumentWithTouchOnReadAndExpirationProperty {
+
+		@Id
+		private String id;
+		@Expiration
+		private long expiration;
+	}
 }
