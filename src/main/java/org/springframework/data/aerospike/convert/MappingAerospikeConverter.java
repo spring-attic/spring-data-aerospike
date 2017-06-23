@@ -22,7 +22,6 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.convert.*;
 
-import java.util.Collections;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
@@ -43,12 +42,13 @@ public class MappingAerospikeConverter implements InitializingBean, AerospikeCon
 	/**
 	 * Creates a new {@link MappingAerospikeConverter}.
 	 */
-	public MappingAerospikeConverter(AerospikeMappingContext mappingContext, CustomConversions conversions) {
+	public MappingAerospikeConverter(AerospikeMappingContext mappingContext, CustomConversions conversions,
+									 AerospikeTypeAliasAccessor aerospikeTypeAliasAccessor) {
 		this.conversions = conversions;
 		this.conversionService = new DefaultConversionService();
 
 		EntityInstantiators entityInstantiators = new EntityInstantiators();
-		TypeMapper<Map<String, Object>> typeMapper = new DefaultTypeMapper<>(new AerospikeTypeAliasAccessor(),
+		TypeMapper<Map<String, Object>> typeMapper = new DefaultTypeMapper<>(aerospikeTypeAliasAccessor,
 				mappingContext, asList(new SimpleTypeInformationMapper()));
 
 		this.writeConverter = new MappingAerospikeWriteConverter(typeMapper, mappingContext, conversions, conversionService);

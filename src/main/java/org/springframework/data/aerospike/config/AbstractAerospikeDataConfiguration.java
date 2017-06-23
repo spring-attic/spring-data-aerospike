@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.data.aerospike.convert.AerospikeTypeAliasAccessor;
 import org.springframework.data.aerospike.convert.CustomConversions;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
 import org.springframework.data.aerospike.core.AerospikeExceptionTranslator;
@@ -37,8 +38,14 @@ public abstract class AbstractAerospikeDataConfiguration {
     }
 
     @Bean(name = "mappingAerospikeConverter")
-    public MappingAerospikeConverter mappingAerospikeConverter(AerospikeMappingContext aerospikeMappingContext) {
-        return new MappingAerospikeConverter(aerospikeMappingContext, customConversions());
+    public MappingAerospikeConverter mappingAerospikeConverter(AerospikeMappingContext aerospikeMappingContext,
+                                                               AerospikeTypeAliasAccessor aerospikeTypeAliasAccessor) {
+        return new MappingAerospikeConverter(aerospikeMappingContext, customConversions(), aerospikeTypeAliasAccessor);
+    }
+
+    @Bean(name = "aerospikeTypeAliasAccessor")
+    public AerospikeTypeAliasAccessor aerospikeTypeAliasAccessor() {
+        return new AerospikeTypeAliasAccessor();
     }
 
     @Bean(name = "aerospikeCustomConversions")

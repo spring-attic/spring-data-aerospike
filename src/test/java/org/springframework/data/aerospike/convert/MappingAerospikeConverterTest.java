@@ -39,10 +39,15 @@ public class MappingAerospikeConverterTest {
 	private MappingAerospikeConverter converter = getMappingAerospikeConverter(new ComplexIdToStringConverter(), new StringToComplexIdConverter());
 
 	private MappingAerospikeConverter getMappingAerospikeConverter(Converter<?, ?>... customConverters) {
+		return getMappingAerospikeConverter(new AerospikeTypeAliasAccessor(), customConverters);
+	}
+
+	private MappingAerospikeConverter getMappingAerospikeConverter(AerospikeTypeAliasAccessor typeAliasAccessor, Converter<?, ?>... customConverters) {
 		AerospikeMappingContext mappingContext = new AerospikeMappingContext();
 		mappingContext.setDefaultNameSpace(NAMESPACE);
 		CustomConversions customConversions = new CustomConversions(asList(customConverters), AerospikeSimpleTypes.HOLDER);
-		MappingAerospikeConverter converter = new MappingAerospikeConverter(mappingContext, customConversions);
+
+		MappingAerospikeConverter converter = new MappingAerospikeConverter(mappingContext, customConversions, typeAliasAccessor);
 		converter.afterPropertiesSet();
 		return converter;
 	}
@@ -683,6 +688,26 @@ public class MappingAerospikeConverterTest {
 		);
 
 		Map<String, Object> bins = of("fs", "Nastya", "ls", "Smirnova");
+		User read = converter.read(User.class, AerospikeReadData.forRead(forWrite.getKey(), record(bins)));
+
+		assertThat(read).isEqualTo(user);
+	}
+
+	@Test
+	public void shouldWriteAndReadIfTypeKeyIsNull() throws Exception {
+		MappingAerospikeConverter converter =
+				getMappingAerospikeConverter(new AerospikeTypeAliasAccessor(null));
+
+		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
+		User user = new User(678L, null, null);
+		converter.write(user, forWrite);
+
+		assertThatKeyIsEqualTo(forWrite.getKey(), NAMESPACE, SIMPLESET3, user.getId());
+		assertThat(forWrite.getBins()).containsOnly(
+				new Bin("@user_key", "678")
+		);
+
+		Map<String, Object> bins = of("@user_key", "678");
 		User read = converter.read(User.class, AerospikeReadData.forRead(forWrite.getKey(), record(bins)));
 
 		assertThat(read).isEqualTo(user);

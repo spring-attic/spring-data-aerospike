@@ -42,23 +42,24 @@ public class MappingAerospikeConverterDeprecatedTest {
 	private static final String AEROSPIKE_SET_NAME = "AerospikeSetName";
 	private static final String AEROSPIKE_NAME_SPACE = "AerospikeNameSpace";
 	private CustomConversions customConversions = new CustomConversions(Collections.emptyList(), AerospikeSimpleTypes.HOLDER);
+	private AerospikeTypeAliasAccessor aerospikeTypeAliasAccessor = new AerospikeTypeAliasAccessor();
 
 	@Before
 	public void setUp() throws Exception {
-		converter = new MappingAerospikeConverter(new AerospikeMappingContext(), customConversions);
+		converter = new MappingAerospikeConverter(new AerospikeMappingContext(), customConversions, aerospikeTypeAliasAccessor);
 		converter.afterPropertiesSet();
 		key = new Key(AEROSPIKE_NAME_SPACE, AEROSPIKE_SET_NAME, AEROSPIKE_KEY);
 	}
 
 	@Test
 	public void testMappingAerospikeConverter() {
-		MappingAerospikeConverter mappingAerospikeConverter = new MappingAerospikeConverter(new AerospikeMappingContext(), customConversions);
+		MappingAerospikeConverter mappingAerospikeConverter = new MappingAerospikeConverter(new AerospikeMappingContext(), customConversions, aerospikeTypeAliasAccessor);
 		assertNotNull(mappingAerospikeConverter.getConversionService());
 	}
 
 	@Test
 	public void testGetConversionService() {
-		MappingAerospikeConverter mappingAerospikeConverter = new MappingAerospikeConverter(new AerospikeMappingContext(), customConversions);
+		MappingAerospikeConverter mappingAerospikeConverter = new MappingAerospikeConverter(new AerospikeMappingContext(), customConversions, aerospikeTypeAliasAccessor);
 		assertNotNull(mappingAerospikeConverter.getConversionService());
 		assertTrue(mappingAerospikeConverter.getConversionService() instanceof DefaultConversionService);
 	}
