@@ -36,7 +36,7 @@ public class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTr
 
 		if (cause instanceof AerospikeException){
 			int resultCode = ((AerospikeException)cause).getResultCode();
-			String msg = ((AerospikeException)cause).getMessage();
+			String msg = cause.getMessage();
 			switch (resultCode) {
 			/*
 			 * Future enhancements will be more elaborate 
@@ -45,9 +45,16 @@ public class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTr
 					return new DuplicateKeyException(msg, cause);
 				case ResultCode.KEY_NOT_FOUND_ERROR:
 					return new DataRetrievalFailureException(msg, cause);
+				case ResultCode.TIMEOUT:
+				case ResultCode.QUERY_TIMEOUT:
+					return new QueryTimeoutException(msg, cause);
+				case ResultCode.DEVICE_OVERLOAD:
+				case ResultCode.NO_MORE_CONNECTIONS:
+				case ResultCode.KEY_BUSY:
+					return new TransientDataAccessResourceException(msg, cause);
 
 				default:
-					return new RecoverableDataAccessException("Aerospike Error: " + cause.getMessage(), cause);
+					return new RecoverableDataAccessException(msg, cause);
 
 			}
 		}
