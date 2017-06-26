@@ -348,12 +348,20 @@ public class SampleClasses {
 
 		@Id
 		private String id;
+
+		private int field;
+
 		@Version
 		private long version;
 
-		@PersistenceConstructor
 		public DocumentWithTouchOnRead(String id) {
+			this(id, 0);
+		}
+
+		@PersistenceConstructor
+		public DocumentWithTouchOnRead(String id, int field) {
 			this.id = id;
+			this.field = field;
 		}
 	}
 

@@ -17,6 +17,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -186,7 +187,6 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
                 } catch (OptimisticLockingFailureException e) {
                 }
             }
-            return null;
         });
 
 		VersionedClass actual = template.findById(id, VersionedClass.class);
@@ -211,7 +211,6 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
             } catch (OptimisticLockingFailureException e) {
                 optimisticLockCounter.incrementAndGet();
             }
-            return null;
         });
 
 		assertThat(optimisticLockCounter.intValue()).isEqualTo(numberOfConcurrentSaves - 1);
@@ -896,5 +895,32 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		String id = nextId();
 		template.insert(new DocumentWithTouchOnReadAndExpirationProperty(id, EXPIRATION_ONE_MINUTE));
 		template.findById(id, DocumentWithTouchOnReadAndExpirationProperty.class);
+	}
+
+	@Test
+	public void shouldConcurrentlyUpdateDocumentIfTouchOnReadIsTrue() throws Exception {
+		int numberOfConcurrentUpdate = 10;
+		AsyncUtils.executeConcurrently(numberOfConcurrentUpdate, new Runnable() {
+			@Override
+			public void run() {
+				try {
+					DocumentWithTouchOnRead existing = template.findById(id, DocumentWithTouchOnRead.class) ;
+					DocumentWithTouchOnRead toUpdate;
+					if (existing != null) {
+						toUpdate = new DocumentWithTouchOnRead(id, existing.getField() + 1, existing.getVersion());
+					} else {
+						toUpdate = new DocumentWithTouchOnRead(id, 1);
+					}
+
+					template.save(toUpdate);
+				} catch (ConcurrencyFailureException e) {
+					//try again
+					run();
+				}
+			}
+		});
+
+		DocumentWithTouchOnRead actual = template.findById(id, DocumentWithTouchOnRead.class);
+		assertThat(actual.getField()).isEqualTo(numberOfConcurrentUpdate);
 	}
 }
