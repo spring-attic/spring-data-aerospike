@@ -6,7 +6,7 @@
 
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-aerospike</artifactId>
-    <version>1.0.1.RELEASE</version>
+    <version>1.0.2.BUILD-SNAPSHOT</version>
 
     <name>Spring Data Aerospike</name>
 
