@@ -4,12 +4,14 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.springframework.data</groupId>
+    <groupId>com.aerospike</groupId>
     <artifactId>spring-data-aerospike</artifactId>
-    <version>1.0.2.BUILD-SNAPSHOT</version>
-
+    <version>1.0.3.BUILD-SNAPSHOT</version>
     <name>Spring Data Aerospike</name>
-
+    <organization>
+        <name>Aerospike Inc.</name>
+        <url>http://www.aerospike.com</url>
+    </organization>
 
  	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -33,6 +35,79 @@
         <joda-time.version>2.9.9</joda-time.version>
         <embedded-aerospike.version>1.2</embedded-aerospike.version>
     </properties>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>Peter Milne</id>
+            <name>Peter Milne</name>
+            <email>peter@aerospike.com</email>
+            <url>http://www.aerospike.com</url>
+            <organization>Aerospike Inc.</organization>
+            <organizationUrl>http://www.aerospike.com</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>-6</timezone>
+        </developer>
+        <developer>
+            <id>Michael Zhang</id>
+            <name>Michael Zhang</name>
+            <email>mzhang@aerospike.com</email>
+            <url>http://www.aerospike.com</url>
+            <organization>Aerospike Inc.</organization>
+            <organizationUrl>http://www.aerospike.com</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>-8</timezone>
+        </developer>
+        <developer>
+            <id>Jeff Boone</id>
+            <name>Jeff Boone</name>
+            <email>jboone@aerospike.com</email>
+            <url>http://www.aerospike.com</url>
+            <organization>Aerospike Inc.</organization>
+            <organizationUrl>http://www.aerospike.com</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>-8</timezone>
+        </developer>
+        <developer>
+            <id>Anastasiia Smirnova</id>
+            <name>Anastasiia Smirnova</name>
+            <email>asmirnova@playtika.com</email>
+            <url>http://www.playtika.com</url>
+        </developer>
+        <developer>
+            <id>Roman Terentiev</id>
+            <name>Roman Terentiev</name>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/spring-projects/spring-data-aerospike.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:spring-projects/spring-data-aerospike.git</developerConnection>
+        <url>https://github.com/spring-projects/spring-data-aerospike</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <dependencyManagement>
 
@@ -147,6 +222,32 @@
             <plugin>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
