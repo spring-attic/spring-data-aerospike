@@ -29,9 +29,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <spring-boot-starter-test.version>1.5.1.RELEASE</spring-boot-starter-test.version>
-        <testcontainers.version>1.2.0</testcontainers.version>
-        <docker-java.version>3.0.6</docker-java.version>
+        <spring-cloud-starter.version>1.2.4.RELEASE</spring-cloud-starter.version>
         <joda-time.version>2.9.9</joda-time.version>
+        <embedded-aerospike.version>1.2</embedded-aerospike.version>
     </properties>
 
     <dependencyManagement>
@@ -109,21 +109,21 @@
         </dependency>
 
         <dependency>
+            <groupId>com.playtika.testcontainers</groupId>
+            <artifactId>embedded-aerospike</artifactId>
+            <version>${embedded-aerospike.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter</artifactId>
+            <version>${spring-cloud-starter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <version>${spring-boot-starter-test.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <version>${testcontainers.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.docker-java</groupId>
-            <artifactId>docker-java</artifactId>
-            <version>${docker-java.version}</version>
             <scope>test</scope>
         </dependency>
 

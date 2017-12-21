@@ -16,12 +16,8 @@
 
 package org.springframework.data.aerospike.cache;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Key;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -29,12 +25,13 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.transaction.TransactionAwareCacheDecorator;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.aerospike.BaseIntegrationTests;
 import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
-import org.springframework.data.aerospike.BaseIntegrationTests;
 
-import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.Key;
+import java.util.Arrays;
+
+import static org.junit.Assert.*;
 
 /**
  * 
@@ -82,82 +79,6 @@ public class AerospikeCacheMangerTests extends BaseIntegrationTests {
 		Cache cache = manager.getCache("transaction-aware-cache");
 		assertNotNull("Cache instance was null", cache);
 		assertTrue("Cache was not an instance of TransactionAwareCacheDecorator", cache instanceof TransactionAwareCacheDecorator);
-	}
-
-	@Test
-	public void testCacheable() {
-		cleanupForCacheableTest();
-		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(TestConfig.class);
-		try {
-			CachingComponent cachingComponent = ctx.getBean(CachingComponent.class);
-			CachedObject response1 = cachingComponent.cachingMethod("foo");
-			CachedObject response2 = cachingComponent.cachingMethod("foo");
-			assertNotNull("Component returned null", response1);
-			assertEquals("Response didn't match", "bar", response1.getValue());
-			assertNotNull("Component returned null", response2);
-			assertEquals("Response didn't match", "bar", response2.getValue());
-			assertEquals("Component didn't cache result", 1, cachingComponent.getNoOfCalls());
-		}
-		finally {
-			ctx.close();
-			cleanupForCacheableTest();
-		}
-	}
-
-	@Test
-	public void testCacheEviction() {
-		cleanupForCacheableTest();
-		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(TestConfig.class);
-		try {
-			CachingComponent cachingComponent = ctx.getBean(CachingComponent.class);
-			CachedObject response1 = cachingComponent.cachingMethod("foo");
-			cachingComponent.cacheEvictingMethod("foo");
-			CachedObject response2 = cachingComponent.cachingMethod("foo");
-			assertNotNull("Component returned null", response1);
-			assertEquals("Response didn't match", "bar", response1.getValue());
-			assertNotNull("Component returned null", response2);
-			assertEquals("Response didn't match", "bar", response2.getValue());
-			assertEquals("Component didn't evict cached entry", 2, cachingComponent.getNoOfCalls());
-		}
-		finally {
-			ctx.close();
-			cleanupForCacheableTest();
-		}
-	}
-
-	private void cleanupForCacheableTest() {
-		client.delete(null, new Key(getNameSpace(), AerospikeCacheManager.DEFAULT_SET_NAME, "foo"));
-	}
-
-	public static class CachedObject {
-		private String value;
-
-		public CachedObject(String value) {
-			this.value = value;
-		}
-
-		public String getValue() {
-			return value;
-		}
-	}
-
-	public static class CachingComponent {
-		private int noOfCalls = 0;
-
-		@Cacheable("test")
-		public CachedObject cachingMethod(String param) {
-			noOfCalls ++;
-			return new CachedObject("bar");
-		}
-
-		@CacheEvict("test")
-		public void cacheEvictingMethod(String param) {
-
-		}
-
-		public int getNoOfCalls() {
-			return noOfCalls;
-		}
 	}
 
 }

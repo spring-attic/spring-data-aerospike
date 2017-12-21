@@ -76,7 +76,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	//test for RecordExistsAction.REPLACE_ONLY policy
 	@Test
 	public void shouldReplaceAllBinsPresentInAerospikeWhenSavingDocument() throws Exception {
-		Key key = new Key(info.getNamespace(), "versioned-set", id);
+		Key key = new Key(getNameSpace(), "versioned-set", id);
 		VersionedClass first = new VersionedClass(id, "foo");
 		template.save(first);
 		addNewFieldToSavedDataInAerospike(key);
@@ -222,7 +222,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		template.update(new VersionedClass(id, "foobar1"));
 		template.update(new VersionedClass(id, "foobar2"));
 
-		Record raw = client.get(new Policy(), new Key(info.getNamespace(), "versioned-set", id));
+		Record raw = client.get(new Policy(), new Key(getNameSpace(), "versioned-set", id));
 		assertThat(raw.generation).isEqualTo(3);
 		VersionedClass actual = template.findById(id, VersionedClass.class);
 		assertThat(actual.version).isEqualTo(3);
@@ -293,7 +293,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		CustomCollectionClass initial = new CustomCollectionClass(id, "data0");
 		template.insert(initial);
 
-		Record record = client.get(new Policy(), new Key(info.getNamespace(), "custom-set", id));
+		Record record = client.get(new Policy(), new Key(getNameSpace(), "custom-set", id));
 
 		assertThat(record.getString("data")).isEqualTo("data0");
 		assertThat(template.findById(id, CustomCollectionClass.class)).isEqualTo(initial);
