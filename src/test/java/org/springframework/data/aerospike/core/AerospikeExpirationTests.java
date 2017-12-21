@@ -3,6 +3,7 @@ package org.springframework.data.aerospike.core;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.google.common.collect.ImmutableMap;
+import org.assertj.core.data.Offset;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Rule;
@@ -15,6 +16,7 @@ import org.springframework.data.aerospike.SampleClasses.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 
 //TODO: Potentially unstable tests. Instead of sleeping, we need somehow do time travel like in CouchbaseMock.
 public class AerospikeExpirationTests extends BaseIntegrationTests {
@@ -118,13 +120,13 @@ public class AerospikeExpirationTests extends BaseIntegrationTests {
         Key key = new Key(template.getNamespace(), template.getSetName(DocumentWithExpirationOneDay.class), id);
 
         Record record = template.getAerospikeClient().get(null, key);
-        assertThat(record.getTimeToLive()).isEqualTo((int) TimeUnit.DAYS.toSeconds(1));
+        assertThat(record.getTimeToLive()).isCloseTo((int) TimeUnit.DAYS.toSeconds(1), offset(10));
 
         Thread.sleep(2000);
         template.findById(id, DocumentWithExpirationOneDay.class);
 
         record = template.getAerospikeClient().get(null, key);
-        assertThat(record.getTimeToLive()).isEqualTo((int) TimeUnit.DAYS.toSeconds(1));
+        assertThat(record.getTimeToLive()).isCloseTo((int) TimeUnit.DAYS.toSeconds(1), offset(10));
     }
 
     @Test
