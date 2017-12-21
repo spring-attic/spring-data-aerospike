@@ -17,22 +17,22 @@ package org.springframework.data.aerospike.sample;
 
 import java.util.UUID;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 
 /**
  * @author Oliver Gierke
  */
+@NoArgsConstructor
+@Data
 public class Customer {
 
 	private  @Id String id;
 	private  String firstname, lastname;
 	private  long age = 0;
 
-	public Customer(){
-		super();
-	}
 	/**
-	 * @param id
 	 * @param firstname
 	 * @param lastname
 	 */
@@ -41,45 +41,9 @@ public class Customer {
 	}
 
 	public Customer(String id, String firstname, String lastname) {
-		this();
 		this.id = id;
 		this.firstname = firstname;
 		this.lastname = lastname;
-	}
-
-	/**
-	 * @return the id
-	 */
-	public String getId() {
-		return id;
-	}
-
-	/**
-	 * @return the firstname
-	 */
-	public String getFirstname() {
-		return firstname;
-	}
-
-	/**
-	 * @return the lastname
-	 */
-	public String getLastname() {
-		return lastname;
-	}
-
-	public void setLastName(String lastname) {
-		this.lastname = lastname;
-	}
-
-	public long getAge() {
-		return this.age;
-	}
-
-	@Override
-	public String toString() {
-		return "Customer [id=" + id + ", firstname=" + firstname
-				+ ", lastname=" + lastname + ", age=" + age + "]";
 	}
 
 }

@@ -29,7 +29,7 @@ public class Person {
 	private int age;
 	private Map<String, String> map;
 	private Person friend;
-	private boolean active = true;
+	private boolean active;
 	private Date dateOfBirth;
 	private ArrayList<String> list;
 

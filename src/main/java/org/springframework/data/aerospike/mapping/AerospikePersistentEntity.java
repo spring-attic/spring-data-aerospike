@@ -32,11 +32,17 @@ public interface AerospikePersistentEntity<T> extends PersistentEntity<T, Aerosp
 	 * 
 	 * @return
 	 */
+	String getNamespace();
+
 	String getSetName();
 
 	Key getKey();
 
-	long getGeneration();
+	int getExpiration();
 
-	int getTTL();
+	boolean isTouchOnRead();
+
+	AerospikePersistentProperty getExpirationProperty();
+
+	boolean hasExpirationProperty();
 }

@@ -34,6 +34,8 @@ public class CachingAerospikePersistentProperty extends BasicAerospikePersistent
 	private String fieldName;
 	private Boolean usePropertyAccess;
 	private Boolean isTransient;
+	private Boolean isExpirationProperty;
+	private Boolean isExpirationSpecifiedAsUnixTime;
 
 	/**
 	 * Creates a new {@link CachingAerospikePersistentProperty}.
@@ -100,4 +102,20 @@ public class CachingAerospikePersistentProperty extends BasicAerospikePersistent
 		return this.isTransient;
 	}
 
+	@Override
+	public boolean isExpirationProperty() {
+		if (this.isExpirationProperty == null) {
+			this.isExpirationProperty = super.isExpirationProperty();
+		}
+		return this.isExpirationProperty;
+	}
+
+	@Override
+	public boolean isExpirationSpecifiedAsUnixTime() {
+		if (this.isExpirationSpecifiedAsUnixTime == null) {
+			this.isExpirationSpecifiedAsUnixTime = super.isExpirationSpecifiedAsUnixTime();
+		}
+
+		return this.isExpirationSpecifiedAsUnixTime;
+	}
 }
