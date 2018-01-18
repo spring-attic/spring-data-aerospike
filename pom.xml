@@ -34,6 +34,7 @@
         <spring-cloud-starter.version>1.2.4.RELEASE</spring-cloud-starter.version>
         <joda-time.version>2.9.9</joda-time.version>
         <embedded-aerospike.version>1.2</embedded-aerospike.version>
+        <awaitility.version>3.0.0</awaitility.version>
     </properties>
 
     <licenses>
@@ -201,6 +202,13 @@
             <version>${spring-boot-starter-test.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>${awaitility.version}</version>
+            <scope>test</scope>
+        </dependency>
+
 
     </dependencies>
 

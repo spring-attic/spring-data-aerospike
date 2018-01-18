@@ -1,11 +1,6 @@
 package org.springframework.data.aerospike.repository.support;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
+import com.aerospike.client.query.IndexType;
 import org.springframework.data.aerospike.core.AerospikeOperations;
 import org.springframework.data.aerospike.repository.AerospikeRepository;
 import org.springframework.data.domain.Page;
@@ -16,7 +11,8 @@ import org.springframework.data.keyvalue.core.IterableConverter;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.util.Assert;
 
-import com.aerospike.client.query.IndexType;
+import java.io.Serializable;
+import java.util.List;
 
 public class SimpleAerospikeRepository<T, ID extends Serializable> implements AerospikeRepository<T, ID> {
 
@@ -156,8 +152,18 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	 * @see org.springframework.data.aerospike.repository.AerospikeRepository#createIndex(java.lang.Class, java.lang.String, java.lang.String, com.aerospike.client.query.IndexType)
 	 */
 	@Override
-	public <T> void createIndex(Class<T> domainType, String indexName,String binName, IndexType indexType) {
+	public <T> void createIndex(Class<T> domainType, String indexName, String binName, IndexType indexType) {
 		operations.createIndex(domainType, indexName, binName, indexType);
+	}
+
+	@Override
+	public <T> void deleteIndex(Class<T> domainType, String indexName) {
+		operations.deleteIndex(domainType, indexName);
+	}
+
+	@Override
+	public boolean indexExists(String indexName) {
+		return operations.indexExists(indexName);
 	}
 
 }

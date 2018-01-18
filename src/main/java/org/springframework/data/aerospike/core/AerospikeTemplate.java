@@ -137,9 +137,28 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public <T> void createIndex(Class<T> domainType, String indexName,
 			String binName, IndexType indexType) {
 
+		String setName = getSetName(domainType);
 		IndexTask task = client.createIndex(null, this.namespace,
-				domainType.getSimpleName(), indexName, binName, indexType);
+				setName, indexName, binName, indexType);
 		task.waitTillComplete();
+	}
+
+	@Override
+	public <T> void deleteIndex(Class<T> domainType, String indexName) {
+		String setName = getSetName(domainType);
+		client.dropIndex(null, this.namespace, setName, indexName);
+	}
+
+	@Override
+	public boolean indexExists(String indexName) {
+		//TODO: should be moved to aerospike-client
+		Node[] nodes = client.getNodes();
+		if (nodes.length == 0) {
+			throw new AerospikeException.InvalidNode();
+		}
+		Node node = nodes[0];
+		String response = Info.request(node, "sindex/" + namespace + '/' + indexName);
+		return !response.startsWith("FAIL:201");
 	}
 
 	@Override
