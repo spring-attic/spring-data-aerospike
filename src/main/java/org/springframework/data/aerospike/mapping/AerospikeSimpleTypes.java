@@ -76,11 +76,4 @@ public abstract class AerospikeSimpleTypes {
 
 	private AerospikeSimpleTypes() {}
 
-	public static String getColletionName(Class<?> clazz){
-		Document annotation = (Document)clazz.getAnnotation(Document.class);
-		if(annotation != null && ! annotation.collection().isEmpty()){
-			return annotation.collection();
-		}
-		return clazz.getSimpleName();
-	}
 }

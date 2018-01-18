@@ -148,7 +148,7 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	long count(Class<?> type,String setName);
 
 	/**
-	 * @param <T>
+	 * Creates index by specified name in Aerospike.
 	 * @param domainType
 	 * @param indexName
 	 * @param binName
@@ -156,6 +156,20 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 */
 	<T> void createIndex(Class<T> domainType, String indexName, String binName,
 			IndexType indexType);
+
+	/**
+	 * Deletes index by specified name from Aerospike.
+	 * @param domainType
+	 * @param indexName
+	 */
+	<T> void deleteIndex(Class<T> domainType, String indexName);
+
+	/**
+	 * Checks whether index by specified name exists in Aerospike.
+	 * @param indexName
+	 * @return true if exists
+	 */
+	boolean indexExists(String indexName);
 
 	/**
 	 * @param type

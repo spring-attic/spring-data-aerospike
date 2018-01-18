@@ -1,9 +1,13 @@
 package org.springframework.data.aerospike;
 
+import com.aerospike.client.AerospikeClient;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.aerospike.config.TestConfig;
+import org.springframework.data.aerospike.core.AerospikeTemplate;
+import org.springframework.data.aerospike.core.Person;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,6 +27,11 @@ public abstract class BaseIntegrationTests {
     @Value("${embedded.aerospike.namespace}")
     protected String namespace;
 
+    @Autowired
+    protected AerospikeTemplate template;
+    @Autowired
+    protected AerospikeClient client;
+
     protected String getNameSpace() {
         return namespace;
     }
@@ -30,4 +39,10 @@ public abstract class BaseIntegrationTests {
     protected static String nextId() {
         return "as-" + counter.incrementAndGet();
     }
+
+    protected void cleanDb() {
+        template.delete(Person.class);
+        template.delete(SampleClasses.VersionedClass.class);
+    }
+
 }

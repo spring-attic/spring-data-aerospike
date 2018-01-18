@@ -170,4 +170,20 @@ public class SimpleAerospikeRepositoryTest {
 		verify(operations).createIndex(Person.class, "index_first_name", "firstName", IndexType.STRING);
 	}
 
+	@Test
+	public void testDeleteIndex() throws Exception {
+		aerospikeRepository.deleteIndex(Person.class, "index_first_name");
+
+		verify(operations).deleteIndex(Person.class, "index_first_name");
+	}
+
+	@Test
+	public void testIndexExists() throws Exception {
+		when(operations.indexExists(anyString())).thenReturn(true);
+
+		boolean exists = aerospikeRepository.indexExists("index_first_name");
+
+		assertThat(exists).isTrue();
+		verify(operations).indexExists("index_first_name");
+	}
 }
