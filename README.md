@@ -80,19 +80,19 @@ You can have Spring automatically create a proxy for the interface by using the 
 
 ```java
 @Configuration
-@EnableAerospikeRepositories(basePackageClasses = ContactRepository.class)
-class ApplicationConfig extends AbstractAerospikeConfiguration {
-	public @Bean(destroyMethod = "close") AerospikeClient aerospikeClient() {
-
-		ClientPolicy policy = new ClientPolicy();
-		policy.failIfNotConnected = true;
-
-		return new AerospikeClient(policy, "localhost", 3000);
-	}
-
-	public @Bean AerospikeTemplate aerospikeTemplate() {
-		return new AerospikeTemplate(aerospikeClient(), "bar");
-	}
+@EnableAerospikeRepositories(basePackageClasses = PersonRepository.class)
+class ApplicationConfig extends AbstractAerospikeDataConfiguration {
+	
+	@Override
+    protected Collection<Host> getHosts() {
+    	return Collections.singleton(new Host("localhost", 3000));
+    }
+    
+    @Override
+    protected String nameSpace() {
+    	return "bar";
+    }
+	
 }
 ```
 
