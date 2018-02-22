@@ -186,8 +186,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 	@SuppressWarnings("rawtypes")
 	@Test
 	public void testFindWithFilterEqual() throws NoSuchMethodException, Exception{
-		IndexTask task = client.createIndex(null, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "first_name_index", "firstname", IndexType.STRING);
-		task.waitTillComplete();
+		createIndexIfNotExists(Person.class, "first_name_index", "firstname", IndexType.STRING);
 
 		WritePolicy policy = getWritePolicy();
 		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
@@ -214,10 +213,8 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 	@SuppressWarnings("rawtypes")
 	@Test 
 	public void testFindWithFilterEqualOrderBy() throws NoSuchMethodException, Exception{
-		IndexTask task = client.createIndex(null, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);
-		task.waitTillComplete();
-		IndexTask task2 = client.createIndex(null, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "last_name_index", "lastname", IndexType.STRING);
-		task2.waitTillComplete();
+		createIndexIfNotExists(Person.class, "age_index", "age", IndexType.NUMERIC);
+		createIndexIfNotExists(Person.class, "last_name_index", "lastname", IndexType.STRING);
 
 		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
 				"firstname", "Jean"), new Bin("lastname", "Matthews"), new Bin(
@@ -263,10 +260,8 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 	@SuppressWarnings("rawtypes")
 	@Test 
 	public void testFindWithFilterEqualOrderByDesc() throws NoSuchMethodException, Exception{
-		IndexTask task = client.createIndex(null, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);
-		task.waitTillComplete();
-		IndexTask task2 = client.createIndex(null, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "last_name_index", "lastname", IndexType.STRING);
-		task2.waitTillComplete();
+		createIndexIfNotExists(Person.class, "age_index", "age", IndexType.NUMERIC);
+		createIndexIfNotExists(Person.class, "last_name_index", "lastname", IndexType.STRING);
 
 		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
 				"firstname", "Jean"), new Bin("lastname", "Matthews"), new Bin(
@@ -312,8 +307,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 	@SuppressWarnings("rawtypes")
 	@Test
 	public void testFindWithFilterRange() throws NoSuchMethodException, Exception{
-		IndexTask task = client.createIndex(null, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "age_index", "age", IndexType.NUMERIC);
-		task.waitTillComplete();
+		createIndexIfNotExists(Person.class, "age_index", "age", IndexType.NUMERIC);
 
 		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
 				"firstname", "Dave01"), new Bin("lastname", "Matthews"), new Bin(
@@ -358,8 +352,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 
 	@Test
 	public void testFindWithStatement(){
-		IndexTask task = client.createIndex(null, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "first_name_index", "firstname", IndexType.STRING);
-		task.waitTillComplete();
+		createIndexIfNotExists(Person.class,"first_name_index", "firstname", IndexType.STRING);
 
 		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin("firstname", "Dave"),
 				new Bin ("lastname", "Matthews"));

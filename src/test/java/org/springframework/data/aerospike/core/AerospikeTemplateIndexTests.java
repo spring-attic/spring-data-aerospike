@@ -6,6 +6,7 @@ import com.aerospike.client.query.IndexType;
 import com.aerospike.helper.query.Qualifier;
 import org.junit.After;
 import org.junit.Test;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.aerospike.BaseIntegrationTests;
 import org.springframework.data.aerospike.repository.query.Criteria;
 import org.springframework.data.aerospike.repository.query.Query;
@@ -14,7 +15,7 @@ import java.text.SimpleDateFormat;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 
@@ -28,22 +29,38 @@ public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 		assertThat(template.indexExists("check-index-1")).isFalse();
 		assertThat(template.indexExists("check-index-2")).isFalse();
 
-		template.createIndex(Person.class, "check-index-1", "active", IndexType.NUMERIC);
-		template.createIndex(Person.class, "check-index-2", "id", IndexType.NUMERIC);
+		template.createIndex(IndexedRecord.class, "check-index-1", "prop1", IndexType.NUMERIC);
+		template.createIndex(IndexedRecord.class, "check-index-2", "prop2", IndexType.NUMERIC);
 
 		assertThat(template.indexExists("check-index-1")).isTrue();
 		assertThat(template.indexExists("check-index-2")).isTrue();
 
-		template.deleteIndex(Person.class, "check-index-1");
-		template.deleteIndex(Person.class, "check-index-2");
+		template.deleteIndex(IndexedRecord.class, "check-index-1");
+		template.deleteIndex(IndexedRecord.class, "check-index-2");
 
-		await().untilAsserted(() -> assertThat(template.indexExists("check-index-1")).isFalse());
-		await().untilAsserted(() -> assertThat(template.indexExists("check-index-2")).isFalse());
+		assertThat(template.indexExists("check-index-1")).isFalse();
+		assertThat(template.indexExists("check-index-2")).isFalse();
+	}
+
+	@Test
+	public void shouldFailWithExceptionOnSecondCreateIndex() throws Exception {
+		template.createIndex(IndexedRecord.class, "check-index-3", "prop3", IndexType.NUMERIC);
+
+		Throwable throwable = catchThrowable(() -> template.createIndex(IndexedRecord.class, "check-index-3", "prop3", IndexType.NUMERIC));
+
+		assertThat(throwable).isInstanceOf(InvalidDataAccessResourceUsageException.class);
+	}
+
+	@Test
+	public void shouldFailWithExceptionOnDeleteNonExistingIndex() throws Exception {
+		Throwable throwable = catchThrowable(() -> template.deleteIndex(IndexedRecord.class, "check-index-4"));
+
+		assertThat(throwable).isInstanceOf(InvalidDataAccessResourceUsageException.class);
 	}
 
 	@Test
 	public void checkIndexingString() {
-		template.createIndex(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
+		createIndexIfNotExists(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
 		Person p1 = new Person(nextId(), "ZLastName", 25);
 		Person p2 = new Person(nextId(), "QLastName", 21);
 		Person p3 = new Person(nextId(), "ALastName", 24);
@@ -58,7 +75,7 @@ public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 
 	@Test
 	public void checkIndexingViaNumeric() {
-		template.createIndex(Person.class, "Person_age_index", "age", IndexType.NUMERIC);
+		createIndexIfNotExists(Person.class, "Person_age_index", "age", IndexType.NUMERIC);
 		Person p1 = new Person(nextId(), "ZLastName", 25);
 		Person p2 = new Person(nextId(), "QLastName", 21);
 		Person p3 = new Person(nextId(), "ALastName", 24);
@@ -73,7 +90,7 @@ public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 
 	@Test
 	public void countsDocumentsCorrectly() {
-		template.createIndex(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
+		createIndexIfNotExists(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
 		Person p1 = new Person(nextId(), "ZLastName", 25);
 		Person p2 = new Person(nextId(), "QLastName", 50);
 		Person p3 = new Person(nextId(), "ALastName", 24);
@@ -88,7 +105,7 @@ public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 
 	@Test
 	public void executesExistsCorrectly() {
-		template.createIndex(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
+		createIndexIfNotExists(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
 		Person p1 = new Person(nextId(), "ZLastName", 25);
 		Person p2 = new Person(nextId(), "QLastName", 50);
 		Person p3 = new Person(nextId(), "ALastName", 24);
@@ -104,7 +121,7 @@ public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 
 	@Test
 	public void find_shouldReturnEmptyResultForQueryWithNoResults() throws Exception {
-		template.createIndex(Person.class, "Person_age_index", "age", IndexType.NUMERIC);
+		createIndexIfNotExists(Person.class, "Person_age_index", "age", IndexType.NUMERIC);
 		Query<?> query = new Query<Object>(
 				Criteria.where("age").is(-10, "age"));
 
@@ -115,7 +132,7 @@ public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 
 	@Test
 	public void findMultipleFiltersFilterAndQualifier() {
-		template.createIndex(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
+		createIndexIfNotExists(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
 		Person p1 = new Person(nextId(), "John", 25);
 		Person p2 = new Person(nextId(), "John", 21);
 		Person p3 = new Person(nextId(), "John", 24);
@@ -135,7 +152,7 @@ public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 
 	@Test
 	public void findMultipleFiltersQualifierOnly() {
-		template.createIndex(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
+		createIndexIfNotExists(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
 		Person p1 = new Person(nextId(), "ZLastName", 25);
 		Person p2 = new Person(nextId(), "QLastName", 21);
 		Person p3 = new Person(nextId(), "ALastName", 24);
@@ -150,7 +167,7 @@ public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 
 	@Test
 	public void StoreAndRetrieveDate() throws Exception {
-		template.createIndex(Person.class, "Person_dateOfBirth_index", "dateOfBirth", IndexType.STRING);
+		createIndexIfNotExists(Person.class, "Person_dateOfBirth_index", "dateOfBirth", IndexType.STRING);
 		SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
 		Person p1 = new Person(nextId(), "ZLastName", 25);
 		Person p2 = new Person(nextId(), "QLastName", 50);
@@ -169,7 +186,7 @@ public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 
 	@Test
 	public void updateConsidersMappingAnnotations() {
-		template.createIndex(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
+		createIndexIfNotExists(Person.class, "Person_firstName_index", "firstName", IndexType.STRING);
 
 		Person p1 = new Person(nextId(), "ZLastName", 25);
 		p1.setEmailAddress("old@mail.com");
@@ -187,6 +204,13 @@ public class AerospikeTemplateIndexTests extends BaseIntegrationTests {
 		Iterable<Person> it = template.find(query, Person.class);
 
 		assertThat(it).containsOnly(personWithMail);
+	}
+
+	@lombok.Value
+	private static class IndexedRecord {
+		public final int prop1;
+		public final int prop2;
+		public final int prop3;
 	}
 
 }

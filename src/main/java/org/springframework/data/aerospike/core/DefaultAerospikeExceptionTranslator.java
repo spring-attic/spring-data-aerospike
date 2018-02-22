@@ -45,6 +45,9 @@ public class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTr
 					return new DuplicateKeyException(msg, cause);
 				case ResultCode.KEY_NOT_FOUND_ERROR:
 					return new DataRetrievalFailureException(msg, cause);
+				case ResultCode.INDEX_NOTFOUND:
+				case ResultCode.INDEX_ALREADY_EXISTS:
+					return new InvalidDataAccessResourceUsageException(msg, cause);
 				case ResultCode.TIMEOUT:
 				case ResultCode.QUERY_TIMEOUT:
 					return new QueryTimeoutException(msg, cause);

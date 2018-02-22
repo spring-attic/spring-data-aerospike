@@ -1,10 +1,12 @@
 package org.springframework.data.aerospike;
 
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.query.IndexType;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.core.Person;
@@ -17,7 +19,6 @@ import java.util.concurrent.atomic.AtomicLong;
         classes = TestConfig.class,
         properties = {
                 "expirationProperty: 1",
-                "embedded.aerospike.dockerImage=aerospike:3.13.0.8"
         }
 )
 public abstract class BaseIntegrationTests {
@@ -43,6 +44,14 @@ public abstract class BaseIntegrationTests {
     protected void cleanDb() {
         template.delete(Person.class);
         template.delete(SampleClasses.VersionedClass.class);
+    }
+
+    protected <T> void createIndexIfNotExists(Class<T> domainType, String indexName, String binName, IndexType indexType) {
+        try {
+            template.createIndex(domainType, indexName, binName, indexType);
+        } catch (InvalidDataAccessResourceUsageException e) {
+            // ignore: index already exists
+        }
     }
 
 }
