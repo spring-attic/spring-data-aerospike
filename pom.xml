@@ -22,7 +22,7 @@
     <properties>
         <bundlor.enabled>false</bundlor.enabled>
         <source.level>1.8</source.level>
-        <aerospike>4.0.1</aerospike>
+        <aerospike>4.1.3</aerospike>
         <aerospike-helper-java.version>1.2.1</aerospike-helper-java.version>
 
         <springdata.commons>1.13.9.RELEASE</springdata.commons>
@@ -33,7 +33,7 @@
         <spring-boot-starter-test.version>1.5.9.RELEASE</spring-boot-starter-test.version>
         <spring-cloud-starter.version>1.3.1.RELEASE</spring-cloud-starter.version>
         <joda-time.version>2.9.9</joda-time.version>
-        <embedded-aerospike.version>1.2</embedded-aerospike.version>
+        <embedded-aerospike.version>1.5</embedded-aerospike.version>
         <awaitility.version>3.0.0</awaitility.version>
     </properties>
 

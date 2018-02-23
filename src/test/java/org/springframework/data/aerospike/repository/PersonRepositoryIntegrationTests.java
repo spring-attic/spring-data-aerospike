@@ -16,7 +16,6 @@
 
 package org.springframework.data.aerospike.repository;
 
-import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.query.IndexType;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,9 +49,6 @@ public class PersonRepositoryIntegrationTests extends BaseIntegrationTests {
 	@Autowired
 	AerospikeOperations operations;
 
-	@Autowired
-	AerospikeClient client;
-
 	static int count = 0;
 
 	Person dave, donny, oliver, carter, boyd, stefan, leroi2, leroi, alicia;
@@ -74,9 +70,9 @@ public class PersonRepositoryIntegrationTests extends BaseIntegrationTests {
 		leroi2 = new Person("Leroi-02", "Leroi", "Moore", 25);
 		alicia = new Person("Alicia-01", "Alicia", "Keys", 30, Sex.FEMALE);
 
-		repository.createIndex(Person.class, "last_name_index", "lastname", IndexType.STRING);
-		repository.createIndex(Person.class, "first_name_index", "firstname", IndexType.STRING);
-		repository.createIndex(Person.class, "person_age_index", "age", IndexType.NUMERIC);
+		createIndexIfNotExists(Person.class, "last_name_index", "lastname", IndexType.STRING);
+		createIndexIfNotExists(Person.class, "first_name_index", "firstname", IndexType.STRING);
+		createIndexIfNotExists(Person.class, "person_age_index", "age", IndexType.NUMERIC);
 
 		all = (List<Person>) repository.save(Arrays.asList(oliver, dave, donny, carter, boyd, stefan, leroi, leroi2, alicia));
 	}

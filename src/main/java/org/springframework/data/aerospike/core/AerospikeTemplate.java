@@ -135,30 +135,49 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	@Override
 	public <T> void createIndex(Class<T> domainType, String indexName,
-			String binName, IndexType indexType) {
-
-		String setName = getSetName(domainType);
-		IndexTask task = client.createIndex(null, this.namespace,
-				setName, indexName, binName, indexType);
-		task.waitTillComplete();
+								String binName, IndexType indexType) {
+		try {
+			String setName = getSetName(domainType);
+			IndexTask task = client.createIndex(null, this.namespace,
+					setName, indexName, binName, indexType);
+			if (task != null) {
+				task.waitTillComplete();
+			}
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
+		}
 	}
 
 	@Override
 	public <T> void deleteIndex(Class<T> domainType, String indexName) {
-		String setName = getSetName(domainType);
-		client.dropIndex(null, this.namespace, setName, indexName);
+		try {
+			String setName = getSetName(domainType);
+			IndexTask task = client.dropIndex(null, this.namespace, setName, indexName);
+			if (task != null) {
+				task.waitTillComplete();
+			}
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
+		}
 	}
 
 	@Override
 	public boolean indexExists(String indexName) {
 		//TODO: should be moved to aerospike-client
-		Node[] nodes = client.getNodes();
-		if (nodes.length == 0) {
-			throw new AerospikeException.InvalidNode();
+		try {
+			Node[] nodes = client.getNodes();
+			if (nodes.length == 0) {
+				throw new AerospikeException.InvalidNode();
+			}
+			Node node = nodes[0];
+			String response = Info.request(node, "sindex/" + namespace + '/' + indexName);
+			return !response.startsWith("FAIL:201");
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
 		}
-		Node node = nodes[0];
-		String response = Info.request(node, "sindex/" + namespace + '/' + indexName);
-		return !response.startsWith("FAIL:201");
 	}
 
 	@Override
