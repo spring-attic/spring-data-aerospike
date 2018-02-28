@@ -15,21 +15,6 @@
  */
 package org.springframework.data.aerospike.core;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map.Entry;
-
-import org.springframework.data.aerospike.convert.AerospikeConverter;
-import org.springframework.data.aerospike.convert.AerospikeData;
-import org.springframework.data.aerospike.utility.Utils;
-import org.springframework.data.keyvalue.core.AbstractKeyValueAdapter;
-import org.springframework.data.keyvalue.core.KeyValueAdapter;
-import org.springframework.data.keyvalue.core.KeyValueTemplate;
-import org.springframework.data.keyvalue.core.query.KeyValueQuery;
-import org.springframework.data.util.CloseableIterator;
-
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
@@ -38,6 +23,21 @@ import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.Statement;
+import org.springframework.data.aerospike.convert.AerospikeConverter;
+import org.springframework.data.aerospike.convert.AerospikeReadData;
+import org.springframework.data.aerospike.convert.AerospikeWriteData;
+import org.springframework.data.aerospike.utility.Utils;
+import org.springframework.data.keyvalue.core.AbstractKeyValueAdapter;
+import org.springframework.data.keyvalue.core.KeyValueAdapter;
+import org.springframework.data.keyvalue.core.KeyValueTemplate;
+import org.springframework.data.keyvalue.core.query.KeyValueQuery;
+import org.springframework.data.util.CloseableIterator;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map.Entry;
 
 /**
  * An Aerospike-specific {@link KeyValueAdapter} to implement core sore interactions to be used by the
@@ -79,7 +79,7 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 	 */
 	@Override
 	public Object put(Serializable id, Object item, Serializable keyspace) {
-		AerospikeData data = AerospikeData.forWrite(namespace);
+		AerospikeWriteData data = AerospikeWriteData.forWrite();
 
 		converter.write(item, data);
 
@@ -107,7 +107,10 @@ public class AerospikeKeyValueAdapter extends AbstractKeyValueAdapter {
 
 		Key key = makeKey(keyspace.toString(), id.toString());
 		Record record = client.get(null, key);
-		AerospikeData data = AerospikeData.forRead(key, record);
+		if(record == null){
+			return null;
+		}
+		AerospikeReadData data = AerospikeReadData.forRead(key, record);
 		return converter.read(Object.class,  data);
 	}
 

@@ -16,7 +16,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.aerospike.repository.BaseRepositoriesIntegrationTests;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -36,7 +35,7 @@ import org.springframework.util.ObjectUtils;
  * @author Jean Mercier
  *
  */
-public class SpelQueryCreatorUnitTests extends BaseRepositoriesIntegrationTests {
+public class SpelQueryCreatorUnitTests {
 	
 	static final DateTimeFormatter FORMATTER = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC();
 

@@ -15,10 +15,14 @@
  *******************************************************************************/
 package org.springframework.data.aerospike.mapping;
 
-import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.util.TypeInformation;
-
 import com.aerospike.client.Key;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.core.env.Environment;
+import org.springframework.data.mapping.model.BasicPersistentEntity;
+import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Default implementation of {@link AerospikePersistentEntity}.
@@ -26,28 +30,61 @@ import com.aerospike.client.Key;
  * @author Oliver Gierke
  */
 public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, AerospikePersistentProperty> implements
-		AerospikePersistentEntity<T> {
+		AerospikePersistentEntity<T>, EnvironmentAware {
+
+	static final int DEFAULT_EXPIRATION = 0;
 
 	private final TypeInformation<?> typeInformation;
+	private final String defaultNameSpace;
+
+	private AerospikePersistentProperty expirationProperty;
+	private Environment environment;
 
 	/**
 	 * Creates a new {@link BasicAerospikePersistentEntity} using the given {@link TypeInformation}.
-	 * 
+	 *
 	 * @param information must not be {@literal null}.
+	 * @param defaultNameSpace
 	 */
-	public BasicAerospikePersistentEntity(TypeInformation<T> information) {
+	public BasicAerospikePersistentEntity(TypeInformation<T> information, String defaultNameSpace) {
 
 		super(information);
 		this.typeInformation = information;
+		this.defaultNameSpace = defaultNameSpace;
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.aerospike.mapping.AerospikePersistentEntity#getSetName()
-	 */
+	@Override
+	public void addPersistentProperty(AerospikePersistentProperty property) {
+		super.addPersistentProperty(property);
+
+		if (property.isExpirationProperty()) {
+			if (expirationProperty != null) {
+				String message = String.format("Attempt to add expiration property %s but already have property %s " +
+						"registered as expiration. Check your mapping configuration!", property.getField(), expirationProperty.getField());
+				throw new MappingException(message);
+			}
+
+			expirationProperty = property;
+		}
+	}
+
+	@Override
+	public String getNamespace() {
+		return defaultNameSpace;
+	}
+
+	/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.aerospike.mapping.AerospikePersistentEntity#getSetName()
+		 */
 	@Override
 	public String getSetName() {
-		return AerospikeSimpleTypes.getColletionName(typeInformation.getType());
+		Class<?> clazz = typeInformation.getType();
+		Document annotation = clazz.getAnnotation(Document.class);
+		if(annotation != null && ! annotation.collection().isEmpty()){
+			return annotation.collection();
+		}
+		return clazz.getSimpleName();
 	}
 
 	@Override
@@ -57,14 +94,53 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 	}
 
 	@Override
-	public long getGeneration() {
-		// TODO Auto-generated method stub
-		return 0;
+	public int getExpiration() {
+		Document annotation = getType().getAnnotation(Document.class);
+		if (annotation == null) {
+			return DEFAULT_EXPIRATION;
+		}
+
+		int expirationValue = getExpirationValue(annotation);
+		return (int) annotation.expirationUnit().toSeconds(expirationValue);
 	}
 
 	@Override
-	public int getTTL() {
-		// TODO Auto-generated method stub
-		return 0;
+	public boolean isTouchOnRead() {
+		Document annotation = getType().getAnnotation(Document.class);
+		return annotation != null && annotation.touchOnRead();
+	}
+
+	@Override
+	public AerospikePersistentProperty getExpirationProperty() {
+		return expirationProperty;
+	}
+
+	@Override
+	public boolean hasExpirationProperty() {
+		return expirationProperty != null;
+	}
+
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
+	}
+
+	private int getExpirationValue(Document annotation) {
+		int expiration = annotation.expiration();
+		String expressionString = annotation.expirationExpression();
+
+		if (StringUtils.hasLength(expressionString)) {
+			Assert.state(expiration == DEFAULT_EXPIRATION, "Both 'expiration' and 'expirationExpression' are set");
+			Assert.notNull(environment, "Environment must be set to use 'expirationExpression'");
+
+			String resolvedExpression = environment.resolveRequiredPlaceholders(expressionString);
+			try {
+				return Integer.parseInt(resolvedExpression);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Invalid Integer value for expiration expression: " + resolvedExpression);
+			}
+		}
+
+		return expiration;
 	}
 }

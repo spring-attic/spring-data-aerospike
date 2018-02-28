@@ -18,12 +18,13 @@ package org.springframework.data.aerospike.core;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.keyvalue.core.KeyValueCallback;
 import org.springframework.data.mapping.context.MappingContext;
 
+import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Value;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
@@ -47,18 +48,9 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	
 	/**
 	 * Insert operation using the WritePolicy.recordExisits policy of CREATE_ONLY 
-	 * @param objectToInsert
-	 * @return
+	 * @param document
 	 */
-	public <T> T insert(T objectToInsert);
-	
-	/**
-	 * Insert operation using the WritePolicy specified. 
-	 * @param objectToInsert
-	 * @param policy
-	 * @return
-	 */
-	public <T> T insert(T objectToInsert, WritePolicy policy);
+	void insert(Object document);
 
 	/**
 	 * @return mapping context in use.
@@ -66,25 +58,39 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	MappingContext<?, ?> getMappingContext();
 	
 	/**
-	 * Save operation using the WritePolicy.recordExisits policy of CREATE_ONLY
-	 * @param objectToInsert
+	 * Save operation.
+	 *
+	 * If document has version property - CAS algorithm is used for updating record.
+	 * Version property is used for deciding whether to create new record or update existing.
+	 * If version is set to zero - new record will be created, creation will fail is such record already exists.
+	 * If version is greater than zero - existing record will be updated with RecordExistsAction.REPLACE_ONLY policy
+	 * taking into consideration the version property of the document.
+	 *
+	 * If document does not have version property - record is updated with RecordExistsAction.UPDATE policy.
+	 * This means that when such record does not exist it will be created, otherwise updated.
+	 * @param document
 	 */
-	void save(Object objectToInsert);
-	
+	void save(Object document);
+
 	/**
-	 * Save operation using the WritePolicy specified.
-	 * @param objectToInsert
-	 * @param policy
+	 * Persist document using specified WritePolicy
+	 * @param document
+	 * @param writePolicy
 	 */
-	void save(Object objectToInsert, WritePolicy policy);
-	
+	void persist(Object document, WritePolicy writePolicy);
+
+	/**
+	 * Update operation using the WritePolicy.recordExisits policy of UPDATE_ONLY
+	 * @param objectToUpdate
+	 */
 	void update(Object objectToUpdate);
-	void update(Object objectToUpdate, WritePolicy policy);
 
 	void delete(Class<?> type);
-	
-	<T> T delete(Serializable id, Class<T> type);
-	<T> T delete(T objectToDelete);
+
+	boolean delete(Serializable id, Class<?> type);
+	boolean delete(Object objectToDelete);
+
+	boolean exists(Serializable id, Class<?> type);
 	
 	<T> Iterable<T> find(Query query, Class<T> type);
 	<T> List<T> findAll(Class<T> type);
@@ -93,7 +99,7 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	<T> List<T> findByIDs(Iterable<Serializable> IDs, Class<T> type);
 
 	<T> T add(T objectToAddTo, Map<String, Long> values);
-	<T> T add(T objectToAddTo, String binName, int value);
+	<T> T add(T objectToAddTo, String binName, long value);
 
 	<T> T append(T objectToAppendTo, Map<String, String> values);
 	<T> T append(T objectToAppendTo, String binName, String value);
@@ -114,10 +120,10 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	/**
 	 * Execute operation against underlying store.
 	 * 
-	 * @param action must not be {@literal null}.
+	 * @param supplier must not be {@literal null}.
 	 * @return
 	 */
-	<T> T execute(KeyValueCallback<T> action);
+	<T> T execute(Supplier<T> supplier);
 
 	/**
 	 * @param sort
@@ -142,7 +148,7 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	long count(Class<?> type,String setName);
 
 	/**
-	 * @param <T>
+	 * Creates index by specified name in Aerospike.
 	 * @param domainType
 	 * @param indexName
 	 * @param binName
@@ -152,9 +158,24 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 			IndexType indexType);
 
 	/**
+	 * Deletes index by specified name from Aerospike.
+	 * @param domainType
+	 * @param indexName
+	 */
+	<T> void deleteIndex(Class<T> domainType, String indexName);
+
+	/**
+	 * Checks whether index by specified name exists in Aerospike.
+	 * @param indexName
+	 * @return true if exists
+	 */
+	boolean indexExists(String indexName);
+
+	/**
 	 * @param type
 	 * @return
 	 */
 	long count(Class<?> type);
 
+	AerospikeClient getAerospikeClient();
 }

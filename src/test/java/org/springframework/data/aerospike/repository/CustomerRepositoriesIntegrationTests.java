@@ -19,19 +19,23 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+
 import java.util.Arrays;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.aerospike.BaseIntegrationTests;
+
 import org.springframework.data.aerospike.sample.Customer;
 import org.springframework.data.aerospike.sample.CustomerRepository;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 
+
 /**
  * @author Oliver Gierke
  */
-public class CustomerRepositoriesIntegrationTests extends BaseRepositoriesIntegrationTests {
+public class CustomerRepositoriesIntegrationTests extends BaseIntegrationTests {
 
 	@Autowired CustomerRepository repository;
 

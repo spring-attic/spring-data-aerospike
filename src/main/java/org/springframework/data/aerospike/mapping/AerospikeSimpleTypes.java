@@ -65,8 +65,7 @@ public abstract class AerospikeSimpleTypes {
 		simpleTypes.add(Date.class);
 		simpleTypes.add(Locale.class);
 		simpleTypes.add(Class.class);
-		simpleTypes.add(List.class);
-		simpleTypes.add(Map.class);
+		simpleTypes.add(Enum.class);
 		simpleTypes.add(Byte[].class);
 		simpleTypes.add(UUID.class);
 		AEROSPIKE_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
@@ -77,11 +76,4 @@ public abstract class AerospikeSimpleTypes {
 
 	private AerospikeSimpleTypes() {}
 
-	public static String getColletionName(Class<?> clazz){
-		Document annotation = (Document)clazz.getAnnotation(Document.class);
-		if(annotation != null && ! annotation.collection().isEmpty()){
-			return annotation.collection();
-		}
-		return clazz.getSimpleName();
-	}
 }
