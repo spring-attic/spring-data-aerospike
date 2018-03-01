@@ -35,11 +35,14 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.convert.AerospikeReadData;
+import org.springframework.data.aerospike.convert.AerospikeTypeAliasAccessor;
 import org.springframework.data.aerospike.convert.AerospikeWriteData;
+import org.springframework.data.aerospike.convert.CustomConversions;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
+import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
 import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
@@ -98,6 +101,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 	private AerospikeExceptionTranslator exceptionTranslator;
 
+	
 	/**
 	 * Creates a new {@link AerospikeTemplate} for the given
 	 * {@link AerospikeClient}.
@@ -122,6 +126,26 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 		this.queryEngine = new QueryEngine(this.client);
 
+		loggerSetup();
+	}
+	
+	public AerospikeTemplate(AerospikeClient client, String namespace) {
+		Assert.notNull(client, "Aerospike client must not be null!");
+		Assert.notNull(namespace, "Namespace cannot be null");
+		Assert.hasLength(namespace, "Namespace cannot be empty");
+		
+		this.client = client;
+		this.namespace = namespace;
+		
+		AerospikeMappingContext asContext = new AerospikeMappingContext();
+		asContext.setDefaultNameSpace(namespace);
+		this.mappingContext = asContext;
+		CustomConversions customConversions = new CustomConversions(Collections.emptyList(), AerospikeSimpleTypes.HOLDER);
+		this.converter = new MappingAerospikeConverter(asContext, customConversions, new AerospikeTypeAliasAccessor());
+		converter.afterPropertiesSet();
+		
+		this.queryEngine = new QueryEngine(this.client);
+		
 		loggerSetup();
 	}
 
