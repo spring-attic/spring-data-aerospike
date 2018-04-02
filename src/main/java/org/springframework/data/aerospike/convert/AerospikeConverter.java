@@ -25,7 +25,8 @@ import org.springframework.data.convert.EntityWriter;
  *
  * @author Oliver Gierke
  */
-public interface AerospikeConverter extends EntityReader<Object, AerospikeReadData>, EntityWriter<Object, AerospikeWriteData> {
+public interface AerospikeConverter extends
+	EntityReader<Object, AerospikeReadData>, EntityWriter<Object, AerospikeWriteData>{
 
 	ConversionService getConversionService();
 }

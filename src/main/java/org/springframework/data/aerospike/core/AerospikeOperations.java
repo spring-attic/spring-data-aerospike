@@ -16,16 +16,15 @@
 package org.springframework.data.aerospike.core;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import com.aerospike.client.AerospikeClient;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.context.MappingContext;
 
+import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Value;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
@@ -93,11 +92,11 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 
 	boolean exists(Serializable id, Class<?> type);
 	
-	<T> Iterable<T> find(Query<?> query, Class<T> type);
+	<T> Iterable<T> find(Query query, Class<T> type);
 	<T> List<T> findAll(Class<T> type);
 
 	<T> T findById(Serializable id, Class<T> type);
-	<T> List<T> findByIds(Collection<?> ids, Class<T> type);
+	<T> List<T> findByIDs(Iterable<Serializable> IDs, Class<T> type);
 
 	<T> T add(T objectToAddTo, Map<String, Long> values);
 	<T> T add(T objectToAddTo, String binName, long value);
@@ -108,14 +107,15 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	<T> T prepend(T objectToPrependTo, String binName, String value);
 	
 	<T> Iterable<T> aggregate(Filter filter, Class<T> outputType, String module, String function, List<Value> arguments);
-	
+
+
 
 	/**
 	 * @param query
 	 * @param javaType
 	 * @return
 	 */
-	int count(Query<?> query, Class<?> javaType);
+	int count(Query query, Class<?> javaType);
 
 	/**
 	 * Execute operation against underlying store.

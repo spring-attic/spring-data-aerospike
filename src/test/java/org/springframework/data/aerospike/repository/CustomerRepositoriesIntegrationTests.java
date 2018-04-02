@@ -19,11 +19,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+
+import java.util.Arrays;
+
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.aerospike.BaseIntegrationTests;
+
 import org.springframework.data.aerospike.sample.Customer;
 import org.springframework.data.aerospike.sample.CustomerRepository;
+
+import jersey.repackaged.com.google.common.collect.Lists;
+
 
 /**
  * @author Oliver Gierke
@@ -59,4 +66,13 @@ public class CustomerRepositoriesIntegrationTests extends BaseIntegrationTests {
 		assertEquals(customer.getFirstname(), findById.getFirstname());
 	}
 
+	@Test
+	public void testFindAllByIDs(){
+		repository.save(new Customer("dave-001", "Dave", "AMatthews"));
+		repository.save(new Customer("dave-002", "Dave", "BMatthews"));
+		repository.save(new Customer("dave-003", "Dave", "CMatthews"));
+		repository.save(new Customer("dave-004", "Dave", "DMatthews"));
+		Iterable<Customer> customers = repository.findAll(Arrays.asList("dave-001", "dave-004"));
+		assertEquals(Lists.newArrayList(customers).size(), 2);
+	}
 }

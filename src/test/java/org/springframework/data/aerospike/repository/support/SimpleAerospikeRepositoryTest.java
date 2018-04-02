@@ -159,8 +159,9 @@ public class SimpleAerospikeRepositoryTest {
 	@Test
 	public void testDeleteAll() {
 		aerospikeRepository.deleteAll();
-
-		verify(operations).delete(Person.class);
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {}
 	}
 
 	@Test

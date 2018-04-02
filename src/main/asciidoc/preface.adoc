@@ -28,7 +28,7 @@ The jumping off ground for learning about Aerospike is http://www.aerospike.com/
 [[requirements]]
 == Requirements
 
-Spring Data Aerospike 3.1.x binaries requires JDK level 6.0 and above, and http://spring.io/docs[Spring Framework] 4.0.x and above.
+Spring Data Aerospike 3.1.x binaries requires JDK level 8.0 and above, and http://spring.io/docs[Spring Framework] 4.3.x and above.
 
 In terms of servers, http://www.aerospike.com/download/server/[Aerospike] at least 3.5
 

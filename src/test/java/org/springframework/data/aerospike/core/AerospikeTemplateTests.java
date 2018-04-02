@@ -623,26 +623,6 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		assertThat(template.delete(one)).isFalse();
 	}
 
-	@Test
-	public void findByIds_shouldFindExisting() {
-		Person firstPerson = Person.builder().id(nextId()).firstName("first").emailAddress("gmail.com").build();
-		template.save(firstPerson);
-
-		Person secondPerson = Person.builder().id(nextId()).firstName("second").emailAddress("gmail.com").build();
-		template.save(secondPerson);
-
-		List<String> ids = Arrays.asList(nextId(), firstPerson.getId(), secondPerson.getId());
-
-		List<Person> actual = template.findByIds(ids, Person.class);
-		assertThat(actual).containsExactly(firstPerson, secondPerson);
-	}
-
-	@Test
-	public void findByIds_shouldReturnEmptyList() {
-		List<Person> actual = template.findByIds(Collections.emptyList(), Person.class);
-		assertThat(actual).isEmpty();
-	}
-
 	@Test(expected = IllegalStateException.class)
 	public void findById_shouldFailOnTouchOnReadWithExpirationProperty() {
 		String id = nextId();

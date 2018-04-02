@@ -20,16 +20,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.aerospike.client.policy.WritePolicy;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.aerospike.BaseIntegrationTests;
-import org.springframework.data.aerospike.sample.ContactRepository;
-import org.springframework.data.aerospike.sample.Person;
 import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
+import org.springframework.data.aerospike.sample.ContactRepository;
+import org.springframework.data.aerospike.sample.Person;
 import org.springframework.data.aerospike.sample.PersonRepository;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
@@ -43,11 +42,11 @@ import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.client.policy.ScanPolicy;
+import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.Filter;
 import com.aerospike.client.query.IndexType;
 import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.Statement;
-import com.aerospike.client.task.IndexTask;
 
 /**
  * Integration tests for {@link AerospikeTemplate}.
@@ -161,8 +160,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		Assert.assertEquals(10, list.size());
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T> Query<T> createQueryForMethodWithArgs(String methodName, Object... args)
+	private <T> Query createQueryForMethodWithArgs(String methodName, Object... args)
 			throws NoSuchMethodException, SecurityException {
 
 		Class<?>[] argTypes = new Class<?>[args.length];
@@ -178,12 +176,12 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		PartTree partTree = new PartTree(method.getName(), Person.class);
 		AerospikeQueryCreator creator = new AerospikeQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,repositoryMetaData, new SpelAwareProxyProjectionFactory()).getParameters(), args));
 
-		Query<T> q = (Query<T>) creator.createQuery();
+		Query q = (Query) creator.createQuery();
 
 		return q;
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings("unused")
 	@Test
 	public void testFindWithFilterEqual() throws NoSuchMethodException, Exception{
 		createIndexIfNotExists(Person.class, "first_name_index", "firstname", IndexType.STRING);
@@ -210,7 +208,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		Assert.assertEquals(10, count);
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings("unused")
 	@Test 
 	public void testFindWithFilterEqualOrderBy() throws NoSuchMethodException, Exception{
 		createIndexIfNotExists(Person.class, "age_index", "age", IndexType.NUMERIC);
@@ -257,7 +255,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		Assert.assertEquals(10, count);
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings("unused")
 	@Test 
 	public void testFindWithFilterEqualOrderByDesc() throws NoSuchMethodException, Exception{
 		createIndexIfNotExists(Person.class, "age_index", "age", IndexType.NUMERIC);
@@ -304,7 +302,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		Assert.assertEquals(10, count);
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings("unused")
 	@Test
 	public void testFindWithFilterRange() throws NoSuchMethodException, Exception{
 		createIndexIfNotExists(Person.class, "age_index", "age", IndexType.NUMERIC);
@@ -350,6 +348,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		Assert.assertEquals(6, count);
 	}
 
+	@SuppressWarnings("unused")
 	@Test
 	public void testFindWithStatement(){
 		createIndexIfNotExists(Person.class,"first_name_index", "firstname", IndexType.STRING);

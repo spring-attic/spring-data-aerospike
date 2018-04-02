@@ -1,34 +1,79 @@
 package org.springframework.data.aerospike.convert;
 
-import com.aerospike.client.Bin;
-import com.aerospike.client.Key;
-import com.aerospike.client.Record;
-import com.aerospike.client.Value;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.aerospike.AsCollections.list;
+import static org.springframework.data.aerospike.AsCollections.of;
+import static org.springframework.data.aerospike.AsCollections.set;
+import static org.springframework.data.aerospike.SampleClasses.EXPIRATION_ONE_MINUTE;
+import static org.springframework.data.aerospike.SampleClasses.EXPIRATION_ONE_SECOND;
+import static org.springframework.data.aerospike.SampleClasses.SimpleClass.SIMPLESET;
+import static org.springframework.data.aerospike.SampleClasses.SimpleClassWithPersistenceConstructor.SIMPLESET2;
+import static org.springframework.data.aerospike.SampleClasses.User.SIMPLESET3;
+
+import java.time.Duration;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 import org.assertj.core.data.Offset;
 import org.joda.time.DateTime;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.aerospike.SampleClasses.*;
+import org.springframework.data.aerospike.SampleClasses.Address;
+import org.springframework.data.aerospike.SampleClasses.AerospikeReadDataToUserConverter;
+import org.springframework.data.aerospike.SampleClasses.ClassWithComplexId;
+import org.springframework.data.aerospike.SampleClasses.ClassWithIdField;
+import org.springframework.data.aerospike.SampleClasses.ClassWithIntId;
+import org.springframework.data.aerospike.SampleClasses.CollectionOfObjects;
+import org.springframework.data.aerospike.SampleClasses.ComplexId;
+import org.springframework.data.aerospike.SampleClasses.ComplexIdToStringConverter;
+import org.springframework.data.aerospike.SampleClasses.Contact;
+import org.springframework.data.aerospike.SampleClasses.ContainerOfCustomFieldNames;
+import org.springframework.data.aerospike.SampleClasses.CustomFieldNames;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithDefaultConstructor;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithExpirationAnnotation;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithUnixTimeExpiration;
+import org.springframework.data.aerospike.SampleClasses.EnumProperties;
+import org.springframework.data.aerospike.SampleClasses.GenericType;
+import org.springframework.data.aerospike.SampleClasses.ListOfLists;
+import org.springframework.data.aerospike.SampleClasses.ListOfMaps;
+import org.springframework.data.aerospike.SampleClasses.MapWithCollectionValue;
+import org.springframework.data.aerospike.SampleClasses.MapWithGenericValue;
+import org.springframework.data.aerospike.SampleClasses.MapWithSimpleValue;
+import org.springframework.data.aerospike.SampleClasses.Name;
+import org.springframework.data.aerospike.SampleClasses.NestedMapsWithSimpleValue;
+import org.springframework.data.aerospike.SampleClasses.Person;
+import org.springframework.data.aerospike.SampleClasses.SetWithSimpleValue;
+import org.springframework.data.aerospike.SampleClasses.SimpleClass;
+import org.springframework.data.aerospike.SampleClasses.SimpleClassWithPersistenceConstructor;
+import org.springframework.data.aerospike.SampleClasses.SortedMapWithSimpleValue;
+import org.springframework.data.aerospike.SampleClasses.Street;
+import org.springframework.data.aerospike.SampleClasses.StringToComplexIdConverter;
+import org.springframework.data.aerospike.SampleClasses.TYPES;
+import org.springframework.data.aerospike.SampleClasses.User;
+import org.springframework.data.aerospike.SampleClasses.UserToAerospikeWriteDataConverter;
+import org.springframework.data.aerospike.SampleClasses.VersionedClass;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
 
-import java.time.Duration;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.data.aerospike.AsCollections.*;
-import static org.springframework.data.aerospike.SampleClasses.*;
-import static org.springframework.data.aerospike.SampleClasses.SimpleClass.SIMPLESET;
-import static org.springframework.data.aerospike.SampleClasses.SimpleClassWithPersistenceConstructor.SIMPLESET2;
-import static org.springframework.data.aerospike.SampleClasses.User.SIMPLESET3;
+import com.aerospike.client.Bin;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.Value;
 
 public class MappingAerospikeConverterTest {
 
@@ -480,6 +525,7 @@ public class MappingAerospikeConverterTest {
 		AerospikeReadData dbObject = AerospikeReadData.forRead(new Key(NAMESPACE, "NestedMapsWithSimpleValue", 10L), record(bins));
 
 		NestedMapsWithSimpleValue result = converter.read(NestedMapsWithSimpleValue.class, dbObject);
+
 
 		Map<String, Map<String, Map<String, String>>> map = of(
 				"level-1", of("level-1-1", of("1", "2")),

@@ -1,8 +1,12 @@
 package org.springframework.data.aerospike.convert;
 
-import com.aerospike.client.Key;
-import com.aerospike.client.Record;
-import com.aerospike.client.Value;
+import static org.springframework.data.aerospike.convert.AerospikeMetaData.USER_KEY;
+import static org.springframework.data.aerospike.utility.TimeUtils.offsetInSecondsToUnixTime;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
@@ -22,13 +26,9 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import static org.springframework.data.aerospike.convert.AerospikeMetaData.USER_KEY;
-import static org.springframework.data.aerospike.utility.TimeUtils.offsetInSecondsToUnixTime;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.Value;
 
 public class MappingAerospikeReadConverter implements EntityReader<Object, AerospikeReadData> {
 
@@ -53,7 +53,6 @@ public class MappingAerospikeReadConverter implements EntityReader<Object, Aeros
 	* @see org.springframework.data.convert.EntityReader#read(java.lang.Class, S)
 	*/
 	@Override
-	@SuppressWarnings("unchecked")
 	public <R> R read(Class<R> targetClass, final AerospikeReadData data) {
 		if (data == null) {
 			return null;
@@ -84,6 +83,7 @@ public class MappingAerospikeReadConverter implements EntityReader<Object, Aeros
 		return convertProperties(entity, propertyValueProvider, accessor);
 	}
 
+	@SuppressWarnings("unchecked")
 	private <T> T getIdValue(Key key, Map<String, Object> data, AerospikePersistentProperty property) {
 		Value userKey = key.userKey;
 		Object value = userKey == null ? data.get(USER_KEY) : userKey.getObject();
@@ -220,7 +220,6 @@ public class MappingAerospikeReadConverter implements EntityReader<Object, Aeros
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(AerospikePersistentProperty property) {
 			if (key != null && property.isIdProperty()) {
 				return getIdValue(key, source, property);

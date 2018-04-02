@@ -17,10 +17,10 @@ package org.springframework.data.aerospike.sample;
 
 import java.util.UUID;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.springframework.data.aerospike.mapping.Document;
 import org.springframework.data.annotation.Id;
+
+import lombok.Data;
 /**
  * Sample contact domain class.
  * 

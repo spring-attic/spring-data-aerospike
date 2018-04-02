@@ -3,6 +3,7 @@
  */
 package org.springframework.data.aerospike.sample;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -82,7 +83,9 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 	List<Person> findByCredentials(Credentials credentials);
 	
 	List<Person> findCustomerByAgeBetween(Integer from, Integer to);
-	
+
+	List<Person> findByAgeIn(ArrayList<Integer> ages);
+
 	List<Person> findPersonByFirstname(String firstname);
 
 	long countByLastname(String lastname);

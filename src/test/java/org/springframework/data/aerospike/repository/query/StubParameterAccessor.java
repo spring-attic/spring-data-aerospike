@@ -3,12 +3,14 @@
  */
 package org.springframework.data.aerospike.repository.query;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.springframework.data.aerospike.core.AerospikeWriter;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
-import org.springframework.util.Assert;
+import org.springframework.data.geo.Distance;
 
 /**
  *
@@ -17,27 +19,31 @@ import org.springframework.util.Assert;
  * @author Jean Mercier
  *
  */
-public class ConvertingParameterAccessor implements AerospikeParameterAccessor {
+public class StubParameterAccessor implements AerospikeParameterAccessor {
+	
+	private final Object[] values;
 	
 	@SuppressWarnings("unused")
-	private final AerospikeWriter<?> writer;
-	private final AerospikeParameterAccessor delegate;
+	private Range<Distance> range = new Range<Distance>(null, null);
 	
-	public ConvertingParameterAccessor(AerospikeWriter<?> writer, AerospikeParameterAccessor delegate) {
+	@SuppressWarnings("unchecked")
+	public StubParameterAccessor(Object... values) {
 
-		Assert.notNull(writer);
-		Assert.notNull(delegate);
+		this.values = values;
 
-		this.writer = writer;
-		this.delegate = delegate;
+		for (Object value : values) {
+			if (value instanceof Range) {
+				this.range = (Range<Distance>) value;
+			} else if (value instanceof Distance) {
+				this.range = new Range<Distance>(null, (Distance) value);
+			}
+		}
 	}
-
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
 	 */
 	@Override
 	public Pageable getPageable() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -46,7 +52,6 @@ public class ConvertingParameterAccessor implements AerospikeParameterAccessor {
 	 */
 	@Override
 	public Sort getSort() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -55,8 +60,7 @@ public class ConvertingParameterAccessor implements AerospikeParameterAccessor {
 	 */
 	@Override
 	public Object getBindableValue(int index) {
-		// TODO Auto-generated method stub
-		return null;
+		return values[index];
 	}
 
 	/* (non-Javadoc)
@@ -64,7 +68,6 @@ public class ConvertingParameterAccessor implements AerospikeParameterAccessor {
 	 */
 	@Override
 	public boolean hasBindableNullValue() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -73,16 +76,7 @@ public class ConvertingParameterAccessor implements AerospikeParameterAccessor {
 	 */
 	@Override
 	public Iterator<Object> iterator() {
-		return delegate.iterator();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.aerospike.repository.query.AerospikeParameterAccessor#getFullText()
-	 */
-	@Override
-	public TextCriteria getFullText() {
-		// TODO Auto-generated method stub
-		return null;
+		return Arrays.asList(values).iterator();
 	}
 
 	/* (non-Javadoc)
@@ -90,10 +84,8 @@ public class ConvertingParameterAccessor implements AerospikeParameterAccessor {
 	 */
 	@Override
 	public Object[] getValues() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.values;
 	}
-
 	@Override
 	public Class<?> getDynamicProjection() {
 		// TODO Auto-generated method stub

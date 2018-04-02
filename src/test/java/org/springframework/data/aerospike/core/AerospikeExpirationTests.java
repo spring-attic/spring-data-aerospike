@@ -1,9 +1,10 @@
 package org.springframework.data.aerospike.core;
 
-import com.aerospike.client.Key;
-import com.aerospike.client.Record;
-import com.google.common.collect.ImmutableMap;
-import org.assertj.core.data.Offset;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
+
+import java.util.concurrent.TimeUnit;
+
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Rule;
@@ -11,12 +12,15 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.aerospike.BaseIntegrationTests;
-import org.springframework.data.aerospike.SampleClasses.*;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithDefaultConstructor;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithExpiration;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithExpirationAnnotation;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithExpirationOneDay;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithUnixTimeExpiration;
 
-import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.data.Offset.offset;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.google.common.collect.ImmutableMap;
 
 //TODO: Potentially unstable tests. Instead of sleeping, we need somehow do time travel like in CouchbaseMock.
 public class AerospikeExpirationTests extends BaseIntegrationTests {
@@ -120,13 +124,13 @@ public class AerospikeExpirationTests extends BaseIntegrationTests {
         Key key = new Key(template.getNamespace(), template.getSetName(DocumentWithExpirationOneDay.class), id);
 
         Record record = template.getAerospikeClient().get(null, key);
-        assertThat(record.getTimeToLive()).isCloseTo((int) TimeUnit.DAYS.toSeconds(1), offset(10));
+        assertThat(record.getTimeToLive()).isCloseTo((int) TimeUnit.DAYS.toSeconds(1), offset(30));
 
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         template.findById(id, DocumentWithExpirationOneDay.class);
 
         record = template.getAerospikeClient().get(null, key);
-        assertThat(record.getTimeToLive()).isCloseTo((int) TimeUnit.DAYS.toSeconds(1), offset(10));
+        assertThat(record.getTimeToLive()).isCloseTo((int) TimeUnit.DAYS.toSeconds(1), offset(30));
     }
 
     @Test

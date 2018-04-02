@@ -160,6 +160,7 @@ public class PersonRepositoryIntegrationTests extends BaseIntegrationTests {
 		assertThat(result.isLast(), is(false));
 	}
 
+	@SuppressWarnings("unused")
 	@Test
 	public void findsPersonInAgeRangeCorrectly() throws Exception {
 		Iterable<Person> it = repository.findByAgeBetween(40, 45);
@@ -172,6 +173,7 @@ public class PersonRepositoryIntegrationTests extends BaseIntegrationTests {
 		assertThat(result, hasItem(dave));
 	}
 
+	@SuppressWarnings("unused")
 	@Test
 	public void findsPersonInAgeRangeCorrectlyOrderByLastname() throws Exception {
 		Iterable<Person> it = repository.findByAgeBetweenOrderByLastname(30, 45);
@@ -182,6 +184,7 @@ public class PersonRepositoryIntegrationTests extends BaseIntegrationTests {
 		assertEquals(6, count);
 	}
 
+	@SuppressWarnings("unused")
 	@Test
 	public void findsPersonInAgeRangeAndNameCorrectly() throws Exception {
 		Iterable<Person> it = repository.findByAgeBetweenAndLastname(40, 45, "Matthews");
@@ -210,7 +213,7 @@ public class PersonRepositoryIntegrationTests extends BaseIntegrationTests {
 //		assertThat(repository.findByShippingAddresses(address), is(dave));
 //	}
 
-	@SuppressWarnings("serial")
+	@SuppressWarnings({ "serial", "unused" })
 	@Test
 	public void findsPersonByNameRetriveShippingAddressesCorrectly() throws Exception {
 		HashMap<String, Object> myMap = new HashMap<String, Object>();
