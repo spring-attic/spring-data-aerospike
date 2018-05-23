@@ -381,11 +381,6 @@ public class AerospikeTemplate implements AerospikeOperations {
 			return mapToEntity(key, type, record);
 		}
 		catch (AerospikeException e) {
-			//touch operation returns error if key not found
-			if (e.getResultCode() == ResultCode.KEY_NOT_FOUND_ERROR) {
-				return null;
-			}
-
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
 			throw translatedException == null ? e : translatedException;
 		}
@@ -395,7 +390,10 @@ public class AerospikeTemplate implements AerospikeOperations {
 		WritePolicy writePolicy = new WritePolicy(client.writePolicyDefault);
 		writePolicy.expiration = expiration;
 
-		return this.client.operate(writePolicy, key, Operation.touch(), Operation.get());
+		if (this.client.exists(null, key)) {
+			return this.client.operate(writePolicy, key, Operation.touch(), Operation.get());
+		}
+		return null;
 	}
 
 	@Override
