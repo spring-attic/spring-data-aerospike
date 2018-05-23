@@ -44,7 +44,6 @@ import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.aerospike.mapping.AerospikeSimpleTypes;
 import org.springframework.data.aerospike.mapping.BasicAerospikePersistentEntity;
-import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -98,8 +97,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	private final MappingAerospikeConverter converter;
 	private final String namespace;
 	private final QueryEngine queryEngine;
-
-	private AerospikeExceptionTranslator exceptionTranslator;
+	private final AerospikeExceptionTranslator exceptionTranslator;
 
 	
 	/**
@@ -110,6 +108,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 	 * @param mappingContext
 	 * @param exceptionTranslator
 	 * @param client must not be {@literal null}.
+	 * @param namespace must not be {@literal null} or empty.
 	 */
 	public AerospikeTemplate(AerospikeClient client, String namespace, MappingAerospikeConverter converter,
 							 AerospikeMappingContext mappingContext,
@@ -123,34 +122,38 @@ public class AerospikeTemplate implements AerospikeOperations {
 		this.exceptionTranslator = exceptionTranslator;
 		this.namespace = namespace;
 		this.mappingContext = mappingContext;
-
 		this.queryEngine = new QueryEngine(this.client);
 
 		loggerSetup();
 	}
-	
+
+	/**
+	 * Instead use the other constructor.
+	 */
+	@Deprecated
 	public AerospikeTemplate(AerospikeClient client, String namespace) {
 		Assert.notNull(client, "Aerospike client must not be null!");
 		Assert.notNull(namespace, "Namespace cannot be null");
 		Assert.hasLength(namespace, "Namespace cannot be empty");
-		
-		this.client = client;
-		this.namespace = namespace;
-		
+
+		CustomConversions customConversions = new CustomConversions(Collections.emptyList(), AerospikeSimpleTypes.HOLDER);
 		AerospikeMappingContext asContext = new AerospikeMappingContext();
 		asContext.setDefaultNameSpace(namespace);
-		this.mappingContext = asContext;
-		CustomConversions customConversions = new CustomConversions(Collections.emptyList(), AerospikeSimpleTypes.HOLDER);
+
+		this.client = client;
 		this.converter = new MappingAerospikeConverter(asContext, customConversions, new AerospikeTypeAliasAccessor());
-		converter.afterPropertiesSet();
-		
+		this.exceptionTranslator = new DefaultAerospikeExceptionTranslator();
+		this.namespace = namespace;
+		this.mappingContext = asContext;
 		this.queryEngine = new QueryEngine(this.client);
-		
+
+		this.converter.afterPropertiesSet();
+
 		loggerSetup();
 	}
 
 	private void loggerSetup() {
-		final Logger log = LoggerFactory.getLogger(AerospikeQueryCreator.class);
+		final Logger log = LoggerFactory.getLogger("com.aerospike.client");
 		com.aerospike.client.Log
 				.setCallback(new com.aerospike.client.Log.Callback() {
 
@@ -159,16 +162,16 @@ public class AerospikeTemplate implements AerospikeOperations {
 							String message) {
 						switch (level) {
 						case INFO:
-							log.info("AS: {}", message);
+							log.info("{}", message);
 							break;
 						case DEBUG:
-							log.debug("AS: {}", message);
+							log.debug("{}", message);
 							break;
 						case ERROR:
-							log.error("AS: {}", message);
+							log.error("{}", message);
 							break;
 						case WARN:
-							log.warn("AS: {}", message);
+							log.warn("{}", message);
 							break;
 						}
 
