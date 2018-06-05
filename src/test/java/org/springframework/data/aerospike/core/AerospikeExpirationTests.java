@@ -124,13 +124,14 @@ public class AerospikeExpirationTests extends BaseIntegrationTests {
         Key key = new Key(template.getNamespace(), template.getSetName(DocumentWithExpirationOneDay.class), id);
 
         Record record = template.getAerospikeClient().get(null, key);
-        assertThat(record.getTimeToLive()).isCloseTo((int) TimeUnit.DAYS.toSeconds(1), offset(30));
+        int initialExpiration = record.expiration;
 
-        Thread.sleep(1000);
+        Thread.sleep(2_000);
         template.findById(id, DocumentWithExpirationOneDay.class);
 
         record = template.getAerospikeClient().get(null, key);
-        assertThat(record.getTimeToLive()).isCloseTo((int) TimeUnit.DAYS.toSeconds(1), offset(30));
+        assertThat(record.expiration - initialExpiration)
+                .isCloseTo(2, offset(1));
     }
 
     @Test
