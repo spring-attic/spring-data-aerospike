@@ -291,7 +291,8 @@ public class AerospikeTemplate implements AerospikeOperations {
 	@Override
 	public void delete(Class<?> type) {
 		try {
-			client.truncate(null, getNamespace(), type.getSimpleName(), null);
+			String set = getSetName(type);
+			client.truncate(null, getNamespace(), set, null);
 		}
 		catch (AerospikeException o_O) {
 			DataAccessException translatedException = exceptionTranslator
