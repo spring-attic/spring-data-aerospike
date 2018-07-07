@@ -11,8 +11,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.aerospike.core.AerospikeOperations;
 import org.springframework.data.aerospike.core.Person;
 import org.springframework.data.domain.Page;
@@ -34,7 +33,7 @@ import static org.mockito.Mockito.*;
  * @author Peter Milne
  * @author Jean Mercier
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class SimpleAerospikeRepositoryTest {
 
 	@Mock
@@ -107,7 +106,8 @@ public class SimpleAerospikeRepositoryTest {
 		Page<Person> page = new PageImpl<>(IterableConverter.toList(testPersons), new PageRequest(0, 2), 5);
 
 		doReturn(testPersons).when(operations).findInRange(0, 2, null, Person.class);
-		doReturn(5L).when(operations).count(Mockito.anyVararg(), anyString());
+		doReturn("set").when(operations).getSetName(Person.class);
+		doReturn(5L).when(operations).count(Person.class, "set");
 
 		Page<Person> result = aerospikeRepository.findAll(new PageRequest(0, 2));
 

@@ -270,17 +270,17 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	@Test
 	public void insertsSimpleEntityCorrectly() {
-		Person person = new Person("Person-01","Oliver");
+		Person person = new Person(id,"Oliver");
 		person.setAge(25);
 		template.insert(person);
 
-		Person person1 =  template.findById("Person-01", Person.class);
+		Person person1 =  template.findById(id, Person.class);
 		assertThat(person1).isEqualTo(person);
 	}
 
 	@Test
 	public void findbyIdFail() {
-		Person person = new Person("Person-01","Oliver");
+		Person person = new Person(id,"Oliver");
 		person.setAge(25);
 		template.insert(person);
 
@@ -290,7 +290,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	@Test (expected = DuplicateKeyException.class)
 	public void throwsExceptionForDuplicateIds() {
-		Person person = new Person("Person-02","Amol");
+		Person person = new Person(id,"Amol");
 		person.setAge(28);
 
 		template.insert(person);
@@ -299,7 +299,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	@Test (expected = DuplicateKeyException.class)
 	public void rejectsDuplicateIdInInsertAll() {
-		Person person = new Person("Biff-01", "Amol");
+		Person person = new Person(id, "Amol");
 		person.setAge(28);
 
 		List<Person> records = new ArrayList<Person>();
@@ -311,85 +311,64 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	@Test(expected = DataRetrievalFailureException.class)
 	public void shouldThrowExceptionOnUpdateForNonexistingKey(){
-		template.update(new Person("Sven-06","svenfirstName",11));
+		template.update(new Person(id,"svenfirstName",11));
 	}
 
 	@Test
 	public void testUpdateSuccess(){
-		Person person = new Person("Sven-04","WLastName",11);
+		Person person = new Person(id,"WLastName",11);
 		template.insert(person);
 
 		template.update(person);
 
-		Person result = template.findById("Sven-04", Person.class);
+		Person result = template.findById(id, Person.class);
 
 		assertThat(result.getAge()).isEqualTo(11);
 	}
 
 	@Test
 	public void testSimpleDeleteByObject(){
-		Person personSven01 = new Person("Sven-01","ZLastName",25);
-		Person personSven02 = new Person("Sven-02","QLastName",21);
-		Person personSven03 = new Person("Sven-03","ALastName",24);
-		Person personSven04 = new Person("Sven-04","WLastName",35);
+		Person personSven02 = new Person(id,"QLastName",21);
 
-		template.insert(personSven01);
 		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
 
 		boolean deleted = template.delete(personSven02);
 		assertThat(deleted).isTrue();
 
-		Person result = template.findById("Sven-02", Person.class);
+		Person result = template.findById(id, Person.class);
 		assertThat(result).isNull();
 	}
 
 	@Test
 	public void testSimpleDeleteById(){
-		Person personSven01 = new Person("Sven-01","ZLastName",25);
-		Person personSven02 = new Person("Sven-02","QLastName",21);
-		Person personSven03 = new Person("Sven-03","ALastName",24);
-		Person personSven04 = new Person("Sven-04","WLastName",35);
+		Person personSven02 = new Person(id,"QLastName",21);
 
-		template.insert(personSven01);
 		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
 
-		boolean deleted = template.delete("Sven-02", Person.class);
+		boolean deleted = template.delete(id, Person.class);
 		assertThat(deleted).isTrue();
 
-		Person result = template.findById("Sven-02", Person.class);
+		Person result = template.findById(id, Person.class);
 		assertThat(result).isNull();
 	}
 
 	@Test
 	public void StoreAndRetrieveMap(){
-		Person personSven01 = new Person("Sven-01","ZLastName",25);
-		Person personSven02 = new Person("Sven-02","QLastName",50);
-		Person personSven03 = new Person("Sven-03","ALastName",24);
-		Person personSven04 = new Person("Sven-04","WLastName",25);
+		Person personSven02 = new Person(id,"QLastName",50);
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("key", "value");
 			personSven02.setMap(map);
 
-		template.insert(personSven01);
 		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
 
-		Person findDate = template.findById("Sven-02", Person.class);
+		Person findDate = template.findById(id, Person.class);
 
 		assertThat(findDate.getMap()).isEqualTo(map);
 	}
 
 	@Test
 	public void StoreAndRetrieveList(){
-		Person personSven01 = new Person("Sven-01", "ZLastName", 25);
-		Person personSven02 = new Person("Sven-02", "QLastName", 50);
-		Person personSven03 = new Person("Sven-03", "ALastName", 24);
-		Person personSven04 = new Person("Sven-04", "WLastName", 25);
+		Person personSven02 = new Person(id, "QLastName", 50);
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("key1", "value1");
 		map.put("key2", "value2");
@@ -401,12 +380,9 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		list.add("string3");
 		personSven02.setList(list);
 
-		template.insert(personSven01);
 		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
 
-		Person findDate = template.findById("Sven-02", Person.class);
+		Person findDate = template.findById(id, Person.class);
 
 		assertThat(findDate.getMap()).isEqualTo(map);
 		assertThat(findDate.getList()).isEqualTo(list);
@@ -414,10 +390,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	@Test
 	public void TestAddToList() {
-		Person personSven01 = new Person("Sven-01", "ZLastName", 25);
-		Person personSven02 = new Person("Sven-02", "QLastName", 50);
-		Person personSven03 = new Person("Sven-03", "ALastName", 24);
-		Person personSven04 = new Person("Sven-04", "WLastName", 25);
+		Person personSven02 = new Person(id, "QLastName", 50);
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("key1", "value1");
 		map.put("key2", "value2");
@@ -429,15 +402,12 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		list.add("string3");
 		personSven02.setList(list);
 
-		template.insert(personSven01);
 		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
 
-		Person personWithList = template.findById("Sven-02", Person.class);
+		Person personWithList = template.findById(id, Person.class);
 		personWithList.getList().add("Added something new");
 		template.update(personWithList);
-		Person personWithList2 = template.findById("Sven-02", Person.class);
+		Person personWithList2 = template.findById(id, Person.class);
 
 		assertThat(personWithList2).isEqualTo(personWithList);
 		assertThat(personWithList2.getList()).hasSize(4);
@@ -446,10 +416,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	@Test
 	public void TestAddToMap() {
 
-		Person personSven01 = new Person("Sven-01", "ZLastName", 25);
-		Person personSven02 = new Person("Sven-02", "QLastName", 50);
-		Person personSven03 = new Person("Sven-03", "ALastName", 24);
-		Person personSven04 = new Person("Sven-04", "WLastName", 25);
+		Person personSven02 = new Person(id, "QLastName", 50);
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("key1", "value1");
 		map.put("key2", "value2");
@@ -461,15 +428,12 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		list.add("string3");
 		personSven02.setList(list);
 
-		template.insert(personSven01);
 		template.insert(personSven02);
-		template.insert(personSven03);
-		template.insert(personSven04);
 
-		Person personWithList = template.findById("Sven-02", Person.class);
+		Person personWithList = template.findById(id, Person.class);
 		personWithList.getMap().put("key4","Added something new");
 		template.update(personWithList);
-		Person personWithList2 = template.findById("Sven-02", Person.class);
+		Person personWithList2 = template.findById(id, Person.class);
 
 		assertThat(personWithList2).isEqualTo(personWithList);
 		assertThat(personWithList2.getMap()).hasSize(4);
