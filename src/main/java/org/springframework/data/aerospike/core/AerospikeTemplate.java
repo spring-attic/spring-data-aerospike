@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -399,16 +401,48 @@ public class AerospikeTemplate implements AerospikeOperations {
 		return null;
 	}
 
+	/**
+	 * Instead use findByIds
+	 */
+	@Deprecated
 	@Override
-	public 	<T> List<T> findByIDs(Iterable<Serializable> IDs, Class<T> type){
-		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
-		List<Key> kList = new ArrayList<Key>();
-		IDs.forEach(id -> kList.add(new Key(this.namespace, entity.getSetName(), id.toString())));
-		Record[] rs = this.client.get(null, kList.toArray(new Key[kList.size()]));
-		final List<T> tList = new ArrayList<T>();
-		for(int i=0; i < rs.length; i++)
-			tList.add(mapToEntity(kList.get(i), type, rs[i]));
-		return tList;
+	public 	<T> List<T> findByIDs(Iterable<? extends Serializable> ids, Class<T> type){
+		Assert.notNull(ids, "List of ids must not be null!");
+		Assert.notNull(type, "Type must not be null!");
+
+		return findByIdsInternal(IterableConverter.toList(ids), type);
+	}
+
+	@Override
+	public <T> List<T> findByIds(Iterable<?> ids, Class<T> type) {
+		Assert.notNull(ids, "List of ids must not be null!");
+		Assert.notNull(type, "Type must not be null!");
+
+		return findByIdsInternal(IterableConverter.toList(ids), type);
+	}
+
+	private <T> List<T> findByIdsInternal(Collection<?> ids, Class<T> type) {
+		if (ids.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		try {
+			AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
+
+			Key[] keys = ids.stream()
+					.map(id -> getKey(id, entity))
+					.toArray(Key[]::new);
+
+			Record[] records = client.get(null, keys);
+
+			return IntStream.range(0, keys.length)
+					.filter(index -> records[index] != null)
+					.mapToObj(index -> mapToEntity(keys[index], type, records[index]))
+					.collect(Collectors.toList());
+		} catch (AerospikeException e) {
+			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
+			throw translatedException == null ? e : translatedException;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
