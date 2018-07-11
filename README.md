@@ -28,26 +28,25 @@ Add the Maven dependency:
 <dependency>
   <groupId>com.aerospike</groupId>
   <artifactId>spring-data-aerospike</artifactId>
-  <version>1.0.2.RELEASE</version>
+  <version>1.2.1.RELEASE</version>
 </dependency>
 ```
 
-The Aersopike Spring Data connector depends on the Aerospike Client and the Aerospike Helper projects:
+The Aerospike Spring Data connector depends on the Aerospike Client and the Aerospike Helper projects:
 
 ```xml
 <dependency>
   <groupId>com.aerospike</groupId>
   <artifactId>aerospike-client</artifactId>
-  <version>3.3.4</version>
 </dependency>
 
 <dependency>
   <groupId>com.aerospike</groupId>
   <artifactId>aerospike-helper-java</artifactId>
-  <version>1.2</version>
 </dependency>
 ```
-
+Both dependencies will be provided for you by `spring-data-aerospike`, so no need to declare them additionally.
+ 
 Note that the 1.2 version of the Aerospike Helper requires Aerospike server 3.12+ as it takes advantage of the PredExp feature for performing queries. Use version 1.1 of the Aerospike Helper for earlier versions of the Aerospike Server.
 
 ### AerospikeTemplate
