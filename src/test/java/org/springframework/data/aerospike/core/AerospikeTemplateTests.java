@@ -3,7 +3,10 @@
  */
 package org.springframework.data.aerospike.core;
 
-import com.aerospike.client.*;
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Bin;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
@@ -18,16 +21,24 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.AsyncUtils;
 import org.springframework.data.aerospike.BaseIntegrationTests;
+import org.springframework.data.aerospike.SampleClasses;
 import org.springframework.data.aerospike.SampleClasses.CustomCollectionClass;
+import org.springframework.data.aerospike.SampleClasses.DocumentWithExpiration;
 import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnRead;
 import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnReadAndExpirationProperty;
 import org.springframework.data.aerospike.SampleClasses.VersionedClass;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Duration.TEN_SECONDS;
 import static org.springframework.data.aerospike.SampleClasses.EXPIRATION_ONE_MINUTE;
 
 /**
@@ -477,9 +488,47 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 	}
 
-	@Test (expected = NullPointerException.class)
-	public void removingNullIsANoOp() {
-		template.delete(null);
+	@Test
+	public void deleteByTypeShouldDeleteAllDocumentsWithCustomSetName() throws Exception {
+		String id1 = nextId();
+		String id2 = nextId();
+		template.save(new VersionedClass(id1, "field-value"));
+		template.save(new VersionedClass(id2, "field-value"));
+
+		template.delete(SampleClasses.VersionedClass.class);
+
+		// truncate is async operation that is why we need to wait until
+		// it completes
+		await().atMost(TEN_SECONDS)
+				.untilAsserted(() -> {
+					assertThat(template.findById(id1, VersionedClass.class)).isNull();
+					assertThat(template.findById(id2, VersionedClass.class)).isNull();
+				});
+	}
+
+	@Test
+	public void deleteByTypeShouldDeleteAllDocumentsWithDefaultSetName() throws Exception {
+		String id1 = nextId();
+		String id2 = nextId();
+		template.save(new DocumentWithExpiration(id1));
+		template.save(new DocumentWithExpiration(id2));
+
+		template.delete(DocumentWithExpiration.class);
+
+		// truncate is async operation that is why we need to wait until
+		// it completes
+		await().atMost(TEN_SECONDS)
+				.untilAsserted(() -> {
+					assertThat(template.findById(id1, DocumentWithExpiration.class)).isNull();
+					assertThat(template.findById(id2, DocumentWithExpiration.class)).isNull();
+				});
+	}
+
+	@Test
+	public void deleteByMullTypeThrowsException() {
+		assertThatThrownBy(() -> template.delete(null))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessage("Type must not be null!");
 	}
 
 	@Test(expected = IllegalArgumentException.class)
