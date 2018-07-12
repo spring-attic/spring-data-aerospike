@@ -96,7 +96,14 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	<T> List<T> findAll(Class<T> type);
 
 	<T> T findById(Serializable id, Class<T> type);
-	<T> List<T> findByIDs(Iterable<Serializable> IDs, Class<T> type);
+
+	/**
+	 * Instead use findByIds
+	 */
+	@Deprecated
+	<T> List<T> findByIDs(Iterable<? extends Serializable> IDs, Class<T> type);
+
+	<T> List<T> findByIds(Iterable<?> IDs, Class<T> type);
 
 	<T> T add(T objectToAddTo, Map<String, Long> values);
 	<T> T add(T objectToAddTo, String binName, long value);

@@ -107,7 +107,7 @@ public class SimpleAerospikeRepository<T, ID extends Serializable> implements Ae
 	@SuppressWarnings("unchecked")
 	@Override
 	public Iterable<T> findAll(Iterable<ID> ids) {
-		return operations.findByIDs((Iterable<Serializable>)ids, entityInformation.getJavaType());
+		return operations.findByIds(ids, entityInformation.getJavaType());
 	}
 
 	/* (non-Javadoc)
