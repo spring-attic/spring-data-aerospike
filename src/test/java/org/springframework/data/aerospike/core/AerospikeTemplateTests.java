@@ -28,10 +28,7 @@ import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnRead;
 import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnReadAndExpirationProperty;
 import org.springframework.data.aerospike.SampleClasses.VersionedClass;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -456,17 +453,17 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	public void deleteByTypeShouldDeleteAllDocumentsWithCustomSetName() throws Exception {
 		String id1 = nextId();
 		String id2 = nextId();
-		template.save(new VersionedClass(id1, "field-value"));
-		template.save(new VersionedClass(id2, "field-value"));
+		template.save(new CustomCollectionClass(id1, "field-value"));
+		template.save(new CustomCollectionClass(id2, "field-value"));
 
-		template.delete(SampleClasses.VersionedClass.class);
+		template.delete(SampleClasses.CustomCollectionClass.class);
 
 		// truncate is async operation that is why we need to wait until
 		// it completes
 		await().atMost(TEN_SECONDS)
 				.untilAsserted(() -> {
-					assertThat(template.findById(id1, VersionedClass.class)).isNull();
-					assertThat(template.findById(id2, VersionedClass.class)).isNull();
+					assertThat(template.findById(id1, CustomCollectionClass.class)).isNull();
+					assertThat(template.findById(id2, CustomCollectionClass.class)).isNull();
 				});
 	}
 
