@@ -28,7 +28,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>com.aerospike</groupId>
   <artifactId>spring-data-aerospike</artifactId>
-  <version>1.0.2.RELEASE</version>
+  <version>1.2.1.RELEASE</version>
 </dependency>
 ```
 
@@ -38,13 +38,13 @@ The Aersopike Spring Data connector depends on the Aerospike Client and the Aero
 <dependency>
   <groupId>com.aerospike</groupId>
   <artifactId>aerospike-client</artifactId>
-  <version>3.3.4</version>
+  <version>4.1.3</version>
 </dependency>
 
 <dependency>
   <groupId>com.aerospike</groupId>
   <artifactId>aerospike-helper-java</artifactId>
-  <version>1.2</version>
+  <version>1.2.1</version>
 </dependency>
 ```
 
