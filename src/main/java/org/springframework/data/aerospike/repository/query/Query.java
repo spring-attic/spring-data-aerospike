@@ -18,22 +18,22 @@ import org.springframework.data.keyvalue.core.query.KeyValueQuery;
 public class Query {
 
 	private Sort sort;
-	private int offset = -1;
+	private long offset = -1;
 	private int rows = -1;
 	private CriteriaDefinition criteria;
 
 	/**
 	 * Creates new instance of {@link KeyValueQuery} with given criteria.
-	 * 
+	 *
 	 * @param criteria can be {@literal null}.
 	 */
 	public Query(CriteriaDefinition criteria) {
-		 this.criteria = criteria;
+		this.criteria = criteria;
 	}
 
 	/**
 	 * Creates new instance of {@link Query} with given {@link Sort}.
-	 * 
+	 *
 	 * @param sort can be {@literal null}.
 	 */
 	public Query(Sort sort) {
@@ -42,7 +42,7 @@ public class Query {
 
 	/**
 	 * Get the criteria object.
-	 * 
+	 *
 	 * @return
 	 */
 	public CriteriaDefinition getCritieria() {
@@ -51,7 +51,7 @@ public class Query {
 
 	/**
 	 * Get {@link Sort}.
-	 * 
+	 *
 	 * @return
 	 */
 	public Sort getSort() {
@@ -60,16 +60,16 @@ public class Query {
 
 	/**
 	 * Number of elements to skip.
-	 * 
+	 *
 	 * @return negative value if not set.
 	 */
-	public int getOffset() {
+	public long getOffset() {
 		return this.offset;
 	}
 
 	/**
 	 * Number of elements to read.
-	 * 
+	 *
 	 * @return negative value if not set.
 	 */
 	public int getRows() {
@@ -78,16 +78,16 @@ public class Query {
 
 	/**
 	 * Set the number of elements to skip.
-	 * 
+	 *
 	 * @param offset use negative value for none.
 	 */
-	public void setOffset(int offset) {
+	public void setOffset(long offset) {
 		this.offset = offset;
 	}
 
 	/**
 	 * Set the number of elements to read.
-	 * 
+	 *
 	 * @param offset use negative value for all.
 	 */
 	public void setRows(int rows) {
@@ -96,7 +96,7 @@ public class Query {
 
 	/**
 	 * Set {@link Sort} to be applied.
-	 * 
+	 *
 	 * @param sort
 	 */
 	public void setSort(Sort sort) {
@@ -105,7 +105,7 @@ public class Query {
 
 	/**
 	 * Add given {@link Sort}.
-	 * 
+	 *
 	 * @param sort {@literal null} {@link Sort} will be ignored.
 	 * @return
 	 */
@@ -124,11 +124,11 @@ public class Query {
 	}
 
 	/**
-	 * @see Query#setOffset(int)
+	 * @see Query#setOffset(long)
 	 * @param offset
 	 * @return
 	 */
-	public Query skip(int offset) {
+	public Query skip(long offset) {
 		setOffset(offset);
 		return this;
 	}

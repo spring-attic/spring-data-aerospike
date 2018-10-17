@@ -208,7 +208,7 @@ public class SpelQueryCreatorUnitTests {
 	}
 	
 	private Evaluation evaluate(String methodName, Object... args) throws Exception {
-		return new Evaluation((SpelExpression) createQueryForMethodWithArgs(methodName, args).getCritieria());
+		return new Evaluation((SpelExpression) createQueryForMethodWithArgs(methodName, args).getCriteria());
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -228,7 +228,7 @@ public class SpelQueryCreatorUnitTests {
 		SpelQueryCreator creator = new SpelQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,metadataMock, new SpelAwareProxyProjectionFactory()).getParameters(), args));
 
 		KeyValueQuery<SpelExpression> q = creator.createQuery();
-		q.getCritieria().setEvaluationContext(new StandardEvaluationContext(args));
+		q.getCriteria().setEvaluationContext(new StandardEvaluationContext(args));
 
 		return q;
 	}

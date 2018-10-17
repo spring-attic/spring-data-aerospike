@@ -2,7 +2,6 @@
  * 
  */
 package org.springframework.data.aerospike.repository.support;
-import java.io.Serializable;
 
 import org.springframework.data.aerospike.core.AerospikeOperations;
 import org.springframework.data.mapping.context.MappingContext;
@@ -18,8 +17,8 @@ import org.springframework.data.repository.query.parser.AbstractQueryCreator;
  * @author Jean Mercier
  *
  */
-public class AerospikeRepositoryFactoryBean<T extends Repository <S, ID>, S, ID extends Serializable> extends
-RepositoryFactoryBeanSupport<T, S, ID> {
+public class AerospikeRepositoryFactoryBean<T extends Repository <S, ID>, S, ID> extends
+		RepositoryFactoryBeanSupport<T, S, ID> {
 	
 	private AerospikeOperations operations;
 	private Class<? extends AbstractQueryCreator<?, ?>> queryCreator;
@@ -47,7 +46,6 @@ RepositoryFactoryBeanSupport<T, S, ID> {
 	 */
 	@Override
 	protected RepositoryFactorySupport createRepositoryFactory() {
-		// TODO Auto-generated method stub
 		return new AerospikeRepositoryFactory(this.operations, this.queryCreator);
 	}
 	

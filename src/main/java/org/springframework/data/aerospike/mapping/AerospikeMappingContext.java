@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
+import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
@@ -71,9 +72,9 @@ public class AerospikeMappingContext extends
 	 * @see org.springframework.data.mapping.context.AbstractMappingContext#createPersistentProperty(java.lang.reflect.Field, java.beans.PropertyDescriptor, org.springframework.data.mapping.model.MutablePersistentEntity, org.springframework.data.mapping.model.SimpleTypeHolder)
 	 */
 	@Override
-	protected AerospikePersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
-			BasicAerospikePersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
-		return new CachingAerospikePersistentProperty(field, descriptor, owner, simpleTypeHolder, fieldNamingStrategy);
+	protected AerospikePersistentProperty createPersistentProperty(Property property,
+		BasicAerospikePersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
+		return new CachingAerospikePersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 
 	/*

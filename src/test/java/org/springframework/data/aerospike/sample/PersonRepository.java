@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 //import java.util.stream.Stream;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.springframework.data.aerospike.repository.AerospikeRepository;
 import org.springframework.data.domain.Page;
@@ -41,9 +42,9 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	List<Person> findByAgeLessThan(int age, Sort sort);
 
-	List<Person> findByFirstnameIn(String... firstnames);
+	Stream<Person> findByFirstnameIn(List<String> firstnames);
 
-	List<Person> findByFirstnameNotIn(Collection<String> firstnames);
+	Stream<Person> findByFirstnameNotIn(Collection<String> firstnames);
 
 	List<Person> findByFirstnameAndLastname(String firstname, String lastname);
 
@@ -78,7 +79,7 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	List<Person> findByCreatedAtAfter(Date date);
 
-	List<Person> findByLastnameNot(String lastname);
+	Stream<Person> findByLastnameNot(String lastname);
 
 	List<Person> findByCredentials(Credentials credentials);
 	

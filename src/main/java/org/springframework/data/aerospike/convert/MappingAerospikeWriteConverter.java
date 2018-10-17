@@ -9,7 +9,7 @@ import org.springframework.data.convert.EntityWriter;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -51,7 +51,7 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 
 		TypeInformation<?> type = ClassTypeInformation.from(source.getClass());
 		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(source.getClass());
-		ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(source), conversionService);
+		ConvertingPropertyAccessor<?> accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(source), conversionService);
 
 		AerospikePersistentProperty idProperty = entity.getIdProperty();
 		if (idProperty != null) {
@@ -191,7 +191,7 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 		return entity.getExpiration();
 	}
 
-	private int getExpirationFromProperty(ConvertingPropertyAccessor accessor, AerospikePersistentProperty expirationProperty) {
+	private int getExpirationFromProperty(ConvertingPropertyAccessor<?> accessor, AerospikePersistentProperty expirationProperty) {
 		if (expirationProperty.isExpirationSpecifiedAsUnixTime()) {
 			Long unixTime = accessor.getProperty(expirationProperty, Long.class);
 			Assert.notNull(unixTime, "Expiration must not be null!");

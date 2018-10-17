@@ -15,10 +15,10 @@
  */
 package org.springframework.data.aerospike.core;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
@@ -87,21 +87,15 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 
 	void delete(Class<?> type);
 
-	boolean delete(Serializable id, Class<?> type);
+	boolean delete(Object id, Class<?> type);
 	boolean delete(Object objectToDelete);
 
-	boolean exists(Serializable id, Class<?> type);
+	boolean exists(Object id, Class<?> type);
 	
-	<T> Iterable<T> find(Query query, Class<T> type);
-	<T> List<T> findAll(Class<T> type);
+	<T> Stream<T> find(Query query, Class<T> type);
+	<T> Stream<T> findAll(Class<T> type);
 
-	<T> T findById(Serializable id, Class<T> type);
-
-	/**
-	 * Instead use findByIds
-	 */
-	@Deprecated
-	<T> List<T> findByIDs(Iterable<? extends Serializable> IDs, Class<T> type);
+	<T> T findById(Object id, Class<T> type);
 
 	<T> List<T> findByIds(Iterable<?> IDs, Class<T> type);
 
@@ -122,7 +116,7 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 	 * @param javaType
 	 * @return
 	 */
-	int count(Query query, Class<?> javaType);
+	long count(Query query, Class<?> javaType);
 
 	/**
 	 * Execute operation against underlying store.
@@ -141,12 +135,12 @@ public interface AerospikeOperations {//extends KeyValueOperations {
 
 	/**
 	 * @param offset
-	 * @param rows
+	 * @param limit
 	 * @param sort
 	 * @param type
 	 * @return
 	 */
-	<T> Iterable<T> findInRange(int offset, int rows, Sort sort, Class<T> type);
+	<T> Stream<T> findInRange(long offset, long limit, Sort sort, Class<T> type);
 
 	/**
 	 * @param type

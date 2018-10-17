@@ -20,8 +20,6 @@ import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.Repository;
 
-import java.io.Serializable;
-
 /**
  * Aerospike specific {@link Repository}
  *
@@ -30,17 +28,8 @@ import java.io.Serializable;
  * @author Jean Mercier
  */
 @NoRepositoryBean
-public interface AerospikeRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
+public interface AerospikeRepository<T, ID> extends PagingAndSortingRepository<T, ID> {
 
-	/**
-	 * @param <T>
-	 * @param domainType
-	 * @param indexName
-	 * @param binName
-	 * @param indexType
-	 */
-
-	@SuppressWarnings("hiding")
 	<T> void createIndex(Class<T> domainType, String indexName, String binName, IndexType indexType);
 
 	<T> void deleteIndex(Class<T> domainType, String indexName);

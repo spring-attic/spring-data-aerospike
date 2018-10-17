@@ -3,23 +3,20 @@
  */
 package org.springframework.data.aerospike.repository.query;
 
-import java.lang.reflect.Constructor;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.aerospike.core.AerospikeOperations;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.keyvalue.core.IterableConverter;
-import org.springframework.data.repository.query.EvaluationContextProvider;
-import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.repository.query.*;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpression;
 import org.springframework.util.ClassUtils;
+
+import java.lang.reflect.Constructor;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  *
@@ -30,14 +27,14 @@ import org.springframework.util.ClassUtils;
  */
 public class AerospikePartTreeQuery implements RepositoryQuery {
 	
-	private final EvaluationContextProvider evaluationContextProvider;
+	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 	private final QueryMethod queryMethod;
 	private final AerospikeOperations aerospikeOperations;
 	private final Class<? extends AbstractQueryCreator<?, ?>> queryCreator;
 
 	private Query query;
 
-	public AerospikePartTreeQuery(QueryMethod queryMethod, EvaluationContextProvider evalContextProvider,
+	public AerospikePartTreeQuery(QueryMethod queryMethod, QueryMethodEvaluationContextProvider evalContextProvider,
 			AerospikeOperations aerospikeOperations, Class<? extends AbstractQueryCreator<?, ?>> queryCreator) {
 
 		this.queryMethod = queryMethod;
@@ -67,22 +64,24 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 			query.setOffset(page.getOffset());
 			query.setRows(page.getPageSize());
 
-			Iterable<?> result = this.aerospikeOperations.find(query, queryMethod.getEntityInformation().getJavaType());
-			long count = queryMethod.isSliceQuery() ? 0 : aerospikeOperations.count(query, queryMethod.getEntityInformation().getJavaType());
+			Stream<?> result = findByQuery(query);
+			long total = queryMethod.isSliceQuery() ? 0 : aerospikeOperations.count(query, queryMethod.getEntityInformation().getJavaType());
 
-			return new PageImpl(IterableConverter.toList(result), page, count);
+			return new PageImpl(result.collect(Collectors.toList()), page, total);
+		} else if (queryMethod.isStreamQuery()) {
+			return findByQuery(query);
 		} else if (queryMethod.isCollectionQuery()) {
-
-			return this.aerospikeOperations.find(query, queryMethod.getEntityInformation().getJavaType());
-
+			return findByQuery(query).collect(Collectors.toList());
 		} else if (queryMethod.isQueryForEntity()) {
-
-			Iterable<?> result = this.aerospikeOperations.find(query, queryMethod.getEntityInformation().getJavaType());
-			return result.iterator().hasNext() ? result.iterator().next() : null;
-
+			Stream<?> result = findByQuery(query);
+			return result.findFirst().orElse(null);
 		}
 
-		throw new UnsupportedOperationException("Query method not supported.");
+		throw new UnsupportedOperationException("Query method " + queryMethod.getNamedQueryName() + " not supported.");
+	}
+
+	private Stream<?> findByQuery(Query query) {
+		return this.aerospikeOperations.find(query, queryMethod.getEntityInformation().getJavaType());
 	}
 
 	/**
@@ -97,7 +96,7 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 		AerospikeCriteria criteria = (AerospikeCriteria) query.getCritieria();
 		Query q = new Query(criteria);
 
-		if (accessor.getPageable() != null) {
+		if (accessor.getPageable().isPaged()) {
 			q.setOffset(accessor.getPageable().getOffset());
 			q.setRows(accessor.getPageable().getPageSize());
 		} else {
@@ -105,7 +104,7 @@ public class AerospikePartTreeQuery implements RepositoryQuery {
 			q.setRows(-1);
 		}
 
-		if (accessor.getSort() != null) {
+		if (accessor.getSort().isSorted()) {
 			q.setSort(accessor.getSort());
 		} else {
 			q.setSort(this.query.getSort());

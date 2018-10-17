@@ -66,8 +66,7 @@ public class AerospikeRepositoryFactoryTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetEntityInformationClassOfT() {
-		when(context.getPersistentEntity(Person.class)).thenReturn(entity);
-		when(entity.getType()).thenReturn(Person.class);
+		when(context.getRequiredPersistentEntity(Person.class)).thenReturn(entity);
 
 		AerospikeRepositoryFactory factory = new AerospikeRepositoryFactory(aerospikeOperations);
 		EntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);

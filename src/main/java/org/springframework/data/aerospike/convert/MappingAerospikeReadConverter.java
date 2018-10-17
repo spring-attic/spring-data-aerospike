@@ -72,7 +72,9 @@ public class MappingAerospikeReadConverter implements EntityReader<Object, Aeros
 		AerospikePersistentProperty idProperty = entity.getIdProperty();
 		if (idProperty != null) {
 			Object value = getIdValue(data.getKey(), record, idProperty);
-			accessor.setProperty(idProperty, value);
+			if (!idProperty.isImmutable() || !entity.isConstructorArgument(idProperty)) {
+				accessor.setProperty(idProperty, value);
+			}
 		}
 		AerospikePersistentProperty expirationProperty = entity.getExpirationProperty();
 		if (expirationProperty != null) {
