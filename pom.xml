@@ -33,7 +33,7 @@
         <spring-boot-starter-test.version>2.0.3.RELEASE</spring-boot-starter-test.version>
         <spring-cloud-starter.version>2.0.0.RELEASE</spring-cloud-starter.version>
         <joda-time.version>2.9.9</joda-time.version>
-        <embedded-aerospike.version>1.12</embedded-aerospike.version>
+        <embedded-aerospike.version>1.13</embedded-aerospike.version>
         <awaitility.version>3.1.1</awaitility.version>
     </properties>
 
