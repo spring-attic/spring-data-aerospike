@@ -183,7 +183,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		try {
 			Node[] nodes = client.getNodes();
 			if (nodes.length == 0) {
-				throw new AerospikeException.InvalidNode();
+				throw new AerospikeException(ResultCode.SERVER_NOT_AVAILABLE, "Command failed because cluster is empty.");
 			}
 			Node node = nodes[0];
 			String response = Info.request(node, "sindex/" + namespace + '/' + indexName);

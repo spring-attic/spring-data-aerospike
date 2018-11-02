@@ -22,8 +22,8 @@
     <properties>
         <bundlor.enabled>false</bundlor.enabled>
         <source.level>1.8</source.level>
-        <aerospike>4.1.8</aerospike>
-        <aerospike-helper-java.version>1.2.3</aerospike-helper-java.version>
+        <!--TODO: Update aerospike version to latest when issue resolved: https://github.com/aerospike/aerospike-client-java/issues/118-->
+        <aerospike>4.2.0</aerospike>
 
         <springdata.commons>2.1.2.RELEASE</springdata.commons>
         <springdata.keyvalue>2.1.2.RELEASE</springdata.keyvalue>
@@ -131,8 +131,8 @@
             </dependency>
             <dependency>
                 <groupId>com.aerospike</groupId>
-                <artifactId>aerospike-helper-java</artifactId>
-                <version>${aerospike-helper-java.version}</version>
+                <artifactId>aerospike-query-engine</artifactId>
+                <version>${aerospike}</version>
             </dependency>
             <dependency>
                 <groupId>joda-time</groupId>
@@ -176,7 +176,7 @@
 
         <dependency>
             <groupId>com.aerospike</groupId>
-            <artifactId>aerospike-helper-java</artifactId>
+            <artifactId>aerospike-query-engine</artifactId>
         </dependency>
 
         <dependency>

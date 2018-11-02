@@ -63,7 +63,7 @@ public class DefaultAerospikeExceptionTranslatorTest {
 
     @Test
     public void shouldTranslateAerospikeError() {
-        AerospikeException cause = new AerospikeException();
+        AerospikeException cause = new AerospikeException("any");
         DataAccessException actual = translator.translateExceptionIfPossible(cause);
         assertThat(actual).isExactlyInstanceOf(RecoverableDataAccessException.class);
     }

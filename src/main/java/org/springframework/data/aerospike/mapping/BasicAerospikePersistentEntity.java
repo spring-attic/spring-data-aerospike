@@ -34,7 +34,6 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 
 	static final int DEFAULT_EXPIRATION = 0;
 
-	private final TypeInformation<?> typeInformation;
 	private final String defaultNameSpace;
 
 	private AerospikePersistentProperty expirationProperty;
@@ -49,7 +48,6 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 	public BasicAerospikePersistentEntity(TypeInformation<T> information, String defaultNameSpace) {
 
 		super(information);
-		this.typeInformation = information;
 		this.defaultNameSpace = defaultNameSpace;
 	}
 
@@ -79,12 +77,12 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 		 */
 	@Override
 	public String getSetName() {
-		Class<?> clazz = typeInformation.getType();
-		Document annotation = clazz.getAnnotation(Document.class);
+		Class<T> type = getType();
+		Document annotation = type.getAnnotation(Document.class);
 		if(annotation != null && ! annotation.collection().isEmpty()){
 			return annotation.collection();
 		}
-		return clazz.getSimpleName();
+		return type.getSimpleName();
 	}
 
 	@Override

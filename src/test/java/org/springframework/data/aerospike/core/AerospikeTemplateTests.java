@@ -21,7 +21,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.AsyncUtils;
 import org.springframework.data.aerospike.BaseIntegrationTests;
-import org.springframework.data.aerospike.SampleClasses;
 import org.springframework.data.aerospike.SampleClasses.*;
 import org.springframework.data.domain.Sort;
 
@@ -455,7 +454,9 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		template.save(new CustomCollectionClass(id1, "field-value"));
 		template.save(new CustomCollectionClass(id2, "field-value"));
 
-		template.delete(SampleClasses.CustomCollectionClass.class);
+		assertThat(template.findByIds(Arrays.asList(id1, id2), CustomCollectionClass.class)).hasSize(2);
+
+		template.delete(CustomCollectionClass.class);
 
 		// truncate is async operation that is why we need to wait until
 		// it completes
@@ -734,4 +735,5 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		DocumentWithTouchOnRead actual = template.findById(id, DocumentWithTouchOnRead.class);
 		assertThat(actual.getField()).isEqualTo(numberOfConcurrentUpdate);
 	}
+
 }
