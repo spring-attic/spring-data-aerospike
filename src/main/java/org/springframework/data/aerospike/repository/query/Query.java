@@ -45,7 +45,7 @@ public class Query {
 	 *
 	 * @return
 	 */
-	public CriteriaDefinition getCritieria() {
+	public CriteriaDefinition getCriteria() {
 		return criteria;
 	}
 

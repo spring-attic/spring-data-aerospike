@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.support.PropertyComparator;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.convert.*;
 import org.springframework.data.aerospike.mapping.*;
@@ -457,7 +456,11 @@ public class AerospikeTemplate implements AerospikeOperations {
 	public long count(Query query, Class<?> type) {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(type, "Type must not be null!");
-		return find(query, type).count();
+
+		Qualifier qualifier = query.getCriteria().getCriteriaObject();
+		Stream<KeyRecord> results = findAllRecordsUsingQuery(type, null, qualifier);
+
+		return results.count();
 	}
 
 	/*
@@ -473,12 +476,19 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(type, "Type must not be null!");
 
-		Qualifier qualifier = query.getCritieria().getCriteriaObject();
+		Qualifier qualifier = query.getCriteria().getCriteriaObject();
 		Stream<T> results = findAllUsingQuery(type, null, qualifier);
 
 		if (query.getSort() != null && query.getSort().isSorted()) {
 			Comparator comparator = getComparator(query);
 			results = results.sorted(comparator);
+		}
+
+		if(query.getOffset() != -1) {
+			results = results.skip(query.getOffset());
+		}
+		if(query.getRows() != -1) {
+			results = results.limit(query.getRows());
 		}
 		return results;
 	}
@@ -569,54 +579,24 @@ public class AerospikeTemplate implements AerospikeOperations {
 	}
 
 	protected <T> Stream<T> findAllUsingQuery(Class<T> type, Filter filter, Qualifier... qualifiers) {
+		return findAllRecordsUsingQuery(type, filter, qualifiers)
+				.map(keyRecord -> mapToEntity(keyRecord.key, type, keyRecord.record));
+	}
+
+	private <T> Stream<KeyRecord> findAllRecordsUsingQuery(Class<T> type, Filter filter, Qualifier... qualifiers) {
 		String setName = getSetName(type);
-		Statement stmt = new Statement();
-		stmt.setNamespace(this.namespace);
-		stmt.setSetName(setName);
 
 		KeyRecordIterator recIterator = this.queryEngine.select(
 				this.namespace, setName, filter, qualifiers);
 
-		EntityIterator<T> entityIterator = new EntityIterator<>(type, recIterator);
-
-		return StreamUtils.createStreamFromIterator(entityIterator);
-	}
-
-	public class EntityIterator<T> implements CloseableIterator<T> {
-		private KeyRecordIterator keyRecordIterator;
-		private Class<T> type;
-		
-		public EntityIterator(Class<T> type, KeyRecordIterator keyRecordIterator) {
-			this.type = type;
-			this.keyRecordIterator = keyRecordIterator;
-		}
-
-		@Override
-		public boolean hasNext() {
-			return this.keyRecordIterator.hasNext();
-		}
-
-		@Override
-		public T next() {
-			KeyRecord keyRecord = this.keyRecordIterator.next();
-			return mapToEntity(keyRecord.key, type, keyRecord.record);
-		}
-
-		@Override
-		public void close() {
-			try {
-				keyRecordIterator.close();
-			}
-			catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
-		@Override
-		public void remove() {
-
-		}
+		return StreamUtils.createStreamFromIterator(recIterator)
+				.onClose(() -> {
+					try {
+						recIterator.close();
+					} catch (Exception e) {
+						log.error("Caught exception while closing query", e);
+					}
+				});
 	}
 
 	@SuppressWarnings("unchecked")

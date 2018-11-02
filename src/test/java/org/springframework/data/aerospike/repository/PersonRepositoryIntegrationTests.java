@@ -18,6 +18,7 @@ package org.springframework.data.aerospike.repository;
 
 import com.aerospike.client.query.IndexType;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.aerospike.BaseIntegrationTests;
@@ -29,10 +30,12 @@ import org.springframework.data.aerospike.sample.PersonRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -204,7 +207,45 @@ public class PersonRepositoryIntegrationTests extends BaseIntegrationTests {
 
 		assertThat(slice.hasContent()).isTrue();
 		assertThat(slice.hasNext()).isFalse();
-		assertThat(slice.getContent()).contains(dave, carter, boyd, leroi);
+		assertThat(slice.getContent()).hasSize(4).contains(dave, carter, boyd, leroi);
+	}
+
+	@Test
+	public void findByAgeGreaterThan_respectsLimit() {
+		Slice<Person> slice = repository.findByAgeGreaterThan(40, PageRequest.of(0, 1));
+
+		assertThat(slice.hasContent()).isTrue();
+		assertThat(slice.hasNext()).isFalse();//TODO: not implemented yet. should be true instead
+		assertThat(slice.getContent()).containsAnyOf(dave, carter, boyd, leroi).hasSize(1);
+	}
+
+	@Test
+	public void findByAgeGreaterThan_respectsLimitAndOffsetAndSort() {
+		List<Person> result = IntStream.range(0, 4)
+				.mapToObj(index -> repository.findByAgeGreaterThan(40, PageRequest.of(index, 1, Sort.by("age"))))
+				.flatMap(slice -> slice.getContent().stream())
+				.collect(Collectors.toList());
+
+		assertThat(result)
+				.hasSize(4)
+				.containsSequence(leroi, dave, boyd, carter);
+	}
+
+	@Test
+	public void findByAgeGreaterThan_returnsValidValuesForNextAndPrev() {
+		Slice<Person> first = repository.findByAgeGreaterThan(40, PageRequest.of(0, 1, Sort.by("age")));
+
+		assertThat(first.hasContent()).isTrue();
+		assertThat(first.getNumberOfElements()).isEqualTo(1);
+		assertThat(first.hasNext()).isFalse();//TODO: not implemented yet. should be true instead
+		assertThat(first.isFirst()).isTrue();
+
+		Slice<Person> last = repository.findByAgeGreaterThan(40, PageRequest.of(3, 1, Sort.by("age")));
+
+		assertThat(last.hasContent()).isTrue();
+		assertThat(last.getNumberOfElements()).isEqualTo(1);
+		assertThat(last.hasNext()).isFalse();
+		assertThat(last.isLast()).isTrue();
 	}
 
 	@Test
@@ -214,6 +255,27 @@ public class PersonRepositoryIntegrationTests extends BaseIntegrationTests {
 		assertThat(slice.hasContent()).isFalse();
 		assertThat(slice.hasNext()).isFalse();
 		assertThat(slice.getContent()).isEmpty();
+	}
+
+	@Test
+	public void findByLastnameStartsWith_respectsLimitAndOffset() {
+		Page<Person> first = repository.findByLastnameStartsWith("Moo", PageRequest.of(0, 1));
+
+		assertThat(first.getNumberOfElements()).isEqualTo(1);
+		assertThat(first.getTotalPages()).isEqualTo(2);
+		assertThat(first.get()).hasSize(1).containsAnyOf(leroi, leroi2);
+
+		Page<Person> last = repository.findByLastnameStartsWith("Moo", first.nextPageable());
+
+		assertThat(last.getTotalPages()).isEqualTo(2);
+		assertThat(last.getNumberOfElements()).isEqualTo(1);
+		assertThat(last.get()).hasSize(1).containsAnyOf(leroi, leroi2);
+
+		Page<Person> all = repository.findByLastnameStartsWith("Moo", PageRequest.of(0, 5));
+
+		assertThat(all.getTotalPages()).isEqualTo(1);
+		assertThat(all.getNumberOfElements()).isEqualTo(2);
+		assertThat(all.get()).hasSize(2).containsOnly(leroi, leroi2);
 	}
 
 	@Test

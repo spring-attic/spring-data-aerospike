@@ -22,7 +22,10 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.AsyncUtils;
 import org.springframework.data.aerospike.BaseIntegrationTests;
 import org.springframework.data.aerospike.SampleClasses.*;
+import org.springframework.data.aerospike.repository.query.Criteria;
+import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.parser.Part;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -490,6 +493,46 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		assertThatThrownBy(() -> template.delete(null))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessage("Type must not be null!");
+	}
+
+	@Test
+	public void countFindsAllItemsByGivenCriteria() {
+		template.insert(new Person(id, "vasili", 50));
+		template.insert(new Person(nextId(), "vasili", 51));
+		template.insert(new Person(nextId(), "vasili", 52));
+		template.insert(new Person(nextId(), "petya", 52));
+
+		long vasyaCount = template.count(new Query(new Criteria().is("vasili", "firstName")), Person.class);
+
+		assertThat(vasyaCount).isEqualTo(3);
+
+		long vasya51Count = template.count(new Query(new Criteria().is("vasili", "firstName").and("age").is(51, "age")), Person.class);
+
+		assertThat(vasya51Count).isEqualTo(1);
+
+		long petyaCount = template.count(new Query(new Criteria().is("petya", "firstName")), Person.class);
+
+		assertThat(petyaCount).isEqualTo(1);
+	}
+
+	@Test
+	public void countFindsAllItemsByGivenCriteriaAndRespectsIgnoreCase() {
+		template.insert(new Person(id, "VaSili", 50));
+		template.insert(new Person(nextId(), "vasILI", 51));
+		template.insert(new Person(nextId(), "vasili", 52));
+
+		Query query1 = new Query(new Criteria().startingWith("vas", "firstName", Part.IgnoreCaseType.ALWAYS));
+		assertThat(template.count(query1, Person.class)).isEqualTo(3);
+
+		Query query2 = new Query(new Criteria().startingWith("VaS", "firstName", Part.IgnoreCaseType.NEVER));
+		assertThat(template.count(query2, Person.class)).isEqualTo(1);
+	}
+
+	@Test
+	public void countReturnsZeroIfNoDocumentsByProvidedCriteriaIsFound() {
+		long count = template.count(new Query(new Criteria().is("nastyushka", "firstName")), Person.class);
+
+		assertThat(count).isZero();
 	}
 
 	@Test(expected = IllegalArgumentException.class)

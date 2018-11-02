@@ -28,7 +28,7 @@ public interface PersonRepository extends AerospikeRepository<Person, String> {
 
 	List<Person> findByLastname(String lastname);
 	
-	List<Person> findByLastnameStartsWith(String prefix);
+	Page<Person> findByLastnameStartsWith(String prefix, Pageable pageable);
 
 	List<Person> findByLastnameEndsWith(String postfix);
 
