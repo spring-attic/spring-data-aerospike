@@ -59,9 +59,8 @@ public class SampleClasses {
 		final TYPES field8;
 		final Set<String> field9;
 		final Set<Set<String>> field10;
-//		TODO: see https://github.com/aerospike/aerospike-client-java/issues/75
-//		final byte field10;
-//		final char field11;
+		final byte field11;
+//		final char field12;
 
 	}
 
