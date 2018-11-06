@@ -15,16 +15,7 @@
  */
 package org.springframework.data.aerospike.convert;
 
-import org.springframework.core.convert.ConversionService;
-import org.springframework.data.convert.EntityConverter;
+import org.springframework.data.convert.EntityReader;
 
-/**
- * Interface of an Aerospike-specific {@link EntityConverter}.
- *
- * @author Oliver Gierke
- */
-public interface AerospikeConverter extends
-		AerospikeReader<Object>, AerospikeWriter<Object> {
-
-	ConversionService getConversionService();
+public interface AerospikeReader<T> extends EntityReader<T, AerospikeReadData> {
 }
