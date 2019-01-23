@@ -258,20 +258,20 @@ public class PersonRepositoryIntegrationTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void findByLastnameStartsWith_respectsLimitAndOffset() {
-		Page<Person> first = repository.findByLastnameStartsWith("Moo", PageRequest.of(0, 1));
+	public void findByLastnameStartsWithOrderByAgeAsc_respectsLimitAndOffset() {
+		Page<Person> first = repository.findByLastnameStartsWithOrderByAgeAsc("Moo", PageRequest.of(0, 1));
 
 		assertThat(first.getNumberOfElements()).isEqualTo(1);
 		assertThat(first.getTotalPages()).isEqualTo(2);
-		assertThat(first.get()).hasSize(1).containsAnyOf(leroi, leroi2);
+		assertThat(first.get()).hasSize(1).containsOnly(leroi2);
 
-		Page<Person> last = repository.findByLastnameStartsWith("Moo", first.nextPageable());
+		Page<Person> last = repository.findByLastnameStartsWithOrderByAgeAsc("Moo", first.nextPageable());
 
 		assertThat(last.getTotalPages()).isEqualTo(2);
 		assertThat(last.getNumberOfElements()).isEqualTo(1);
-		assertThat(last.get()).hasSize(1).containsAnyOf(leroi, leroi2);
+		assertThat(last.get()).hasSize(1).containsAnyOf(leroi);
 
-		Page<Person> all = repository.findByLastnameStartsWith("Moo", PageRequest.of(0, 5));
+		Page<Person> all = repository.findByLastnameStartsWithOrderByAgeAsc("Moo", PageRequest.of(0, 5));
 
 		assertThat(all.getTotalPages()).isEqualTo(1);
 		assertThat(all.getNumberOfElements()).isEqualTo(2);

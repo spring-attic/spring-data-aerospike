@@ -22,8 +22,7 @@
     <properties>
         <bundlor.enabled>false</bundlor.enabled>
         <source.level>1.8</source.level>
-        <!--TODO: Update aerospike version to latest when issue resolved: https://github.com/aerospike/aerospike-client-java/issues/118-->
-        <aerospike>4.2.0</aerospike>
+        <aerospike>4.2.3</aerospike>
 
         <springdata.commons>2.1.2.RELEASE</springdata.commons>
         <springdata.keyvalue>2.1.2.RELEASE</springdata.keyvalue>

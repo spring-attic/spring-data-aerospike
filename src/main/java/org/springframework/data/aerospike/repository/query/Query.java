@@ -17,9 +17,11 @@ import org.springframework.data.keyvalue.core.query.KeyValueQuery;
  */
 public class Query {
 
+	private static final int NOT_SPECIFIED = -1;
+
 	private Sort sort;
-	private long offset = -1;
-	private int rows = -1;
+	private long offset = NOT_SPECIFIED;
+	private int rows = NOT_SPECIFIED;
 	private CriteriaDefinition criteria;
 
 	/**
@@ -65,6 +67,14 @@ public class Query {
 	 */
 	public long getOffset() {
 		return this.offset;
+	}
+
+	public boolean hasOffset() {
+		return this.offset != NOT_SPECIFIED;
+	}
+
+	public boolean hasRows() {
+		return this.rows != NOT_SPECIFIED;
 	}
 
 	/**

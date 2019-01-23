@@ -41,13 +41,11 @@ import org.springframework.data.keyvalue.core.IterableConverter;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.comparator.CompoundComparator;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -476,6 +474,12 @@ public class AerospikeTemplate implements AerospikeOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(type, "Type must not be null!");
 
+		if ((query.getSort() == null || query.getSort().isUnsorted())
+				&& query.getOffset() > 0) {
+			throw new IllegalArgumentException("Unsorted query must not have offset value. " +
+                    "For retrieving paged results use sorted query.");
+		}
+
 		Qualifier qualifier = query.getCriteria().getCriteriaObject();
 		Stream<T> results = findAllUsingQuery(type, null, qualifier);
 
@@ -484,10 +488,10 @@ public class AerospikeTemplate implements AerospikeOperations {
 			results = results.sorted(comparator);
 		}
 
-		if(query.getOffset() != -1) {
+		if(query.hasOffset()) {
 			results = results.skip(query.getOffset());
 		}
-		if(query.getRows() != -1) {
+		if(query.hasRows()) {
 			results = results.limit(query.getRows());
 		}
 		return results;

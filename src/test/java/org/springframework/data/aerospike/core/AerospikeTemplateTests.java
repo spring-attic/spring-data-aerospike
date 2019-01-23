@@ -791,4 +791,13 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		assertThat(actual.getField()).isEqualTo(numberOfConcurrentUpdate);
 	}
 
+	@Test
+	public void find_throwsExceptionForUnsortedQueryWithSpecifiedOffsetValue() {
+		Query query = new Query((Sort) null);
+		query.setOffset(1);
+
+		assertThatThrownBy(() -> template.find(query, Person.class))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessage("Unsorted query must not have offset value. For retrieving paged results use sorted query.");
+	}
 }
