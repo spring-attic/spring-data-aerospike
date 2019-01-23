@@ -1,5 +1,17 @@
-/**
+/*
+ * Copyright 2012-2018 the original author or authors
  *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.springframework.data.aerospike.core;
 
@@ -21,22 +33,23 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.AsyncUtils;
 import org.springframework.data.aerospike.BaseIntegrationTests;
-import org.springframework.data.aerospike.SampleClasses;
-import org.springframework.data.aerospike.SampleClasses.CustomCollectionClass;
-import org.springframework.data.aerospike.SampleClasses.DocumentWithExpiration;
-import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnRead;
-import org.springframework.data.aerospike.SampleClasses.DocumentWithTouchOnReadAndExpirationProperty;
-import org.springframework.data.aerospike.SampleClasses.VersionedClass;
+import org.springframework.data.aerospike.SampleClasses.*;
+import org.springframework.data.aerospike.repository.query.Criteria;
+import org.springframework.data.aerospike.repository.query.Query;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.parser.Part;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.TEN_SECONDS;
-import static org.springframework.data.aerospike.SampleClasses.EXPIRATION_ONE_MINUTE;
+import static org.springframework.data.aerospike.SampleClasses.*;
 
 /**
  *
@@ -456,7 +469,9 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		template.save(new CustomCollectionClass(id1, "field-value"));
 		template.save(new CustomCollectionClass(id2, "field-value"));
 
-		template.delete(SampleClasses.CustomCollectionClass.class);
+		assertThat(template.findByIds(Arrays.asList(id1, id2), CustomCollectionClass.class)).hasSize(2);
+
+		template.delete(CustomCollectionClass.class);
 
 		// truncate is async operation that is why we need to wait until
 		// it completes
@@ -490,6 +505,46 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		assertThatThrownBy(() -> template.delete(null))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessage("Type must not be null!");
+	}
+
+	@Test
+	public void countFindsAllItemsByGivenCriteria() {
+		template.insert(new Person(id, "vasili", 50));
+		template.insert(new Person(nextId(), "vasili", 51));
+		template.insert(new Person(nextId(), "vasili", 52));
+		template.insert(new Person(nextId(), "petya", 52));
+
+		long vasyaCount = template.count(new Query(new Criteria().is("vasili", "firstName")), Person.class);
+
+		assertThat(vasyaCount).isEqualTo(3);
+
+		long vasya51Count = template.count(new Query(new Criteria().is("vasili", "firstName").and("age").is(51, "age")), Person.class);
+
+		assertThat(vasya51Count).isEqualTo(1);
+
+		long petyaCount = template.count(new Query(new Criteria().is("petya", "firstName")), Person.class);
+
+		assertThat(petyaCount).isEqualTo(1);
+	}
+
+	@Test
+	public void countFindsAllItemsByGivenCriteriaAndRespectsIgnoreCase() {
+		template.insert(new Person(id, "VaSili", 50));
+		template.insert(new Person(nextId(), "vasILI", 51));
+		template.insert(new Person(nextId(), "vasili", 52));
+
+		Query query1 = new Query(new Criteria().startingWith("vas", "firstName", Part.IgnoreCaseType.ALWAYS));
+		assertThat(template.count(query1, Person.class)).isEqualTo(3);
+
+		Query query2 = new Query(new Criteria().startingWith("VaS", "firstName", Part.IgnoreCaseType.NEVER));
+		assertThat(template.count(query2, Person.class)).isEqualTo(1);
+	}
+
+	@Test
+	public void countReturnsZeroIfNoDocumentsByProvidedCriteriaIsFound() {
+		long count = template.count(new Query(new Criteria().is("nastyushka", "firstName")), Person.class);
+
+		assertThat(count).isZero();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -655,32 +710,58 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		assertThat(actual).isEmpty();
 	}
 
-	@Test
-	public void findByIds_deprecated_shouldFindExisting() {
-		Person firstPerson = Person.builder().id(nextId()).firstName("first").emailAddress("gmail.com").build();
-		Person secondPerson = Person.builder().id(nextId()).firstName("second").emailAddress("gmail.com").build();
-		template.save(firstPerson);
-
-		template.save(secondPerson);
-
-		Iterable<String> ids = Arrays.asList(nextId(), firstPerson.getId(), secondPerson.getId());
-
-		List<Person> actual = template.findByIDs(ids, Person.class);
-
-		assertThat(actual).containsExactly(firstPerson, secondPerson);
-	}
-
-	@Test
-	public void findByIds_deprecated_shouldReturnEmptyList() {
-		List<Person> actual = template.findByIDs(Collections.emptyList(), Person.class);
-		assertThat(actual).isEmpty();
-	}
-
 	@Test(expected = IllegalStateException.class)
 	public void findById_shouldFailOnTouchOnReadWithExpirationProperty() {
 		String id = nextId();
 		template.insert(new DocumentWithTouchOnReadAndExpirationProperty(id, EXPIRATION_ONE_MINUTE));
 		template.findById(id, DocumentWithTouchOnReadAndExpirationProperty.class);
+	}
+
+	@Test
+	public void findInRange_shouldFindLimitedNumberOfDocuments() throws Exception {
+		IntStream.range(20, 27)
+				.forEach(age -> template.insert(Person.builder().id(nextId()).age(age).build()));
+
+		int skip = 0;
+		int limit = 5;
+		Stream<Person> stream = template.findInRange(skip, limit, Sort.unsorted(), Person.class);
+
+		assertThat(stream)
+				.hasSize(5)
+				.extracting("age").containsAnyOf(20, 21, 22, 23, 24, 25, 26);
+	}
+
+	@Test
+	public void findInRange_shouldFindLimitedNumberOfDocumentsAndSkip() throws Exception {
+		IntStream.range(20, 27)
+				.forEach(age -> template.insert(Person.builder().id(nextId()).age(age).build()));
+
+		int skip = 3;
+		int limit = 5;
+		Stream<Person> stream = template.findInRange(skip, limit, Sort.unsorted(), Person.class);
+
+		assertThat(stream)
+				.hasSize(4)
+				.extracting("age").containsAnyOf(20, 21, 22, 23, 24, 25, 26);
+	}
+
+	@Test
+	public void findAll_findsAllExistingDocuments() {
+		List<Person> persons = IntStream.range(1, 10)
+				.mapToObj(age -> Person.builder().id(nextId()).firstName("Nastya").age(age).build())
+				.collect(Collectors.toList());
+		template.insertAll(persons);
+
+		Stream<Person> result = template.findAll(Person.class);
+
+		assertThat(result).containsOnlyElementsOf(persons);
+	}
+
+	@Test
+	public void findAll_findsNothing() throws Exception {
+		Stream<Person> result = template.findAll(Person.class);
+
+		assertThat(result).isEmpty();
 	}
 
 	@Test
@@ -708,5 +789,15 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 
 		DocumentWithTouchOnRead actual = template.findById(id, DocumentWithTouchOnRead.class);
 		assertThat(actual.getField()).isEqualTo(numberOfConcurrentUpdate);
+	}
+
+	@Test
+	public void find_throwsExceptionForUnsortedQueryWithSpecifiedOffsetValue() {
+		Query query = new Query((Sort) null);
+		query.setOffset(1);
+
+		assertThatThrownBy(() -> template.find(query, Person.class))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessage("Unsorted query must not have offset value. For retrieving paged results use sorted query.");
 	}
 }

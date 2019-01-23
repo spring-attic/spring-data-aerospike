@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012-2018 the original author or authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.data.aerospike.convert;
 
 import static java.util.Arrays.asList;
@@ -243,7 +258,7 @@ public class MappingAerospikeConverterTest {
 		Set<String> field9 = set("val1", "val2");
 		Set<Set<String>> field10 = set(set("1", "2"), set("3", "4"), set());
 		SimpleClass object = new SimpleClass(0, "abyrvalg", 13, 14L, (float) 15, 16.0, true, new Date(8878888),
-				TYPES.SECOND, field9, field10);
+				TYPES.SECOND, field9, field10, (byte) 1);
 		AerospikeWriteData forWrite = AerospikeWriteData.forWrite();
 
 		converter.write(object, forWrite);
@@ -260,6 +275,8 @@ public class MappingAerospikeConverterTest {
 				new Bin("field8", "SECOND"),
 				new Bin("field9", list("val2", "val1")),
 				new Bin("field10", list(list(), list("1", "2"), list("3", "4"))),
+				new Bin("field11", (byte)1),
+//				new Bin("field12", (byte)'d'),//TODO: chars not supported
 				new Bin("@_class", "simpleclass"),
 				new Bin("@user_key", "0")
 		);
@@ -278,12 +295,15 @@ public class MappingAerospikeConverterTest {
 		bins.put("field8", "SECOND");
 		bins.put("field9", list("val1", "val2"));
 		bins.put("field10", list(list(), list("1", "2"), list("3", "4")));
+		bins.put("field11", (byte)1);
+		bins.put("field12", (byte)'d');//TODO: chars not supported
 		AerospikeReadData forRead = AerospikeReadData.forRead(new Key(NAMESPACE, SIMPLESET, 867), record(bins));
 
 		SimpleClass actual = converter.read(SimpleClass.class, forRead);
 
 		assertThat(actual).isEqualTo(new SimpleClass(867, "abyrvalg", 13, 14L, (float) 15, 16.0, true,
-				new Date(77777L), TYPES.SECOND, set("val1", "val2"), set(set("1", "2"), set("3", "4"), set())));
+				new Date(77777L), TYPES.SECOND, set("val1", "val2"), set(set("1", "2"), set("3", "4"), set()),
+				(byte)1));
 	}
 
 	@Test

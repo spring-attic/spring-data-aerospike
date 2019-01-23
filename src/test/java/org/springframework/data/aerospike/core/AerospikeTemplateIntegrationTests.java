@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,9 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,12 +50,15 @@ import com.aerospike.client.query.IndexType;
 import com.aerospike.client.query.RecordSet;
 import com.aerospike.client.query.Statement;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
- * Integration tests for {@link AerospikeTemplate}.
- * 
+ * Please do not add tests here. Instead add tests to AerospikeTemplateTests.
  * @author Oliver Gierke
  * 
  */
+//TODO: cleanup and move to AerospikeTemplateTests
+@Deprecated
 public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 	
 	protected static final String SET_NAME_PERSON = "Person";
@@ -134,31 +139,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 			Assert.fail("dave-001 was not deleted");
 	}
 
-	@Test
-	public void testFindAll(){
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-003"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-004"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-005"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-006"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-007"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-008"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-009"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		List<Person> list = template.findAll(Person.class);
-		Assert.assertEquals(10, list.size());
-	}
+
 
 	private <T> Query createQueryForMethodWithArgs(String methodName, Object... args)
 			throws NoSuchMethodException, SecurityException {
@@ -200,12 +181,9 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 
 		Query query = createQueryForMethodWithArgs("findPersonByFirstname", "Dave");
 
-		Iterable<Person> it = template.find(query, Person.class);
-		int count = 0;
-		for (Person customer : it){
-			count++;
-		}
-		Assert.assertEquals(10, count);
+		Stream<Person> result = template.find(query, Person.class);
+
+		assertThat(result).hasSize(10);
 	}
 
 	@SuppressWarnings("unused")
@@ -247,12 +225,9 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 
 		Query query = createQueryForMethodWithArgs("findByLastnameOrderByFirstnameAsc","Matthews");
 
-		Iterable<Person> it = template.find(query, Person.class);
-		int count = 0;
-		for (Person person : it){
-			count++;
-		}
-		Assert.assertEquals(10, count);
+		Stream<Person> result = template.find(query, Person.class);
+
+		assertThat(result).hasSize(10);
 	}
 
 	@SuppressWarnings("unused")
@@ -294,12 +269,9 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		Object [] args = {"Matthews"};
 		Query query = createQueryForMethodWithArgs("findByLastnameOrderByFirstnameDesc",args);
 
-		Iterable<Person> it = template.find(query, Person.class);
-		int count = 0;
-		for (Person person : it){
-			count++;
-		}
-		Assert.assertEquals(10, count);
+		Stream<Person> result = template.find(query, Person.class);
+
+		assertThat(result).hasSize(10);
 	}
 
 	@SuppressWarnings("unused")
@@ -340,12 +312,9 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		
 		Query query = createQueryForMethodWithArgs("findCustomerByAgeBetween", 25,30);
 
-		Iterable<Person> it = template.find(query, Person.class);
-		int count = 0;
-		for (Person person : it){
-			count++;
-		}
-		Assert.assertEquals(6, count);
+		Stream<Person> result = template.find(query, Person.class);
+
+		assertThat(result).hasSize(6);
 	}
 
 	@SuppressWarnings("unused")

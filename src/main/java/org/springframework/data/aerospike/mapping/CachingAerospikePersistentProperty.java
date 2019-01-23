@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 the original author or authors.
+ * Copyright (c) 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
+import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 /**
@@ -40,18 +41,16 @@ public class CachingAerospikePersistentProperty extends BasicAerospikePersistent
 	/**
 	 * Creates a new {@link CachingAerospikePersistentProperty}.
 	 * 
-	 * @param field
-	 * @param propertyDescriptor
+	 * @param property
 	 * @param owner
 	 * @param simpleTypeHolder
 	 * @param fieldNamingStrategy
 	 */
-	public CachingAerospikePersistentProperty(Field field,
-			PropertyDescriptor propertyDescriptor,
-			PersistentEntity<?, AerospikePersistentProperty> owner,
-			SimpleTypeHolder simpleTypeHolder,
-			FieldNamingStrategy fieldNamingStrategy) {
-		super(field, propertyDescriptor, owner, simpleTypeHolder, fieldNamingStrategy);
+	public CachingAerospikePersistentProperty(Property property,
+											  PersistentEntity<?, AerospikePersistentProperty> owner,
+											  SimpleTypeHolder simpleTypeHolder,
+											  FieldNamingStrategy fieldNamingStrategy) {
+		super(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 
 	@Override

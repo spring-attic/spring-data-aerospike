@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 the original author or authors.
+ * Copyright (c) 2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,9 @@
  *******************************************************************************/
 package org.springframework.data.aerospike.repository;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +27,9 @@ import org.springframework.data.aerospike.sample.Customer;
 import org.springframework.data.aerospike.sample.CustomerRepository;
 
 import jersey.repackaged.com.google.common.collect.Lists;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 
 
 /**
@@ -47,7 +47,7 @@ public class CustomerRepositoriesIntegrationTests extends BaseIntegrationTests {
 	@Test
 	public void testExists() {
 		repository.save(new Customer("dave-001", "Dave", "Matthews"));
-		boolean exists = repository.exists("dave-001");
+		boolean exists = repository.existsById("dave-001");
 		assertTrue(exists);
 	}
 
@@ -59,11 +59,12 @@ public class CustomerRepositoriesIntegrationTests extends BaseIntegrationTests {
 	@Test
 	public void testReadById() {
 		Customer customer = repository.save(new Customer("dave-001", "Dave", "Matthews"));
-		Customer findById = repository.findOne("dave-001");
+		Optional<Customer> findById = repository.findById("dave-001");
 
-		assertNotNull(findById);
-		assertEquals(customer.getLastname(), findById.getLastname());
-		assertEquals(customer.getFirstname(), findById.getFirstname());
+		assertThat(findById).hasValueSatisfying(actual -> {
+			assertThat(actual.getLastname()).isEqualTo(customer.getLastname());
+			assertThat(actual.getFirstname()).isEqualTo(customer.getFirstname());
+		});
 	}
 
 	@Test
@@ -72,7 +73,7 @@ public class CustomerRepositoriesIntegrationTests extends BaseIntegrationTests {
 		repository.save(new Customer("dave-002", "Dave", "BMatthews"));
 		repository.save(new Customer("dave-003", "Dave", "CMatthews"));
 		repository.save(new Customer("dave-004", "Dave", "DMatthews"));
-		Iterable<Customer> customers = repository.findAll(Arrays.asList("dave-001", "dave-004"));
+		Iterable<Customer> customers = repository.findAllById(Arrays.asList("dave-001", "dave-004"));
 		assertEquals(Lists.newArrayList(customers).size(), 2);
 	}
 }
