@@ -154,6 +154,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 			if (task != null) {
 				task.waitTillComplete();
 			}
+			queryEngine.refreshIndexes();
 		} catch (AerospikeException e) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
 			throw translatedException == null ? e : translatedException;
@@ -168,6 +169,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 			if (task != null) {
 				task.waitTillComplete();
 			}
+			queryEngine.refreshIndexes();
 		} catch (AerospikeException e) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
 			throw translatedException == null ? e : translatedException;

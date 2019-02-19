@@ -15,13 +15,16 @@
  */
 package org.springframework.data.aerospike.core;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
-
-import org.assertj.core.api.Assertions;
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Bin;
+import com.aerospike.client.Key;
+import com.aerospike.client.Record;
+import com.aerospike.client.policy.ScanPolicy;
+import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.client.query.Filter;
+import com.aerospike.client.query.IndexType;
+import com.aerospike.client.query.RecordSet;
+import com.aerospike.client.query.Statement;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,29 +41,24 @@ import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.ReflectionUtils;
 
-import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.Bin;
-import com.aerospike.client.Key;
-import com.aerospike.client.Record;
-import com.aerospike.client.policy.ScanPolicy;
-import com.aerospike.client.policy.WritePolicy;
-import com.aerospike.client.query.Filter;
-import com.aerospike.client.query.IndexType;
-import com.aerospike.client.query.RecordSet;
-import com.aerospike.client.query.Statement;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Please do not add tests here. Instead add tests to AerospikeTemplateTests.
  * @author Oliver Gierke
- * 
+ *
  */
 //TODO: cleanup and move to AerospikeTemplateTests
 @Deprecated
 public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
-	
+
 	protected static final String SET_NAME_PERSON = "Person";
 
 	@Autowired AerospikeTemplate template;
@@ -140,9 +138,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 	}
 
 
-
-	private <T> Query createQueryForMethodWithArgs(String methodName, Object... args)
-			throws NoSuchMethodException, SecurityException {
+	private <T> Query createQueryForMethodWithArgs(String methodName, Object... args) {
 
 		Class<?>[] argTypes = new Class<?>[args.length];
 		if (!ObjectUtils.isEmpty(args)) {
@@ -152,7 +148,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 			}
 		}
 
-		Method method = PersonRepository.class.getMethod(methodName, argTypes);
+		Method method = ReflectionUtils.findMethod(PersonRepository.class, methodName, argTypes);
 
 		PartTree partTree = new PartTree(method.getName(), Person.class);
 		AerospikeQueryCreator creator = new AerospikeQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,repositoryMetaData, new SpelAwareProxyProjectionFactory()).getParameters(), args));
@@ -162,22 +158,20 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		return q;
 	}
 
-	@SuppressWarnings("unused")
 	@Test
-	public void testFindWithFilterEqual() throws NoSuchMethodException, Exception{
+	public void testFindWithFilterEqual() {
 		createIndexIfNotExists(Person.class, "first_name_index", "firstname", IndexType.STRING);
 
-		WritePolicy policy = getWritePolicy();
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-003"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-004"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-005"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-006"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-007"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-008"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-009"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin("firstname", "Dave"), new Bin ("lastname", "Matthews"));
+		template.insert(new Person("dave-001", "Dave", "Matthews"));
+		template.insert(new Person("dave-002", "Dave", "Matthews"));
+		template.insert(new Person("dave-003", "Dave", "Matthews"));
+		template.insert(new Person("dave-004", "Dave", "Matthews"));
+		template.insert(new Person("dave-005", "Dave", "Matthews"));
+		template.insert(new Person("dave-006", "Dave", "Matthews"));
+		template.insert(new Person("dave-007", "Dave", "Matthews"));
+		template.insert(new Person("dave-008", "Dave", "Matthews"));
+		template.insert(new Person("dave-009", "Dave", "Matthews"));
+		template.insert(new Person("dave-010", "Dave", "Matthews"));
 
 		Query query = createQueryForMethodWithArgs("findPersonByFirstname", "Dave");
 
@@ -186,42 +180,21 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		assertThat(result).hasSize(10);
 	}
 
-	@SuppressWarnings("unused")
-	@Test 
-	public void testFindWithFilterEqualOrderBy() throws NoSuchMethodException, Exception{
+	@Test
+	public void testFindWithFilterEqualOrderBy() {
 		createIndexIfNotExists(Person.class, "age_index", "age", IndexType.NUMERIC);
 		createIndexIfNotExists(Person.class, "last_name_index", "lastname", IndexType.STRING);
 
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
-				"firstname", "Jean"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 21));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"), new Bin(
-				"firstname", "Ashley"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 22));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-003"), new Bin(
-				"firstname", "Beatrice"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 23));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-004"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 24));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-005"), new Bin(
-				"firstname", "Zaipper"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 25));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-006"), new Bin(
-				"firstname", "knowlen"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 26));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-007"), new Bin(
-				"firstname", "Xylophone"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 27));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-008"), new Bin(
-				"firstname", "Mitch"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 28));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-009"), new Bin(
-				"firstname", "Alister"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 29));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin(
-				"firstname", "Aabbbt"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 30));
+		template.insert(new Person("dave-001", "Jean", "Matthews", 21));
+		template.insert(new Person("dave-002", "Ashley", "Matthews", 22));
+		template.insert(new Person("dave-003", "Beatrice", "Matthews", 23));
+		template.insert(new Person("dave-004", "Dave", "Matthews", 24));
+		template.insert(new Person("dave-005", "Zaipper", "Matthews", 25));
+		template.insert(new Person("dave-006", "knowlen", "Matthews", 26));
+		template.insert(new Person("dave-007", "Xylophone", "Matthews", 27));
+		template.insert(new Person("dave-008", "Mitch", "Matthews", 28));
+		template.insert(new Person("dave-009", "Alister", "Matthews", 29));
+		template.insert(new Person("dave-010", "Aabbbt", "Matthews", 30));
 
 		Query query = createQueryForMethodWithArgs("findByLastnameOrderByFirstnameAsc","Matthews");
 
@@ -230,43 +203,23 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		assertThat(result).hasSize(10);
 	}
 
-	@SuppressWarnings("unused")
-	@Test 
-	public void testFindWithFilterEqualOrderByDesc() throws NoSuchMethodException, Exception{
+	@Test
+	public void testFindWithFilterEqualOrderByDesc() {
 		createIndexIfNotExists(Person.class, "age_index", "age", IndexType.NUMERIC);
 		createIndexIfNotExists(Person.class, "last_name_index", "lastname", IndexType.STRING);
 
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
-				"firstname", "Jean"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 21));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"), new Bin(
-				"firstname", "Ashley"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 22));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-003"), new Bin(
-				"firstname", "Beatrice"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 23));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-004"), new Bin(
-				"firstname", "Dave"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 24));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-005"), new Bin(
-				"firstname", "Zaipper"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 25));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-006"), new Bin(
-				"firstname", "knowlen"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 26));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-007"), new Bin(
-				"firstname", "Xylophone"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 27));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-008"), new Bin(
-				"firstname", "Mitch"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 28));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-009"), new Bin(
-				"firstname", "Alister"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 29));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin(
-				"firstname", "Aabbbt"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 30));
-		Object [] args = {"Matthews"};
+		template.insert(new Person("dave-001", "Jean", "Matthews", 21));
+		template.insert(new Person("dave-002", "Ashley", "Matthews", 22));
+		template.insert(new Person("dave-003", "Beatrice", "Matthews", 23));
+		template.insert(new Person("dave-004", "Dave", "Matthews", 24));
+		template.insert(new Person("dave-005", "Zaipper", "Matthews", 25));
+		template.insert(new Person("dave-006", "knowlen", "Matthews", 26));
+		template.insert(new Person("dave-007", "Xylophone", "Matthews", 27));
+		template.insert(new Person("dave-008", "Mitch", "Matthews", 28));
+		template.insert(new Person("dave-009", "Alister", "Matthews", 29));
+		template.insert(new Person("dave-010", "Aabbbt", "Matthews", 30));
+
+		Object[] args = {"Matthews"};
 		Query query = createQueryForMethodWithArgs("findByLastnameOrderByFirstnameDesc",args);
 
 		Stream<Person> result = template.find(query, Person.class);
@@ -274,42 +227,21 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		assertThat(result).hasSize(10);
 	}
 
-	@SuppressWarnings("unused")
 	@Test
-	public void testFindWithFilterRange() throws NoSuchMethodException, Exception{
+	public void testFindWithFilterRange() {
 		createIndexIfNotExists(Person.class, "age_index", "age", IndexType.NUMERIC);
 
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin(
-				"firstname", "Dave01"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 21));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"), new Bin(
-				"firstname", "Dave02"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 22));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-003"), new Bin(
-				"firstname", "Dave03"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 23));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-004"), new Bin(
-				"firstname", "Dave04"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 24));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-005"), new Bin(
-				"firstname", "Dave05"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 25));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-006"), new Bin(
-				"firstname", "Dave06"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 26));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-007"), new Bin(
-				"firstname", "Dave07"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 27));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-008"), new Bin(
-				"firstname", "Dave08"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 28));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-009"), new Bin(
-				"firstname", "Dave09"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 29));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin(
-				"firstname", "Dave10"), new Bin("lastname", "Matthews"), new Bin(
-				"age", 30));
-		
+		template.insert(new Person("dave-001", "Dave01", "Matthews", 21));
+		template.insert(new Person("dave-002", "Dave02", "Matthews", 22));
+		template.insert(new Person("dave-003", "Dave03", "Matthews", 23));
+		template.insert(new Person("dave-004", "Dave04", "Matthews", 24));
+		template.insert(new Person("dave-005", "Dave05", "Matthews", 25));
+		template.insert(new Person("dave-006", "Dave06", "Matthews", 26));
+		template.insert(new Person("dave-007", "Dave07", "Matthews", 27));
+		template.insert(new Person("dave-008", "Dave08", "Matthews", 28));
+		template.insert(new Person("dave-009", "Dave09", "Matthews", 29));
+		template.insert(new Person("dave-010", "Dave10", "Matthews", 30));
+
 		Query query = createQueryForMethodWithArgs("findCustomerByAgeBetween", 25,30);
 
 		Stream<Person> result = template.find(query, Person.class);
@@ -317,31 +249,20 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		assertThat(result).hasSize(6);
 	}
 
-	@SuppressWarnings("unused")
 	@Test
-	public void testFindWithStatement(){
+	public void testFindWithStatement() {
 		createIndexIfNotExists(Person.class,"first_name_index", "firstname", IndexType.STRING);
 
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-001"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-003"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-004"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-005"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-006"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-007"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-008"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-009"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
-		client.put(policy, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-010"), new Bin("firstname", "Dave"),
-				new Bin ("lastname", "Matthews"));
+		template.insert(new Person("dave-001", "Dave", "Matthews"));
+		template.insert(new Person("dave-002", "Dave", "Matthews"));
+		template.insert(new Person("dave-003", "Dave", "Matthews"));
+		template.insert(new Person("dave-004", "Dave", "Matthews"));
+		template.insert(new Person("dave-005", "Dave", "Matthews"));
+		template.insert(new Person("dave-006", "Dave", "Matthews"));
+		template.insert(new Person("dave-007", "Dave", "Matthews"));
+		template.insert(new Person("dave-008", "Dave", "Matthews"));
+		template.insert(new Person("dave-009", "Dave", "Matthews"));
+		template.insert(new Person("dave-010", "Dave", "Matthews"));
 
 		Statement aerospikeQuery = new Statement();
 		String[] bins = {"firstname","lastname"}; //fields we want retrieved
