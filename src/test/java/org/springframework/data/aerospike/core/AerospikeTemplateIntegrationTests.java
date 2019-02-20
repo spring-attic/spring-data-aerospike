@@ -269,7 +269,7 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		aerospikeQuery.setNamespace(getNameSpace()); // Database
 		aerospikeQuery.setSetName(AerospikeTemplateIntegrationTests.SET_NAME_PERSON); //Table
 		aerospikeQuery.setBinNames(bins);
-		aerospikeQuery.setFilters(Filter.equal("firstname","Dave")); //Query
+		aerospikeQuery.setFilter(Filter.equal("firstname","Dave")); //Query
 
 		RecordSet rs =  client.query(null, aerospikeQuery);
 		int count = 0;

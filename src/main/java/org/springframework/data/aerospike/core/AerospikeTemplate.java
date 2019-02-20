@@ -394,7 +394,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 
 		Statement statement = new Statement();
 		if (filter != null)
-			statement.setFilters(filter);
+			statement.setFilter(filter);
 		statement.setSetName(entity.getSetName());
 		statement.setNamespace(this.namespace);
 		ResultSet resultSet = null;
