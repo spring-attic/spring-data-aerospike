@@ -234,6 +234,15 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                    <reportOutputDirectory>${basedir}</reportOutputDirectory>
+                    <doctitle>Spring Data Aerospike</doctitle>
+                    <show>public</show>
+                    <splitindex>true</splitindex>
+                    <bottom>Copyright &#169; 2012&#x2013;{currentYear} Aerospike, Inc. All rights reserved.</bottom>
+                    <sourcepath>${basedir}/src/main</sourcepath>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
