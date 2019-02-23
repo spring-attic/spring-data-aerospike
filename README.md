@@ -1,6 +1,6 @@
 # Spring Data Aerospike [![maven][maven-image]][maven-url]
 
-[maven-image]: https://img.shields.io/maven-central/v/com.aerospike/spring-data-aerospike.svg?maxAge=2592000
+[maven-image]: https://img.shields.io/maven-central/v/com.aerospike/spring-data-aerospike.svg
 [maven-url]: http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22spring-data-aerospike%22
 
 The primary goal of the [Spring Data](http://projects.spring.io/spring-data) project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
