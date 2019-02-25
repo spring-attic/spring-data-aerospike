@@ -1,6 +1,6 @@
 # Spring Data Aerospike [![maven][maven-image]][maven-url]
 
-[maven-image]: https://img.shields.io/maven-central/v/com.aerospike/spring-data-aerospike.svg?maxAge=2592000
+[maven-image]: https://img.shields.io/maven-central/v/com.aerospike/spring-data-aerospike.svg
 [maven-url]: http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22spring-data-aerospike%22
 
 The primary goal of the [Spring Data](http://projects.spring.io/spring-data) project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
@@ -28,7 +28,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>com.aerospike</groupId>
   <artifactId>spring-data-aerospike</artifactId>
-  <version>1.2.1.RELEASE</version>
+  <version>2.0.0.RELEASE</version>
 </dependency>
 ```
 
@@ -42,13 +42,11 @@ The Aerospike Spring Data connector depends on the Aerospike Client and the Aero
 
 <dependency>
   <groupId>com.aerospike</groupId>
-  <artifactId>aerospike-helper-java</artifactId>
+  <artifactId>aerospike-query-engine</artifactId>
 </dependency>
 ```
 Both dependencies will be provided for you by `spring-data-aerospike`, so no need to declare them additionally.
  
-Note that the 1.2 version of the Aerospike Helper requires Aerospike server 3.12+ as it takes advantage of the PredExp feature for performing queries. Use version 1.1 of the Aerospike Helper for earlier versions of the Aerospike Server.
-
 ### AerospikeTemplate
 
 AerospikeTemplate is the central support class for Aerospike database operations. It provides:
