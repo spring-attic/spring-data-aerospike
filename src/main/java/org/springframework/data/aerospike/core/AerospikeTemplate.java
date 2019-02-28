@@ -204,7 +204,7 @@ public class AerospikeTemplate implements AerospikeOperations {
 		} else {
 			WritePolicyBuilder builder = WritePolicyBuilder.builder(this.client.writePolicyDefault)
 					.sendKey(true)
-					.recordExistsAction(RecordExistsAction.UPDATE);
+					.recordExistsAction(RecordExistsAction.REPLACE);
 			doPersist(document, builder);
 		}
 	}
