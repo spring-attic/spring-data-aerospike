@@ -148,6 +148,35 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
+	public void shouldUpdateNullFieldForClassWithVersionField() {
+		VersionedClass versionedClass = new VersionedClass(id, "field", 0);
+		template.save(versionedClass);
+
+		VersionedClass byId = template.findById(id, VersionedClass.class);
+		assertThat(byId.getField())
+				.isEqualTo("field");
+
+		template.save(new VersionedClass(id, null, byId.version));
+
+		assertThat(template.findById(id, VersionedClass.class).getField())
+				.isNull();
+	}
+
+	@Test
+	public void shouldUpdateNullFieldForClassWithoutVersionField() {
+		Person person = new Person(id,"Oliver");
+		person.setFirstName("First name");
+		template.insert(person);
+
+		assertThat(template.findById(id, Person.class)).isEqualTo(person);
+
+		person.setFirstName(null);
+		template.save(person);
+
+		assertThat(template.findById(id, Person.class).getFirstName()).isNull();
+	}
+
+	@Test
 	public void shouldUpdateExistingDocument() throws Exception {
 		VersionedClass one = new VersionedClass(id, "foo", 0);
 		template.save(one);
@@ -309,16 +338,17 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		assertThat(person1).isNull();
 	}
 
-	@Test (expected = DuplicateKeyException.class)
+	@Test
 	public void throwsExceptionForDuplicateIds() {
 		Person person = new Person(id,"Amol");
 		person.setAge(28);
 
 		template.insert(person);
-		template.insert(person);
+		assertThatThrownBy(() -> template.insert(person))
+				.isInstanceOf(DuplicateKeyException.class);
 	}
 
-	@Test (expected = DuplicateKeyException.class)
+	@Test
 	public void rejectsDuplicateIdInInsertAll() {
 		Person person = new Person(id, "Amol");
 		person.setAge(28);
@@ -327,12 +357,14 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		records.add(person);
 		records.add(person);
 
-		template.insertAll(records);
+		assertThatThrownBy(() -> template.insertAll(records))
+				.isInstanceOf(DuplicateKeyException.class);
 	}
 
-	@Test(expected = DataRetrievalFailureException.class)
-	public void shouldThrowExceptionOnUpdateForNonexistingKey(){
-		template.update(new Person(id,"svenfirstName",11));
+	@Test
+	public void shouldThrowExceptionOnUpdateForNonexistingKey() {
+		assertThatThrownBy(() -> template.update(new Person(id, "svenfirstName", 11)))
+				.isInstanceOf(DataRetrievalFailureException.class);
 	}
 
 	@Test
