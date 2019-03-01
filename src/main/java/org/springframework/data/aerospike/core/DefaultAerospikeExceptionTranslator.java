@@ -61,6 +61,7 @@ public class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTr
 
 			}
 		}
-		return new UncategorizedKeyValueException("Unexpected Aerospike Exception", cause);
+		//we should not convert exceptions that spring-data-aeropike does not recognise
+		return null;
 	}
 }
