@@ -84,9 +84,9 @@ public class DefaultAerospikeExceptionTranslatorTest {
     }
 
     @Test
-    public void shouldTranslateUnknownError() {
+    public void shouldNotTranslateUnknownError() {
         RuntimeException cause = new RuntimeException();
         DataAccessException actual = translator.translateExceptionIfPossible(cause);
-        assertThat(actual).isExactlyInstanceOf(UncategorizedKeyValueException.class);
+        assertThat(actual).isNull();
     }
 }
