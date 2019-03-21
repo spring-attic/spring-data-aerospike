@@ -54,12 +54,12 @@ You will also need to add the location of the Spring Milestone repository for ma
   <repository>
     <id>spring-milestone</id>
     <name>Spring Maven MILESTONE Repository</name>
-    <url>http://repo.spring.io/libs-milestone</url>
+    <url>https://repo.spring.io/libs-milestone</url>
   </repository>
 </repositories>
 ----
 
-The repository is also http://shrub.appspot.com/maven.springframework.org/milestone/org/springframework/data/[browseable here].
+The repository is also https://shrub.appspot.com/maven.springframework.org/milestone/org/springframework/data/[browseable here].
 
 Create a simple Employee class to persist.
 
@@ -223,10 +223,10 @@ While this example show how easy it is to configure Spring to connect to Aerospi
 <beans xmlns="http://www.springframework.org/schema/beans"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aersospike="http://www.springframework.org/schema/data/aersospike"
   xmlns:context="http://www.springframework.org/schema/context"
-  xsi:schemaLocation="http://www.springframework.org/schema/cql http://www.springframework.org/schema/cql/spring-cql-1.0.xsd
-    http://www.springframework.org/schema/data/aersospike http://www.springframework.org/schema/data/aersospike/spring-aersospike-1.0.xsd
-    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+  xsi:schemaLocation="http://www.springframework.org/schema/cql https://www.springframework.org/schema/cql/spring-cql-1.0.xsd
+    http://www.springframework.org/schema/data/aersospike https://www.springframework.org/schema/data/aersospike/spring-aersospike-1.0.xsd
+    http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context-3.2.xsd">
 
   <!-- Loads the properties into the Spring Context and uses them to fill 
     in placeholders in the bean definitions -->
