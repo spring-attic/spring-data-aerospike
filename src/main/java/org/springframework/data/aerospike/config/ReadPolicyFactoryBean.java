@@ -17,7 +17,6 @@ package org.springframework.data.aerospike.config;
 
 import org.springframework.beans.factory.FactoryBean;
 
-import com.aerospike.client.policy.ConsistencyLevel;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.Priority;
 
@@ -70,15 +69,6 @@ public class ReadPolicyFactoryBean implements FactoryBean<Policy> {
 	 */
 	public void setSleepBetweenRetries(int sleepBetweenRetries){
 		this.policy.sleepBetweenRetries = sleepBetweenRetries;
-	}
-
-	/**
-	 * Configures how replicas should be consulted in a read operation to provide the desired
-	 * consistency guarantee. Default to allowing one replica to be used in the
-	 * read operation.
-	 */
-	public void setConsistencyLevel(ConsistencyLevel consistencyLevel){
-		this.policy.consistencyLevel = consistencyLevel;
 	}
 
 	/**
