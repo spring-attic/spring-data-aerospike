@@ -30,20 +30,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.aerospike.BaseIntegrationTests;
-import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
 import org.springframework.data.aerospike.repository.query.Query;
-import org.springframework.data.aerospike.sample.ContactRepository;
 import org.springframework.data.aerospike.sample.Person;
-import org.springframework.data.aerospike.sample.PersonRepository;
-import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
-import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.ReflectionUtils;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -64,7 +53,6 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 	@Autowired AerospikeTemplate template;
 	@Autowired AerospikeClient client;
 
-	DefaultRepositoryMetadata  repositoryMetaData =  new DefaultRepositoryMetadata(ContactRepository.class);
 	private WritePolicy policy = getWritePolicy();
 
 	@Before
@@ -137,26 +125,6 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 			Assert.fail("dave-001 was not deleted");
 	}
 
-
-	private <T> Query createQueryForMethodWithArgs(String methodName, Object... args) {
-
-		Class<?>[] argTypes = new Class<?>[args.length];
-		if (!ObjectUtils.isEmpty(args)) {
-
-			for (int i = 0; i < args.length; i++) {
-				argTypes[i] = args[i].getClass();
-			}
-		}
-
-		Method method = ReflectionUtils.findMethod(PersonRepository.class, methodName, argTypes);
-
-		PartTree partTree = new PartTree(method.getName(), Person.class);
-		AerospikeQueryCreator creator = new AerospikeQueryCreator(partTree, new ParametersParameterAccessor(new QueryMethod(method,repositoryMetaData, new SpelAwareProxyProjectionFactory()).getParameters(), args));
-
-		Query q = (Query) creator.createQuery();
-
-		return q;
-	}
 
 	@Test
 	public void testFindWithFilterEqual() {
