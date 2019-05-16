@@ -1,8 +1,10 @@
 package org.springframework.data.aerospike.core;
 
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.Info;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.GenerationPolicy;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
@@ -171,6 +173,14 @@ abstract class BaseAerospikeTemplate {
                         log.error("Caught exception while closing query", e);
                     }
                 });
+    }
+
+    <T> Stream<KeyRecord> findAllRecordsUsingQuery(Class<T> type, Query query) {
+        Assert.notNull(query, "Query must not be null!");
+        Assert.notNull(type, "Type must not be null!");
+
+        Qualifier qualifier = query.getCriteria().getCriteriaObject();
+        return findAllRecordsUsingQuery(type, null, qualifier);
     }
 
     private Comparator<?> getComparator(Query query) {

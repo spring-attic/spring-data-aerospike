@@ -23,6 +23,9 @@ import com.aerospike.client.query.*;
 import com.aerospike.client.task.IndexTask;
 import com.aerospike.helper.query.Qualifier;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.support.PropertyComparator;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.convert.AerospikeWriteData;
@@ -374,7 +377,7 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.springframework.data.aerospike.core.AerospikeOperations#count(org.
 	 * springframework.data.aerospike.repository.query.Query, java.lang.Class)
@@ -382,12 +385,7 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 	@SuppressWarnings("rawtypes")
 	@Override
 	public long count(Query query, Class<?> type) {
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(type, "Type must not be null!");
-
-		Qualifier qualifier = query.getCriteria().getCriteriaObject();
-		Stream<KeyRecord> results = findAllRecordsUsingQuery(type, null, qualifier);
-
+		Stream<KeyRecord> results = findAllRecordsUsingQuery(type, query);
 		return results.count();
 	}
 

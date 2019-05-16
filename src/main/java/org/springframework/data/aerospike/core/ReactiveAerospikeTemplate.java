@@ -143,6 +143,12 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         return Flux.fromStream(results);
     }
 
+    @Override
+    public <T> Mono<Long> count(Query query, Class<T> type) {
+        Stream<KeyRecord> results = findAllRecordsUsingQuery(type, query);
+        return Flux.fromStream(results).count();
+    }
+
     public <T> Mono<Boolean> delete(T objectToDelete) {
         Assert.notNull(objectToDelete, "Object to delete must not be null!");
 
