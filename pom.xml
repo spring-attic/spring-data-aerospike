@@ -144,6 +144,12 @@
                 <version>${reactor.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-test</artifactId>
+                <version>${reactor.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
                 <version>${joda-time.version}</version>
@@ -198,6 +204,13 @@
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <optional>true</optional>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

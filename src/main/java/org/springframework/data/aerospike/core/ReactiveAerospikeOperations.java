@@ -8,6 +8,7 @@ import reactor.core.publisher.Mono;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -23,6 +24,18 @@ public interface ReactiveAerospikeOperations {
     <T> Mono<T> insert(T document);
 
     <T> Mono<T> update(T document);
+
+    <T> Mono<T> add(T objectToAddTo, Map<String, Long> values);
+
+    <T> Mono<T> add(T objectToAddTo, String binName, long value);
+
+    <T> Mono<T> append(T objectToAppendTo, Map<String, String> values);
+
+    <T> Mono<T> append(T objectToAppendTo, String binName, String value);
+
+    <T> Mono<T> prepend(T objectToPrependTo, Map<String, String> values);
+
+    <T> Mono<T> prepend(T objectToPrependTo, String binName, String value);
 
     <T> Flux<T> findAll(Class<T> type);
 
