@@ -22,7 +22,8 @@
     <properties>
         <bundlor.enabled>false</bundlor.enabled>
         <source.level>1.8</source.level>
-        <aerospike>4.4.0</aerospike>
+        <aerospike>4.4.1</aerospike>
+        <reactor.version>3.1.8.RELEASE</reactor.version>
 
         <springdata.commons>2.1.6.RELEASE</springdata.commons>
         <springdata.keyvalue>2.1.6.RELEASE</springdata.keyvalue>
@@ -133,6 +134,16 @@
                 <version>${aerospike}</version>
             </dependency>
             <dependency>
+                <groupId>com.aerospike</groupId>
+                <artifactId>aerospike-reactor-client</artifactId>
+                <version>${aerospike}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-core</artifactId>
+                <version>${reactor.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
                 <version>${joda-time.version}</version>
@@ -166,7 +177,7 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>com.aerospike</groupId>
             <artifactId>aerospike-client</artifactId>
@@ -174,7 +185,19 @@
 
         <dependency>
             <groupId>com.aerospike</groupId>
+            <artifactId>aerospike-reactor-client</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>com.aerospike</groupId>
             <artifactId>aerospike-query-engine</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <dependency>

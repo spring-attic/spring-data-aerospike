@@ -91,20 +91,6 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		assertThat(record2.bins.get("field")).isEqualTo("foo2");
 	}
 
-	private void addNewFieldToSavedDataInAerospike(Key key) {
-		Record initial = client.get(new Policy(), key);
-		Bin[] bins = Stream.concat(
-				initial.bins.entrySet().stream().map(e -> new Bin(e.getKey(), e.getValue())),
-				Stream.of(new Bin("notPresent", "cats"))).toArray(Bin[]::new);
-		WritePolicy policy = new WritePolicy();
-		policy.recordExistsAction = RecordExistsAction.REPLACE;
-
-		client.put(policy, key, bins);
-
-		Record updated = client.get(new Policy(), key);
-		assertThat(updated.bins.get("notPresent")).isEqualTo("cats");
-	}
-
 	@Test
 	public void shouldSaveAndSetVersion() throws Exception {
 		VersionedClass first = new VersionedClass(id, "foo");

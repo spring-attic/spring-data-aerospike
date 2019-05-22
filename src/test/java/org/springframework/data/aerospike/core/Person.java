@@ -15,7 +15,7 @@
  */
 package org.springframework.data.aerospike.core;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Date;
 import java.util.Map;
 
@@ -44,7 +44,7 @@ public class Person {
 	private Person friend;
 	private boolean active;
 	private Date dateOfBirth;
-	private ArrayList<String> list;
+	private List<String> list;
 
 	@Field("email") 
 	private String emailAddress;
