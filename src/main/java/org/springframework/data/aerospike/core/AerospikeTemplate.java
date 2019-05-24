@@ -21,25 +21,21 @@ import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.*;
 import com.aerospike.client.task.IndexTask;
-import com.aerospike.helper.query.KeyRecordIterator;
 import com.aerospike.helper.query.Qualifier;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.support.PropertyComparator;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.aerospike.convert.*;
-import org.springframework.data.aerospike.mapping.*;
+import org.springframework.data.aerospike.convert.AerospikeWriteData;
+import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
+import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
+import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.keyvalue.core.IterableConverter;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.comparator.CompoundComparator;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -286,6 +282,7 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 		if (this.client.exists(null, key)) {
 			return this.client.operate(writePolicy, key, Operation.touch(), Operation.get());
 		}
+
 		return null;
 	}
 
@@ -341,12 +338,6 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 		else
 			resultSet = this.client.queryAggregate(null, statement);
 		return (Iterable<T>) resultSet;
-	}
-
-	@Override
-	public String getSetName(Class<?> entityClass) {
-		AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(entityClass);
-		return entity.getSetName();
 	}
 
 	@Override
@@ -412,44 +403,7 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 	public <T> Stream<T> find(Query query, Class<T> type) {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(type, "Type must not be null!");
-
-		if ((query.getSort() == null || query.getSort().isUnsorted())
-				&& query.getOffset() > 0) {
-			throw new IllegalArgumentException("Unsorted query must not have offset value. " +
-                    "For retrieving paged results use sorted query.");
-		}
-
-		Qualifier qualifier = query.getCriteria().getCriteriaObject();
-		Stream<T> results = findAllUsingQuery(type, null, qualifier);
-
-		if (query.getSort() != null && query.getSort().isSorted()) {
-			Comparator comparator = getComparator(query);
-			results = results.sorted(comparator);
-		}
-
-		if(query.hasOffset()) {
-			results = results.skip(query.getOffset());
-		}
-		if(query.hasRows()) {
-			results = results.limit(query.getRows());
-		}
-		return results;
-	}
-
-	private Comparator<?> getComparator(Query query) {
-		//TODO replace with not deprecated one
-		//TODO also see NullSafeComparator
-		CompoundComparator<?> compoundComperator = new CompoundComparator();
-		for (Order order : query.getSort()) {
-
-			if (Direction.DESC.equals(order.getDirection())) {
-				compoundComperator.addComparator(new PropertyComparator<>(order.getProperty(), true, false));
-			}else {
-				compoundComperator.addComparator(new PropertyComparator<>(order.getProperty(), true, true));
-			}
-		}
-
-		return compoundComperator;
+		return findAllUsingQuery(type, query);
 	}
 
 	/*
@@ -519,27 +473,6 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 		}
 
 		return (nodeCount > 1) ? n_objects / replicationCount : n_objects;
-	}
-
-	protected <T> Stream<T> findAllUsingQuery(Class<T> type, Filter filter, Qualifier... qualifiers) {
-		return findAllRecordsUsingQuery(type, filter, qualifiers)
-				.map(keyRecord -> mapToEntity(keyRecord.key, type, keyRecord.record));
-	}
-
-	private <T> Stream<KeyRecord> findAllRecordsUsingQuery(Class<T> type, Filter filter, Qualifier... qualifiers) {
-		String setName = getSetName(type);
-
-		KeyRecordIterator recIterator = this.queryEngine.select(
-				this.namespace, setName, filter, qualifiers);
-
-		return StreamUtils.createStreamFromIterator(recIterator)
-				.onClose(() -> {
-					try {
-						recIterator.close();
-					} catch (Exception e) {
-						log.error("Caught exception while closing query", e);
-					}
-				});
 	}
 
 	@SuppressWarnings("unchecked")

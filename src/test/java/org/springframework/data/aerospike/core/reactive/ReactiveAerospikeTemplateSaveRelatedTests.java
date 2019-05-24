@@ -29,22 +29,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ReactiveAerospikeTemplateSaveRelatedTests extends BaseReactiveAerospikeTemplateTests {
 
     @Test
-    public void shouldSaveAndSetVersion() {
+    public void save_shouldSaveAndSetVersion() {
         VersionedClass first = new VersionedClass(id, "foo");
         reactiveTemplate.save(first).block();
 
         assertThat(first.version).isEqualTo(1);
-        assertThat(template.findById(id, VersionedClass.class).version).isEqualTo(1);
+        assertThat(findById(id, VersionedClass.class).version).isEqualTo(1);
     }
 
     @Test(expected = OptimisticLockingFailureException.class)
-    public void shouldNotSaveDocumentIfItAlreadyExistsWithZeroVersion() {
+    public void save_shouldNotSaveDocumentIfItAlreadyExistsWithZeroVersion() {
         reactiveTemplate.save(new VersionedClass(id, "foo", 0)).block();
         reactiveTemplate.save(new VersionedClass(id, "foo", 0)).block();
     }
 
     @Test
-    public void shouldSaveDocumentWithEqualVersion() {
+    public void save_shouldSaveDocumentWithEqualVersion() {
         reactiveTemplate.save(new VersionedClass(id, "foo", 0)).block();
 
         reactiveTemplate.save(new VersionedClass(id, "foo", 1)).block();
@@ -52,57 +52,57 @@ public class ReactiveAerospikeTemplateSaveRelatedTests extends BaseReactiveAeros
     }
 
     @Test(expected = DataRetrievalFailureException.class)
-    public void shouldFailSaveNewDocumentWithVersionGreaterThanZero() {
+    public void save_shouldFailSaveNewDocumentWithVersionGreaterThanZero() {
         reactiveTemplate.save(new VersionedClass(id, "foo", 5)).block();
     }
 
     @Test
-    public void shouldUpdateNullField() {
+    public void save_shouldUpdateNullField() {
         VersionedClass versionedClass = new VersionedClass(id, null, 0);
         VersionedClass saved = reactiveTemplate.save(versionedClass).block();
         reactiveTemplate.save(saved).block();
     }
 
     @Test
-    public void shouldUpdateNullFieldForClassWithVersionField() {
+    public void save_shouldUpdateNullFieldForClassWithVersionField() {
         VersionedClass versionedClass = new VersionedClass(id, "field", 0);
         reactiveTemplate.save(versionedClass).block();
 
-        assertThat(template.findById(id, VersionedClass.class).getField()).isEqualTo("field");
+        assertThat(findById(id, VersionedClass.class).getField()).isEqualTo("field");
 
         versionedClass.setField(null);
         reactiveTemplate.save(versionedClass).block();
 
-        assertThat(template.findById(id, VersionedClass.class).getField()).isNull();
+        assertThat(findById(id, VersionedClass.class).getField()).isNull();
     }
 
     @Test
-    public void shouldUpdateNullFieldForClassWithoutVersionField() {
+    public void save_shouldUpdateNullFieldForClassWithoutVersionField() {
         Person person = new Person(id, "Oliver");
         reactiveTemplate.save(person).block();
 
-        assertThat(template.findById(id, Person.class).getFirstName()).isEqualTo("Oliver");
+        assertThat(findById(id, Person.class).getFirstName()).isEqualTo("Oliver");
 
         person.setFirstName(null);
         reactiveTemplate.save(person).block();
 
-        assertThat(template.findById(id, Person.class).getFirstName()).isNull();
+        assertThat(findById(id, Person.class).getFirstName()).isNull();
     }
 
     @Test
-    public void shouldUpdateExistingDocument() {
+    public void save_shouldUpdateExistingDocument() {
         VersionedClass one = new VersionedClass(id, "foo", 0);
         reactiveTemplate.save(one).block();
 
         reactiveTemplate.save(new VersionedClass(id, "foo1", one.version)).block();
 
-        VersionedClass value = template.findById(id, VersionedClass.class);
+        VersionedClass value = findById(id, VersionedClass.class);
         assertThat(value.version).isEqualTo(2);
         assertThat(value.field).isEqualTo("foo1");
     }
 
     @Test
-    public void shouldSetVersionWhenSavingTheSameDocument() {
+    public void save_shouldSetVersionWhenSavingTheSameDocument() {
         VersionedClass one = new VersionedClass(id, "foo");
         reactiveTemplate.save(one).block();
         reactiveTemplate.save(one).block();
@@ -112,7 +112,7 @@ public class ReactiveAerospikeTemplateSaveRelatedTests extends BaseReactiveAeros
     }
 
     @Test
-    public void shouldUpdateAlreadyExistingDocument() throws Exception {
+    public void save_shouldUpdateAlreadyExistingDocument() throws Exception {
         AtomicLong counter = new AtomicLong();
         int numberOfConcurrentSaves = 5;
 
@@ -124,7 +124,7 @@ public class ReactiveAerospikeTemplateSaveRelatedTests extends BaseReactiveAeros
             boolean saved = false;
             while (!saved) {
                 long counterValue = counter.incrementAndGet();
-                VersionedClass messageData = template.findById(id, VersionedClass.class);
+                VersionedClass messageData = findById(id, VersionedClass.class);
                 messageData.field = "value-" + counterValue;
                 try {
                     reactiveTemplate.save(messageData).block();
@@ -134,7 +134,7 @@ public class ReactiveAerospikeTemplateSaveRelatedTests extends BaseReactiveAeros
             }
         });
 
-        VersionedClass actual = template.findById(id, VersionedClass.class);
+        VersionedClass actual = findById(id, VersionedClass.class);
 
         assertThat(actual.field).isNotEqualTo(initial.field);
         assertThat(actual.version).isNotEqualTo(initial.version);
@@ -142,7 +142,7 @@ public class ReactiveAerospikeTemplateSaveRelatedTests extends BaseReactiveAeros
     }
 
     @Test
-    public void shouldSaveOnlyFirstDocumentAndNextAttemptsShouldFailWithOptimisticLockingException() throws Exception {
+    public void save_shouldSaveOnlyFirstDocumentAndNextAttemptsShouldFailWithOptimisticLockingException() throws Exception {
         AtomicLong counter = new AtomicLong();
         AtomicLong optimisticLockCounter = new AtomicLong();
         int numberOfConcurrentSaves = 5;
@@ -162,28 +162,28 @@ public class ReactiveAerospikeTemplateSaveRelatedTests extends BaseReactiveAeros
     }
 
     @Test
-    public void shouldSaveMultipleTimeDocumentWithoutVersion() {
+    public void save_shouldSaveMultipleTimeDocumentWithoutVersion() {
         SampleClasses.CustomCollectionClass one = new SampleClasses.CustomCollectionClass(id, "numbers");
 
         reactiveTemplate.save(one).block();
         reactiveTemplate.save(one).block();
 
-        assertThat(template.findById(id, SampleClasses.CustomCollectionClass.class)).isEqualTo(one);
+        assertThat(findById(id, SampleClasses.CustomCollectionClass.class)).isEqualTo(one);
     }
 
     @Test
-    public void shouldUpdateDocumentDataWithoutVersion() {
+    public void save_shouldUpdateDocumentDataWithoutVersion() {
         SampleClasses.CustomCollectionClass first = new SampleClasses.CustomCollectionClass(id, "numbers");
         SampleClasses.CustomCollectionClass second = new SampleClasses.CustomCollectionClass(id, "hot dog");
 
         reactiveTemplate.save(first).block();
         reactiveTemplate.save(second).block();
 
-        assertThat(template.findById(id, SampleClasses.CustomCollectionClass.class)).isEqualTo(second);
+        assertThat(findById(id, SampleClasses.CustomCollectionClass.class)).isEqualTo(second);
     }
 
     @Test
-    public void shouldReplaceAllBinsPresentInAerospikeWhenSavingDocument() {
+    public void save_shouldReplaceAllBinsPresentInAerospikeWhenSavingDocument() {
         Key key = new Key(getNameSpace(), "versioned-set", id);
         VersionedClass first = new VersionedClass(id, "foo");
         reactiveTemplate.save(first).block();
@@ -197,38 +197,38 @@ public class ReactiveAerospikeTemplateSaveRelatedTests extends BaseReactiveAeros
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void rejectsNullObjectToBeSaved() {
+    public void save_rejectsNullObjectToBeSaved() {
         reactiveTemplate.save(null).block();
     }
 
     @Test
-    public void testInsertAll() {
+    public void insertAll_shouldInsertAllDocuments() {
         Person customer1 = new Person("dave-002", "Dave");
         Person customer2 = new Person("james-007", "James");
         reactiveTemplate.insertAll(asList(customer1, customer2)).blockLast();
-        assertThat(template.findById("dave-002", Person.class)).isEqualTo(customer1);
-        assertThat(template.findById("james-007", Person.class)).isEqualTo(customer2);
+        assertThat(findById("dave-002", Person.class)).isEqualTo(customer1);
+        assertThat(findById("james-007", Person.class)).isEqualTo(customer2);
     }
 
     @Test(expected = DuplicateKeyException.class)
-    public void rejectsDuplicateIdInInsertAll() {
+    public void insertAll_rejectsDuplicateId() {
         Person person = new Person(id, "Amol");
         person.setAge(28);
         reactiveTemplate.insertAll(asList(person, person)).blockLast();
     }
 
     @Test
-    public void insertsSimpleEntityCorrectly() {
+    public void insert_insertsSimpleEntityCorrectly() {
         Person person = new Person(id,"Oliver");
         person.setAge(25);
         reactiveTemplate.insert(person).block();
 
-        Person person1 =  template.findById(id, Person.class);
+        Person person1 =  findById(id, Person.class);
         assertThat(person1).isEqualTo(person);
     }
 
     @Test(expected = DuplicateKeyException.class)
-    public void throwsExceptionForDuplicateIds() {
+    public void insert_throwsExceptionForDuplicateIds() {
         Person person = new Person(id,"Amol");
         person.setAge(28);
 
@@ -237,39 +237,39 @@ public class ReactiveAerospikeTemplateSaveRelatedTests extends BaseReactiveAeros
     }
 
     @Test
-    public void testUpdateSuccess(){
+    public void update_shouldUpdateDocumentCorrectly(){
         Person person = new Person(id,"WLastName",5);
         reactiveTemplate.insert(person).block();
         person.setAge(11);
         reactiveTemplate.update(person).block();
 
-        Person result = template.findById(id, Person.class);
+        Person result = findById(id, Person.class);
         assertThat(result.getAge()).isEqualTo(11);
     }
 
     @Test(expected = DataRetrievalFailureException.class)
-    public void shouldThrowExceptionOnUpdateForNonexistingKey() {
+    public void update_shouldThrowExceptionOnUpdateForNonexistingKey() {
         reactiveTemplate.update(new Person(id, "svenfirstName", 11)).block();
     }
 
     @Test
-    public void testAddToList() {
+    public void update_shouldUpdateDocumentWithListField() {
         Person personSven02 = new Person(id, "QLastName", 50);
         List<String> list = asList("string1", "string2","string3");
         personSven02.setList(list);
         reactiveTemplate.insert(personSven02).block();
 
-        Person personWithList = template.findById(id, Person.class);
+        Person personWithList = findById(id, Person.class);
         personWithList.getList().add("Added something new");
         reactiveTemplate.update(personWithList).block();
-        Person personWithList2 = template.findById(id, Person.class);
+        Person personWithList2 = findById(id, Person.class);
 
         assertThat(personWithList2).isEqualTo(personWithList);
         assertThat(personWithList2.getList()).hasSize(4);
     }
 
     @Test
-    public void testAddToMap() {
+    public void update_shouldUpdateDocumentWithMapField() {
         Person personSven02 = new Person(id, "QLastName", 50);
         Map<String, String> map = new HashMap<String, String>();
         map.put("key1", "value1");
@@ -278,10 +278,10 @@ public class ReactiveAerospikeTemplateSaveRelatedTests extends BaseReactiveAeros
         personSven02.setMap(map);
         reactiveTemplate.insert(personSven02).block();
 
-        Person personWithList = template.findById(id, Person.class);
+        Person personWithList = findById(id, Person.class);
         personWithList.getMap().put("key4","Added something new");
         reactiveTemplate.update(personWithList).block();
-        Person personWithList2 = template.findById(id, Person.class);
+        Person personWithList2 = findById(id, Person.class);
 
         assertThat(personWithList2).isEqualTo(personWithList);
         assertThat(personWithList2.getMap()).hasSize(4);

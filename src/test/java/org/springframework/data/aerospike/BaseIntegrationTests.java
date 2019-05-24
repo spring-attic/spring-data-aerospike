@@ -16,8 +16,19 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.aerospike.config.TestConfig;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.core.Person;
+import org.springframework.data.aerospike.repository.query.AerospikeQueryCreator;
+import org.springframework.data.aerospike.repository.query.Query;
+import org.springframework.data.aerospike.sample.ContactRepository;
+import org.springframework.data.aerospike.sample.PersonRepository;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -41,6 +52,8 @@ public abstract class BaseIntegrationTests {
     protected AerospikeTemplate template;
     @Autowired
     protected AerospikeClient client;
+
+    private DefaultRepositoryMetadata repositoryMetaData = new DefaultRepositoryMetadata(ContactRepository.class);
 
     protected String getNameSpace() {
         return namespace;
@@ -77,5 +90,15 @@ public abstract class BaseIntegrationTests {
         assertThat(updated.bins.get("notPresent")).isEqualTo("cats");
     }
 
+    public <T> Query createQueryForMethodWithArgs(String methodName, Object... args) {
+        Class[] argTypes = Stream.of(args).map(Object::getClass).toArray(Class[]::new);
+        Method method = ReflectionUtils.findMethod(PersonRepository.class, methodName, argTypes);
+        PartTree partTree = new PartTree(method.getName(), org.springframework.data.aerospike.sample.Person.class);
+        AerospikeQueryCreator creator =
+                new AerospikeQueryCreator(partTree,
+                        new ParametersParameterAccessor(
+                                new QueryMethod(method, repositoryMetaData, new SpelAwareProxyProjectionFactory()).getParameters(), args));
+        return creator.createQuery();
+    }
 
 }

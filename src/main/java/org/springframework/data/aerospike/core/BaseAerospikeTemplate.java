@@ -6,23 +6,36 @@ import com.aerospike.client.Record;
 import com.aerospike.client.policy.GenerationPolicy;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.client.query.Filter;
+import com.aerospike.client.query.KeyRecord;
+import com.aerospike.helper.query.KeyRecordIterator;
+import com.aerospike.helper.query.Qualifier;
 import com.aerospike.helper.query.QueryEngine;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.support.PropertyComparator;
 import org.springframework.data.aerospike.convert.*;
 import org.springframework.data.aerospike.mapping.*;
+import org.springframework.data.aerospike.repository.query.Query;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
+import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
+import org.springframework.util.comparator.CompoundComparator;
 
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 /**
  * Base class for creation Aerospike templates
  *
  * @author Igor Ermolenko
  */
+@Slf4j
 abstract class BaseAerospikeTemplate {
 
     protected final MappingContext<BasicAerospikePersistentEntity<?>, AerospikePersistentProperty> mappingContext;
@@ -94,6 +107,11 @@ abstract class BaseAerospikeTemplate {
                 });
     }
 
+    public String getSetName(Class<?> entityClass) {
+        AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(entityClass);
+        return entity.getSetName();
+    }
+
     <T> T mapToEntity(Key key, Class<T> type, Record record) {
         if (record == null) {
             return null;
@@ -110,13 +128,74 @@ abstract class BaseAerospikeTemplate {
         return readEntity;
     }
 
+    <T> Stream<T> findAllUsingQuery(Class<T> type, Query query) {
+        if ((query.getSort() == null || query.getSort().isUnsorted())
+                && query.getOffset() > 0) {
+            throw new IllegalArgumentException("Unsorted query must not have offset value. " +
+                    "For retrieving paged results use sorted query.");
+        }
+
+        Qualifier qualifier = query.getCriteria().getCriteriaObject();
+        Stream<T> results = findAllUsingQuery(type, null, qualifier);
+
+        if (query.getSort() != null && query.getSort().isSorted()) {
+            Comparator comparator = getComparator(query);
+            results = results.sorted(comparator);
+        }
+
+        if(query.hasOffset()) {
+            results = results.skip(query.getOffset());
+        }
+        if(query.hasRows()) {
+            results = results.limit(query.getRows());
+        }
+        return results;
+    }
+
+    <T> Stream<T> findAllUsingQuery(Class<T> type, Filter filter, Qualifier... qualifiers) {
+        return findAllRecordsUsingQuery(type, filter, qualifiers)
+                .map(keyRecord -> mapToEntity(keyRecord.key, type, keyRecord.record));
+    }
+
+    <T> Stream<KeyRecord> findAllRecordsUsingQuery(Class<T> type, Filter filter, Qualifier... qualifiers) {
+        String setName = getSetName(type);
+
+        KeyRecordIterator recIterator = this.queryEngine.select(
+                this.namespace, setName, filter, qualifiers);
+
+        return StreamUtils.createStreamFromIterator(recIterator)
+                .onClose(() -> {
+                    try {
+                        recIterator.close();
+                    } catch (Exception e) {
+                        log.error("Caught exception while closing query", e);
+                    }
+                });
+    }
+
+    private Comparator<?> getComparator(Query query) {
+        //TODO replace with not deprecated one
+        //TODO also see NullSafeComparator
+        CompoundComparator<?> compoundComperator = new CompoundComparator();
+        for (Sort.Order order : query.getSort()) {
+
+            if (Sort.Direction.DESC.equals(order.getDirection())) {
+                compoundComperator.addComparator(new PropertyComparator<>(order.getProperty(), true, false));
+            }else {
+                compoundComperator.addComparator(new PropertyComparator<>(order.getProperty(), true, true));
+            }
+        }
+
+        return compoundComperator;
+    }
+
     <T> ConvertingPropertyAccessor<T> getPropertyAccessor(AerospikePersistentEntity<?> entity, T source) {
         PersistentPropertyAccessor<T> accessor = entity.getPropertyAccessor(source);
         return new ConvertingPropertyAccessor<T>(accessor, converter.getConversionService());
     }
 
     WritePolicy getCasAwareWritePolicy(AerospikeWriteData data, AerospikePersistentEntity<?> entity,
-                                               ConvertingPropertyAccessor<?> accessor) {
+                                       ConvertingPropertyAccessor<?> accessor) {
         WritePolicyBuilder builder = WritePolicyBuilder.builder(this.client.writePolicyDefault)
                 .sendKey(true)
                 .generationPolicy(GenerationPolicy.EXPECT_GEN_EQUAL)

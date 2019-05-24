@@ -6,6 +6,8 @@ import org.springframework.data.aerospike.BaseIntegrationTests;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
 import org.springframework.data.aerospike.core.ReactiveAerospikeTemplate;
 
+import java.io.Serializable;
+
 /**
  * Base class for implementation tests for {@link AerospikeTemplate}.
  *
@@ -22,4 +24,9 @@ public abstract class BaseReactiveAerospikeTemplateTests extends BaseIntegration
         this.id = nextId();
         cleanDb();
     }
+
+    <T> T findById(Serializable id, Class<T> type) {
+        return reactiveTemplate.findById(id, type).block().get();
+    }
+
 }
