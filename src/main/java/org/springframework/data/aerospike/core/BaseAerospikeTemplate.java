@@ -225,9 +225,15 @@ abstract class BaseAerospikeTemplate {
         return builder.build();
     }
 
-    Key getKey(Object id, AerospikePersistentEntity<?> entity) {
-        return new Key(this.namespace, entity.getSetName(), id.toString());
+    Key getKey(Object id, Class<?> type) {
+        Assert.notNull(type, "Type must not be null!");
+        AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
+        return getKey(id, entity);
     }
 
+    Key getKey(Object id, AerospikePersistentEntity<?> entity) {
+        Assert.notNull(id, "Id must not be null!");
+        return new Key(this.namespace, entity.getSetName(), id.toString());
+    }
 
 }

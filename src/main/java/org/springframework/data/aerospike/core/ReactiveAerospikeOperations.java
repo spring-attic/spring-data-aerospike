@@ -8,6 +8,7 @@ import reactor.core.publisher.Mono;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Aerospike specific data access operations to work with reactive API
@@ -34,4 +35,9 @@ public interface ReactiveAerospikeOperations {
     <T> Flux<T> findInRange(long offset, long limit, Sort sort, Class<T> type);
 
     <T> Mono<Long> count(Query query, Class<T> type);
+
+    <T> Mono<T> execute(Supplier<T> supplier);
+
+    Mono<Boolean> exists(Object id, Class<?> type);
+
 }
