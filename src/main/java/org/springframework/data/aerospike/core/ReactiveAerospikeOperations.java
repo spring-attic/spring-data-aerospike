@@ -33,5 +33,5 @@ public interface ReactiveAerospikeOperations {
 
     <T> Flux<T> findInRange(long offset, long limit, Sort sort, Class<T> type);
 
-
+    <T> Mono<Long> count(Query query, Class<T> type);
 }
