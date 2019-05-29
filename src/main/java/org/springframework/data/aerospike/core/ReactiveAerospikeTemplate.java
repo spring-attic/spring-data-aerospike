@@ -22,7 +22,9 @@ import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.aerospike.client.ResultCode.*;
@@ -89,12 +91,9 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
 
     @Override
     public <T> Mono<Optional<T>> findById(Serializable id, Class<T> type) {
-        Assert.notNull(id, "Id must not be null!");
-        Assert.notNull(type, "Type must not be null!");
+        Key key = getKey(id, type);
 
         AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
-        Key key = getKey(id, entity);
-
         if (entity.isTouchOnRead()) {
             Assert.state(!entity.hasExpirationProperty(), "Touch on read is not supported for entity without expiration property");
             return getAndTouch(key, entity.getExpiration())
@@ -147,6 +146,22 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
     public <T> Mono<Long> count(Query query, Class<T> type) {
         Stream<KeyRecord> results = findAllRecordsUsingQuery(type, query);
         return Flux.fromStream(results).count();
+    }
+
+    @Override
+    public <T> Mono<T> execute(Supplier<T> supplier) {
+        Assert.notNull(supplier, "Callback must not be null!");
+        return Mono.fromSupplier(supplier)
+                .onErrorMap(this::translateError);
+    }
+
+    @Override
+    public Mono<Boolean> exists(Object id, Class<?> type) {
+        Key key = getKey(id, type);
+        return reactorClient.exists(key)
+                .map(Objects::nonNull)
+                .defaultIfEmpty(false)
+                .onErrorMap(this::translateError);
     }
 
     public <T> Mono<Boolean> delete(T objectToDelete) {
