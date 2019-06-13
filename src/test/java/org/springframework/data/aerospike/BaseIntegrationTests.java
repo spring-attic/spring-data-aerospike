@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         classes = TestConfig.class,
         properties = {
                 "expirationProperty: 1",
+                "setSuffix: service1"
         }
 )
 public abstract class BaseIntegrationTests {

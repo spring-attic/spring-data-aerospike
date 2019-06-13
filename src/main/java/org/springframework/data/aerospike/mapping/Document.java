@@ -39,7 +39,14 @@ import static org.springframework.data.aerospike.mapping.BasicAerospikePersisten
 @Target({ ElementType.TYPE })
 public @interface Document {
 
-	//TODO: add support for SPEL expression
+	/**
+	 * An optional name of the collection. If the name is not specified, a {@link Class#getSimpleName()} of the entity's
+	 * class will be used.
+	 * Allows the actual value to be set using standard Spring property sources mechanism.
+	 * Syntax is the same as for {@link org.springframework.core.env.Environment#resolveRequiredPlaceholders(String)}.
+	 * <br /><br />
+	 * SpEL is NOT supported.
+	 */
 	String collection() default "";
 
 	/**

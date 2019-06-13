@@ -17,6 +17,9 @@ package org.springframework.data.aerospike.convert;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.data.aerospike.AsCollections.list;
 import static org.springframework.data.aerospike.AsCollections.of;
 import static org.springframework.data.aerospike.AsCollections.set;
@@ -47,7 +50,9 @@ import org.joda.time.DateTime;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.env.Environment;
 import org.springframework.data.aerospike.SampleClasses.Address;
 import org.springframework.data.aerospike.SampleClasses.AerospikeReadDataToUserConverter;
 import org.springframework.data.aerospike.SampleClasses.ClassWithComplexId;
@@ -96,6 +101,8 @@ public class MappingAerospikeConverterTest {
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
+	ApplicationContext applicationContext = getApplicationContext();
+
 	private MappingAerospikeConverter converter = getMappingAerospikeConverter(new ComplexIdToStringConverter(), new StringToComplexIdConverter());
 
 	private MappingAerospikeConverter getMappingAerospikeConverter(Converter<?, ?>... customConverters) {
@@ -104,12 +111,24 @@ public class MappingAerospikeConverterTest {
 
 	private MappingAerospikeConverter getMappingAerospikeConverter(AerospikeTypeAliasAccessor typeAliasAccessor, Converter<?, ?>... customConverters) {
 		AerospikeMappingContext mappingContext = new AerospikeMappingContext();
+		mappingContext.setApplicationContext(applicationContext);
 		mappingContext.setDefaultNameSpace(NAMESPACE);
 		CustomConversions customConversions = new CustomConversions(asList(customConverters), AerospikeSimpleTypes.HOLDER);
 
 		MappingAerospikeConverter converter = new MappingAerospikeConverter(mappingContext, customConversions, typeAliasAccessor);
 		converter.afterPropertiesSet();
 		return converter;
+	}
+
+	private ApplicationContext getApplicationContext() {
+		Environment environment = mock(Environment.class);
+		when(environment.resolveRequiredPlaceholders(anyString()))
+				.thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
+
+		ApplicationContext applicationContext = mock(ApplicationContext.class);
+		when(applicationContext.getEnvironment()).thenReturn(environment);
+
+		return applicationContext;
 	}
 
 	@Test
