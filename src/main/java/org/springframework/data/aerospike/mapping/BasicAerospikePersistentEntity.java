@@ -79,8 +79,10 @@ public class BasicAerospikePersistentEntity<T> extends BasicPersistentEntity<T, 
 	public String getSetName() {
 		Class<T> type = getType();
 		Document annotation = type.getAnnotation(Document.class);
-		if(annotation != null && ! annotation.collection().isEmpty()){
-			return annotation.collection();
+		if (annotation != null && !annotation.collection().isEmpty()) {
+			Assert.notNull(environment, "Environment must be set to use 'collection'");
+
+			return environment.resolveRequiredPlaceholders(annotation.collection());
 		}
 		return type.getSimpleName();
 	}

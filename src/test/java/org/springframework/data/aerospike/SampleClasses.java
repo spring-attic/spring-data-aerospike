@@ -473,4 +473,15 @@ public class SampleClasses {
 		@Expiration
 		private long expiration;
 	}
+
+	@Document(collection = DocumentWithExpressionInCollection.COLLECTION_PREFIX + "${setSuffix}")
+	public static class DocumentWithExpressionInCollection {
+
+		public static final String COLLECTION_PREFIX = "set-prefix-";
+
+	}
+
+	@Document
+	public static class DocumentWithoutCollection {
+	}
 }
