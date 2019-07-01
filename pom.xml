@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -10,7 +10,7 @@
     <name>Spring Data Aerospike</name>
     <organization>
         <name>Aerospike Inc.</name>
-        <url>http://www.aerospike.com</url>
+        <url>https://www.aerospike.com</url>
     </organization>
 
  	<parent>
@@ -40,7 +40,7 @@
     <licenses>
         <license>
             <name>The Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
 
@@ -49,9 +49,9 @@
             <id>Peter Milne</id>
             <name>Peter Milne</name>
             <email>peter@aerospike.com</email>
-            <url>http://www.aerospike.com</url>
+            <url>https://www.aerospike.com</url>
             <organization>Aerospike Inc.</organization>
-            <organizationUrl>http://www.aerospike.com</organizationUrl>
+            <organizationUrl>https://www.aerospike.com</organizationUrl>
             <roles>
                 <role>developer</role>
             </roles>
@@ -61,9 +61,9 @@
             <id>Michael Zhang</id>
             <name>Michael Zhang</name>
             <email>mzhang@aerospike.com</email>
-            <url>http://www.aerospike.com</url>
+            <url>https://www.aerospike.com</url>
             <organization>Aerospike Inc.</organization>
-            <organizationUrl>http://www.aerospike.com</organizationUrl>
+            <organizationUrl>https://www.aerospike.com</organizationUrl>
             <roles>
                 <role>developer</role>
             </roles>
@@ -73,9 +73,9 @@
             <id>Jeff Boone</id>
             <name>Jeff Boone</name>
             <email>jboone@aerospike.com</email>
-            <url>http://www.aerospike.com</url>
+            <url>https://www.aerospike.com</url>
             <organization>Aerospike Inc.</organization>
-            <organizationUrl>http://www.aerospike.com</organizationUrl>
+            <organizationUrl>https://www.aerospike.com</organizationUrl>
             <roles>
                 <role>developer</role>
             </roles>
@@ -85,7 +85,7 @@
             <id>Anastasiia Smirnova</id>
             <name>Anastasiia Smirnova</name>
             <email>asmirnova@playtika.com</email>
-            <url>http://www.playtika.com</url>
+            <url>https://www.playtika.com</url>
         </developer>
         <developer>
             <id>Roman Terentiev</id>
