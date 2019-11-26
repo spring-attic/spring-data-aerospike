@@ -1,8 +1,11 @@
 package org.springframework.data.aerospike.core;
 
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Key;
+import com.aerospike.client.Log;
 import com.aerospike.client.Record;
+import com.aerospike.client.ResultCode;
 import com.aerospike.client.policy.GenerationPolicy;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
@@ -15,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.support.PropertyComparator;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.convert.AerospikeReadData;
 import org.springframework.data.aerospike.convert.AerospikeTypeAliasAccessor;
 import org.springframework.data.aerospike.convert.AerospikeWriteData;
@@ -41,6 +46,7 @@ import java.util.stream.Stream;
 /**
  * Base class for creation Aerospike templates
  *
+ * @author Anastasiia Smirnova
  * @author Igor Ermolenko
  */
 @Slf4j
@@ -94,25 +100,23 @@ abstract class BaseAerospikeTemplate {
     }
 
     private void loggerSetup() {
-        final Logger log = LoggerFactory.getLogger("com.aerospike.client");
-        com.aerospike.client.Log
-                .setCallback((level, message) -> {
-                    switch (level) {
-                        case INFO:
-                            log.info("{}", message);
-                            break;
-                        case DEBUG:
-                            log.debug("{}", message);
-                            break;
-                        case ERROR:
-                            log.error("{}", message);
-                            break;
-                        case WARN:
-                            log.warn("{}", message);
-                            break;
-                    }
-
-                });
+        Logger log = LoggerFactory.getLogger("com.aerospike.client");
+        Log.setCallback((level, message) -> {
+            switch (level) {
+                case INFO:
+                    log.info("{}", message);
+                    break;
+                case DEBUG:
+                    log.debug("{}", message);
+                    break;
+                case ERROR:
+                    log.error("{}", message);
+                    break;
+                case WARN:
+                    log.warn("{}", message);
+                    break;
+            }
+        });
     }
 
     public String getSetName(Class<?> entityClass) {
@@ -216,6 +220,25 @@ abstract class BaseAerospikeTemplate {
     <T> ConvertingPropertyAccessor<T> getPropertyAccessor(AerospikePersistentEntity<?> entity, T source) {
         PersistentPropertyAccessor<T> accessor = entity.getPropertyAccessor(source);
         return new ConvertingPropertyAccessor<T>(accessor, converter.getConversionService());
+    }
+
+    RuntimeException translateCasError(AerospikeException e) {
+        int code = e.getResultCode();
+        if (code == ResultCode.KEY_EXISTS_ERROR || code == ResultCode.GENERATION_ERROR) {
+            return new OptimisticLockingFailureException("Save document with version value failed", e);
+        }
+        return translateError(e);
+    }
+
+    RuntimeException translateError(AerospikeException e) {
+        DataAccessException translated = exceptionTranslator.translateExceptionIfPossible(e);
+        return translated == null ? e : translated;
+    }
+
+    <T> AerospikeWriteData writeData(T document) {
+        AerospikeWriteData data = AerospikeWriteData.forWrite();
+        converter.write(document, data);
+        return data;
     }
 
     WritePolicy getCasAwareWritePolicy(AerospikeWriteData data, AerospikePersistentEntity<?> entity,

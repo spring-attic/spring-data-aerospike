@@ -12,8 +12,6 @@ import com.aerospike.client.query.KeyRecord;
 import com.aerospike.client.reactor.AerospikeReactorClient;
 import com.aerospike.helper.query.Qualifier;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.aerospike.convert.AerospikeWriteData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
@@ -31,11 +29,9 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static com.aerospike.client.ResultCode.GENERATION_ERROR;
-import static com.aerospike.client.ResultCode.KEY_EXISTS_ERROR;
 import static com.aerospike.client.ResultCode.KEY_NOT_FOUND_ERROR;
-import static java.util.Arrays.asList;
 import static java.util.Objects.nonNull;
+import static org.springframework.data.aerospike.core.OperationUtils.operations;
 
 /**
  * Primary implementation of {@link ReactiveAerospikeOperations}.
@@ -136,7 +132,7 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         Assert.notNull(objectToAppendTo, "Object to append to must not be null!");
 
         AerospikeWriteData data = writeData(objectToAppendTo);
-        Operation[] operations = getOperations(values, Operation.Type.APPEND);
+        Operation[] operations = operations(values, Operation.Type.APPEND, Operation.get());
         return executeOperationsOnValue(objectToAppendTo, data, operations, null);
     }
 
@@ -154,7 +150,7 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         Assert.notNull(objectToPrependTo, "Object to prepend to must not be null!");
 
         AerospikeWriteData data = writeData(objectToPrependTo);
-        Operation[] operations = getOperations(values, Operation.Type.PREPEND);
+        Operation[] operations = operations(values, Operation.Type.PREPEND, Operation.get());
         return executeOperationsOnValue(objectToPrependTo, data, operations, null);
     }
 
@@ -165,17 +161,6 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         AerospikeWriteData data = writeData(objectToPrependTo);
         Operation[] operations = {Operation.prepend(new Bin(binName, value)), Operation.get(binName)};
         return executeOperationsOnValue(objectToPrependTo, data, operations, null);
-    }
-
-    private Operation[] getOperations(Map<String, String> values, Operation.Type operationType) {
-        Operation[] operations = new Operation[values.size() + 1];
-        int x = 0;
-        for (Map.Entry<String, String> entry : values.entrySet()) {
-            operations[x] = new Operation(operationType, entry.getKey(), Value.get(entry.getValue()));
-            x++;
-        }
-        operations[x] = Operation.get();
-        return operations;
     }
 
     @SuppressWarnings("unchecked")
@@ -308,13 +293,7 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
                     accessor.setProperty(entity.getVersionProperty(), newKeyRecord.record.generation);
                     return document;
                 })
-                .onErrorMap(AerospikeException.class, e -> {
-                    if (asList(KEY_EXISTS_ERROR, GENERATION_ERROR).contains(e.getResultCode())) {
-                        throw new OptimisticLockingFailureException("Save document with version value failed", e);
-                    }
-                    return translateError(e);
-                })
-                .onErrorMap(this::translateError);
+                .onErrorMap(AerospikeException.class, this::translateCasError);
     }
 
     private Mono<KeyRecord> getAndTouch(Key key, int expiration) {
@@ -323,16 +302,9 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         return reactorClient.operate(policy, key, Operation.touch(), Operation.get());
     }
 
-    private <T> AerospikeWriteData writeData(T document) {
-        AerospikeWriteData data = AerospikeWriteData.forWrite();
-        converter.write(document, data);
-        return data;
-    }
-
     private Throwable translateError(Throwable e) {
         if (e instanceof AerospikeException) {
-            DataAccessException translated = exceptionTranslator.translateExceptionIfPossible((AerospikeException) e);
-            return translated == null ? e : translated;
+            return translateError((AerospikeException) e);
         }
         return e;
     }
