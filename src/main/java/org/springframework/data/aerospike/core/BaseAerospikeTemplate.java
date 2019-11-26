@@ -239,10 +239,17 @@ abstract class BaseAerospikeTemplate {
         return builder.build();
     }
 
-    Key getKey(Object id, Class<?> type) {
-        Assert.notNull(type, "Type must not be null!");
-        AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
-        return getKey(id, entity);
+    WritePolicy ignoreGeneration() {
+        return WritePolicyBuilder.builder(this.client.writePolicyDefault)
+                .generationPolicy(GenerationPolicy.NONE)
+                .build();
+    }
+
+    WritePolicyBuilder ignoreGeneration(RecordExistsAction recordExistsAction) {
+        return WritePolicyBuilder.builder(this.client.writePolicyDefault)
+                .generationPolicy(GenerationPolicy.NONE)
+                .sendKey(true)
+                .recordExistsAction(recordExistsAction);
     }
 
     Key getKey(Object id, AerospikePersistentEntity<?> entity) {

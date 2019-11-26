@@ -34,9 +34,6 @@ import java.util.stream.Stream;
 import static com.aerospike.client.ResultCode.GENERATION_ERROR;
 import static com.aerospike.client.ResultCode.KEY_EXISTS_ERROR;
 import static com.aerospike.client.ResultCode.KEY_NOT_FOUND_ERROR;
-import static com.aerospike.client.policy.RecordExistsAction.CREATE_ONLY;
-import static com.aerospike.client.policy.RecordExistsAction.REPLACE;
-import static com.aerospike.client.policy.RecordExistsAction.UPDATE_ONLY;
 import static java.util.Arrays.asList;
 import static java.util.Objects.nonNull;
 
@@ -70,7 +67,7 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         if (entity.hasVersionProperty()) {
             return doPersistWithCas(document, entity);
         } else {
-            return doPersist(document, createWritePolicyBuilder(REPLACE));
+            return doPersist(document, ignoreGeneration(RecordExistsAction.REPLACE));
         }
     }
 
@@ -83,13 +80,13 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
     @Override
     public <T> Mono<T> insert(T document) {
         Assert.notNull(document, "Document must not be null!");
-        return doPersist(document, createWritePolicyBuilder(CREATE_ONLY));
+        return doPersist(document, ignoreGeneration(RecordExistsAction.CREATE_ONLY));
     }
 
     @Override
     public <T> Mono<T> update(T document) {
         Assert.notNull(document, "Document must not be null!");
-        return doPersist(document, createWritePolicyBuilder(UPDATE_ONLY));
+        return doPersist(document, ignoreGeneration(RecordExistsAction.UPDATE_ONLY));
     }
 
     @Override
@@ -190,9 +187,9 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
     }
 
     public <T> Mono<T> findById(Object id, Class<T> type) {
-        Key key = getKey(id, type);
-
         AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
+        Key key = getKey(id, entity);
+
         if (entity.isTouchOnRead()) {
             Assert.state(!entity.hasExpirationProperty(), "Touch on read is not supported for entity without expiration property");
             return getAndTouch(key, entity.getExpiration())
@@ -258,7 +255,8 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
 
     @Override
     public Mono<Boolean> exists(Object id, Class<?> type) {
-        Key key = getKey(id, type);
+        AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
+        Key key = getKey(id, entity);
         return reactorClient.exists(key)
                 .map(Objects::nonNull)
                 .defaultIfEmpty(false)
@@ -273,7 +271,7 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
 
         return reactorClient
-                .delete(null, getKey(id, entity))
+                .delete(ignoreGeneration(), getKey(id, entity))
                 .map(k -> true)
                 .onErrorMap(this::translateError);
     }
@@ -285,7 +283,7 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         AerospikeWriteData data = writeData(objectToDelete);
 
         return this.reactorClient
-                .delete(null, data.getKey())
+                .delete(ignoreGeneration(), data.getKey())
                 .map(key -> true)
                 .onErrorMap(this::translateError);
     }
@@ -323,12 +321,6 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         WritePolicy policy = new WritePolicy(client.writePolicyDefault);
         policy.expiration = expiration;
         return reactorClient.operate(policy, key, Operation.touch(), Operation.get());
-    }
-
-    private WritePolicyBuilder createWritePolicyBuilder(RecordExistsAction recordExistsAction) {
-        return WritePolicyBuilder.builder(client.writePolicyDefault)
-                .sendKey(true)
-                .recordExistsAction(recordExistsAction);
     }
 
     private <T> AerospikeWriteData writeData(T document) {

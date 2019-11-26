@@ -15,11 +15,23 @@
  */
 package org.springframework.data.aerospike.core;
 
-import com.aerospike.client.*;
+import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.AerospikeException;
+import com.aerospike.client.Bin;
+import com.aerospike.client.Info;
+import com.aerospike.client.Key;
+import com.aerospike.client.Operation;
+import com.aerospike.client.Record;
+import com.aerospike.client.ResultCode;
+import com.aerospike.client.Value;
 import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
-import com.aerospike.client.query.*;
+import com.aerospike.client.query.Filter;
+import com.aerospike.client.query.IndexType;
+import com.aerospike.client.query.KeyRecord;
+import com.aerospike.client.query.ResultSet;
+import com.aerospike.client.query.Statement;
 import com.aerospike.client.task.IndexTask;
 import com.aerospike.helper.query.Qualifier;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +48,11 @@ import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -134,10 +150,7 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 		if (entity.hasVersionProperty()) {
 			doPersistWithCas(document, entity);
 		} else {
-			WritePolicyBuilder builder = WritePolicyBuilder.builder(this.client.writePolicyDefault)
-					.sendKey(true)
-					.recordExistsAction(RecordExistsAction.REPLACE);
-			doPersist(document, builder);
+			doPersist(document, ignoreGeneration(RecordExistsAction.REPLACE));
 		}
 	}
 
@@ -169,22 +182,14 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 	public void insert(Object document) {
 		Assert.notNull(document, "Document must not be null!");
 
-		WritePolicyBuilder writePolicyBuilder = WritePolicyBuilder.builder(this.client.writePolicyDefault)
-				.sendKey(true)
-				.recordExistsAction(RecordExistsAction.CREATE_ONLY);
-
-		doPersist(document, writePolicyBuilder);
+		doPersist(document, ignoreGeneration(RecordExistsAction.CREATE_ONLY));
 	}
 
 	@Override
 	public void update(Object document) {
 		Assert.notNull(document, "Document must not be null!");
 
-		WritePolicyBuilder writePolicyBuilder = WritePolicyBuilder.builder(this.client.writePolicyDefault)
-				.sendKey(true)
-				.recordExistsAction(RecordExistsAction.UPDATE_ONLY);
-
-		doPersist(document, writePolicyBuilder);
+		doPersist(document, ignoreGeneration(RecordExistsAction.UPDATE_ONLY));
 	}
 
 	@Override
@@ -208,7 +213,7 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 			AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
 			Key key = getKey(id, entity);
 
-			return this.client.delete(null, key);
+			return this.client.delete(ignoreGeneration(), key);
 		} catch (AerospikeException e) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
 			throw translatedException == null ? e : translatedException;
@@ -222,7 +227,7 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 			AerospikeWriteData data = AerospikeWriteData.forWrite();
 			converter.write(objectToDelete, data);
 
-			return this.client.delete(null, data.getKey());
+			return this.client.delete(ignoreGeneration(), data.getKey());
 		} catch (AerospikeException e) {
 			DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(e);
 			throw translatedException == null ? e : translatedException;
