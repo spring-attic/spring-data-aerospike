@@ -24,9 +24,7 @@ import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.DuplicateKeyException;
@@ -67,12 +65,11 @@ import static org.springframework.data.aerospike.SampleClasses.EXPIRATION_ONE_MI
  *
  * @author Peter Milne
  * @author Jean Mercier
+ * @author Anastasiia Smirnova
+ * @author Roman Terentiev
  *
  */
 public class AerospikeTemplateTests extends BaseIntegrationTests {
-
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
 
 	private String id;
 
@@ -83,13 +80,13 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@After
-	public void tearDown() throws Exception {
+	public void tearDown() {
 		cleanDb();
 	}
 
 	//test for RecordExistsAction.REPLACE_ONLY policy
 	@Test
-	public void shouldReplaceAllBinsPresentInAerospikeWhenSavingDocument() throws Exception {
+	public void save_shouldReplaceAllBinsPresentInAerospikeWhenSavingDocument() {
 		Key key = new Key(getNameSpace(), "versioned-set", id);
 		VersionedClass first = new VersionedClass(id, "foo");
 		template.save(first);
@@ -103,7 +100,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldSaveAndSetVersion() throws Exception {
+	public void save_shouldSaveAndSetVersion() {
 		VersionedClass first = new VersionedClass(id, "foo");
 		template.save(first);
 
@@ -112,16 +109,15 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldNotSaveDocumentIfItAlreadyExistsWithZeroVersion() throws Exception {
+	public void save_shouldNotSaveDocumentIfItAlreadyExistsWithZeroVersion() {
 		template.save(new VersionedClass(id, "foo", 0));
 
-		expectedException.expect(OptimisticLockingFailureException.class);
-
-		template.save(new VersionedClass(id, "foo", 0));
+		assertThatThrownBy(() -> template.save(new VersionedClass(id, "foo", 0)))
+				.isInstanceOf(OptimisticLockingFailureException.class);
 	}
 
 	@Test
-	public void shouldSaveDocumentWithEqualVersion() throws Exception {
+	public void save_shouldSaveDocumentWithEqualVersion() {
 		template.save(new VersionedClass(id, "foo", 0));
 
 		template.save(new VersionedClass(id, "foo", 1));
@@ -129,14 +125,13 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldFailSaveNewDocumentWithVersionGreaterThanZero() throws Exception {
-		expectedException.expect(DataRetrievalFailureException.class);
-
-		template.save(new VersionedClass(id, "foo", 5));
+	public void save_shouldFailSaveNewDocumentWithVersionGreaterThanZero() {
+		assertThatThrownBy(() -> template.save(new VersionedClass(id, "foo", 5)))
+				.isInstanceOf(DataRetrievalFailureException.class);
 	}
 
 	@Test
-	public void shouldUpdateNullField() {
+	public void save_shouldUpdateNullField() {
 		VersionedClass versionedClass = new VersionedClass(id, null, 0);
 		template.save(versionedClass);
 
@@ -145,7 +140,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldUpdateNullFieldForClassWithVersionField() {
+	public void save_shouldUpdateNullFieldForClassWithVersionField() {
 		VersionedClass versionedClass = new VersionedClass(id, "field", 0);
 		template.save(versionedClass);
 
@@ -160,7 +155,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldUpdateNullFieldForClassWithoutVersionField() {
+	public void save_shouldUpdateNullFieldForClassWithoutVersionField() {
 		Person person = new Person(id,"Oliver");
 		person.setFirstName("First name");
 		template.insert(person);
@@ -174,7 +169,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldUpdateExistingDocument() throws Exception {
+	public void save_shouldUpdateExistingDocument() {
 		VersionedClass one = new VersionedClass(id, "foo", 0);
 		template.save(one);
 
@@ -186,7 +181,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldSetVersionWhenSavingTheSameDocument() throws Exception {
+	public void save_shouldSetVersionWhenSavingTheSameDocument() {
 		VersionedClass one = new VersionedClass(id, "foo");
 		template.save(one);
 		template.save(one);
@@ -196,7 +191,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldUpdateAlreadyExistingDocument() throws Exception {
+	public void save_shouldUpdateAlreadyExistingDocument() throws Exception {
 		AtomicLong counter = new AtomicLong();
 		int numberOfConcurrentSaves = 5;
 
@@ -226,7 +221,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldSaveOnlyFirstDocumentAndNextAttemptsShouldFailWithOptimisticLockingException() throws Exception {
+	public void save_shouldSaveOnlyFirstDocumentAndNextAttemptsShouldFailWithOptimisticLockingException() throws Exception {
 		AtomicLong counter = new AtomicLong();
 		AtomicLong optimisticLockCounter = new AtomicLong();
 		int numberOfConcurrentSaves = 5;
@@ -270,7 +265,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldSaveMultipleTimeDocumentWithoutVersion() throws Exception {
+	public void save_shouldSaveMultipleTimeDocumentWithoutVersion() {
 		CustomCollectionClass one = new CustomCollectionClass(id, "numbers");
 
 		template.save(one);
@@ -280,7 +275,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldUpdateDocumentDataWithoutVersion() throws Exception {
+	public void save_shouldUpdateDocumentDataWithoutVersion() {
 		CustomCollectionClass first = new CustomCollectionClass(id, "numbers");
 		CustomCollectionClass second = new CustomCollectionClass(id, "hot dog");
 
@@ -593,9 +588,10 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		template.count(null, (Class<?>) null);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullObjectToBeSaved() {
-		template.save(null);
+	@Test
+	public void save_rejectsNullObjectToBeSaved() {
+		assertThatThrownBy(() -> template.save(null))
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
@@ -734,7 +730,6 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 		Person firstPerson = Person.builder().id(nextId()).firstName("first").emailAddress("gmail.com").build();
 		Person secondPerson = Person.builder().id(nextId()).firstName("second").emailAddress("gmail.com").build();
 		template.save(firstPerson);
-
 		template.save(secondPerson);
 
 		List<String> ids = Arrays.asList(nextId(), firstPerson.getId(), secondPerson.getId());
@@ -806,7 +801,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldConcurrentlyUpdateDocumentIfTouchOnReadIsTrue() throws Exception {
+	public void save_shouldConcurrentlyUpdateDocumentIfTouchOnReadIsTrue() throws Exception {
 		int numberOfConcurrentUpdate = 10;
 		AsyncUtils.executeConcurrently(numberOfConcurrentUpdate, new Runnable() {
 			@Override
@@ -843,7 +838,7 @@ public class AerospikeTemplateTests extends BaseIntegrationTests {
 	}
 
 	@Test
-	public void shouldSaveAndFindDocumentWithByteArrayField() {
+	public void save_shouldSaveAndFindDocumentWithByteArrayField() {
 		DocumentWithByteArray document = new DocumentWithByteArray(id, new byte[]{1, 0, 0, 1, 1, 1, 0, 0});
 
 		template.save(document);

@@ -39,12 +39,12 @@ import org.springframework.data.aerospike.convert.AerospikeWriteData;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
 import org.springframework.data.aerospike.mapping.AerospikeMappingContext;
 import org.springframework.data.aerospike.mapping.AerospikePersistentEntity;
+import org.springframework.data.aerospike.mapping.AerospikePersistentProperty;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.keyvalue.core.IterableConverter;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -156,12 +156,16 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 	public <T> void save(T document) {
 		Assert.notNull(document, "Object to insert must not be null!");
 
-		AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(document.getClass());
+		AerospikeWriteData data = writeData(document);
 
-		if (entity.hasVersionProperty()) {
-			doPersistWithCas(document, entity);
+		if (data.hasVersion()) {
+			WritePolicy policy = expectGenerationCasAwareSavePolicy(data);
+
+			doPersistWithCas(document, data, policy);
 		} else {
-			doPersist(document, ignoreGeneration(RecordExistsAction.REPLACE));
+			WritePolicy policy = ignoreGenerationSavePolicy(data, RecordExistsAction.REPLACE);
+
+			doPersist(data, policy);
 		}
 	}
 
@@ -543,6 +547,8 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 		}
 	}
 
+	// instead use other doPersist method
+	@Deprecated
 	private void doPersist(Object document, WritePolicyBuilder policyBuilder) {
 		try {
 			AerospikeWriteData data = writeData(document);
@@ -558,22 +564,36 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 		}
 	}
 
-	private void doPersistWithCas(Object document, AerospikePersistentEntity<?> entity) {
+	private void doPersist(AerospikeWriteData data, WritePolicy policy) {
 		try {
-			AerospikeWriteData data = writeData(document);
-
 			Key key = data.getKey();
 			Bin[] bins = data.getBinsAsArray();
 
-			ConvertingPropertyAccessor accessor = getPropertyAccessor(entity, document);
-			WritePolicy policy = getCasAwareWritePolicy(data);
+			client.put(policy, key, bins);
+		} catch (AerospikeException e) {
+			throw translateError(e);
+		}
+	}
+
+	private <T> void doPersistWithCas(T document, AerospikeWriteData data, WritePolicy policy) {
+		try {
+			Key key = data.getKey();
+			Bin[] bins = data.getBinsAsArray();
 
 			Operation[] operations = operations(bins, Operation::put, Operation.getHeader());
 
 			Record newRecord = client.operate(policy, key, operations);
-			accessor.setProperty(entity.getVersionProperty(), newRecord.generation);
+
+			updateVersion(document, newRecord);
 		} catch (AerospikeException e) {
 			throw translateCasError(e);
 		}
+	}
+
+	private <T> void updateVersion(T document, Record newRecord) {
+		AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(document.getClass());
+		ConvertingPropertyAccessor<T> propertyAccessor = getPropertyAccessor(entity, document);
+		AerospikePersistentProperty versionProperty = entity.getRequiredVersionProperty();
+		propertyAccessor.setProperty(versionProperty, newRecord.generation);
 	}
 }

@@ -238,6 +238,33 @@ abstract class BaseAerospikeTemplate {
         return data;
     }
 
+    WritePolicy expectGenerationCasAwareSavePolicy(AerospikeWriteData data) {
+        RecordExistsAction recordExistsAction = data.getVersion()
+                .filter(v -> v > 0L)
+                .map(v -> RecordExistsAction.REPLACE_ONLY)//Updating existing document with generation
+                .orElse(RecordExistsAction.CREATE_ONLY);// create new document. if exists we should fail with optimistic locking
+        return expectGenerationSavePolicy(data, recordExistsAction);
+    }
+
+    WritePolicy expectGenerationSavePolicy(AerospikeWriteData data, RecordExistsAction recordExistsAction) {
+        return WritePolicyBuilder.builder(this.client.writePolicyDefault)
+                .generationPolicy(GenerationPolicy.EXPECT_GEN_EQUAL)
+                .generation(data.getVersion().orElse(0))
+                .sendKey(true)
+                .expiration(data.getExpiration())
+                .recordExistsAction(recordExistsAction)
+                .build();
+    }
+
+    WritePolicy ignoreGenerationSavePolicy(AerospikeWriteData data, RecordExistsAction recordExistsAction) {
+        return WritePolicyBuilder.builder(this.client.writePolicyDefault)
+                .generationPolicy(GenerationPolicy.NONE)
+                .sendKey(true)
+                .expiration(data.getExpiration())
+                .recordExistsAction(recordExistsAction)
+                .build();
+    }
+
     WritePolicy getCasAwareWritePolicy(AerospikeWriteData data) {
         RecordExistsAction recordExistsAction = data.getVersion()
                 .filter(v -> v > 0L)
