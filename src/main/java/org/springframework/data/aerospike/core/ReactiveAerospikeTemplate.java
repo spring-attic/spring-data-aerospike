@@ -270,7 +270,7 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(entityClass);
 
         return reactorClient
-                .delete(ignoreGeneration(), getKey(id, entity))
+                .delete(ignoreGenerationDeletePolicy(), getKey(id, entity))
                 .map(k -> true)
                 .onErrorMap(this::translateError);
     }
@@ -282,7 +282,7 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         AerospikeWriteData data = writeData(objectToDelete);
 
         return this.reactorClient
-                .delete(ignoreGeneration(), data.getKey())
+                .delete(ignoreGenerationDeletePolicy(), data.getKey())
                 .map(key -> true)
                 .onErrorMap(this::translateError);
     }

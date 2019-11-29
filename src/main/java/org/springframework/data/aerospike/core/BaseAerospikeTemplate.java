@@ -273,7 +273,7 @@ abstract class BaseAerospikeTemplate {
         return expectGeneration(data, recordExistsAction);
     }
 
-    WritePolicy ignoreGeneration() {
+    WritePolicy ignoreGenerationDeletePolicy() {
         return WritePolicyBuilder.builder(this.client.writePolicyDefault)
                 .generationPolicy(GenerationPolicy.NONE)
                 .build();

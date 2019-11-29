@@ -161,11 +161,11 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 		if (data.hasVersion()) {
 			WritePolicy policy = expectGenerationCasAwareSavePolicy(data);
 
-			doPersistWithCas(document, data, policy);
+			doPersistWithVersionAndHandleCasError(document, data, policy);
 		} else {
 			WritePolicy policy = ignoreGenerationSavePolicy(data, RecordExistsAction.REPLACE);
 
-			doPersist(data, policy);
+			doPersistAndHandleError(data, policy);
 		}
 	}
 
@@ -174,16 +174,9 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 		Assert.notNull(document, "Document must not be null!");
 		Assert.notNull(policy, "Policy must not be null!");
 
-		try {
-			AerospikeWriteData data = writeData(document);
+		AerospikeWriteData data = writeData(document);
 
-			Key key = data.getKey();
-			Bin[] bins = data.getBinsAsArray();
-
-			client.put(policy, key, bins);
-		} catch (AerospikeException e) {
-			throw translateError(e);
-		}
+		doPersistAndHandleError(data, policy);
 	}
 
 	public <T> void insertAll(Collection<? extends T> documents) {
@@ -196,14 +189,33 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 	public <T> void insert(T document) {
 		Assert.notNull(document, "Document must not be null!");
 
-		doPersist(document, ignoreGeneration(RecordExistsAction.CREATE_ONLY));
+		AerospikeWriteData data = writeData(document);
+		WritePolicy policy = ignoreGenerationSavePolicy(data, RecordExistsAction.CREATE_ONLY);
+
+		if(data.hasVersion()) {
+			// we are ignoring generation here as insert operation should fail with DuplicateKeyException if key already exists
+			// and we do not mind which initial version is set in the document, BUT we need to update the version value in the original document
+			// also we do not want to handle aerospike error codes as cas aware error codes as we are ignoring generation
+			doPersistWithVersionAndHandleError(document, data, policy);
+		} else {
+			doPersistAndHandleError(data, policy);
+		}
 	}
 
 	@Override
 	public <T> void update(T document) {
 		Assert.notNull(document, "Document must not be null!");
 
-		doPersist(document, ignoreGeneration(RecordExistsAction.UPDATE_ONLY));
+		AerospikeWriteData data = writeData(document);
+		if (data.hasVersion()) {
+			WritePolicy policy = expectGenerationSavePolicy(data, RecordExistsAction.REPLACE_ONLY);
+
+			doPersistWithVersionAndHandleCasError(document, data, policy);
+		} else {
+			WritePolicy policy = ignoreGenerationSavePolicy(data, RecordExistsAction.REPLACE_ONLY);
+
+			doPersistAndHandleError(data, policy);
+		}
 	}
 
 	@Override
@@ -227,7 +239,7 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 			AerospikePersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(entityClass);
 			Key key = getKey(id, entity);
 
-			return this.client.delete(ignoreGeneration(), key);
+			return this.client.delete(ignoreGenerationDeletePolicy(), key);
 		} catch (AerospikeException e) {
 			throw translateError(e);
 		}
@@ -240,7 +252,7 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 		try {
 			AerospikeWriteData data = writeData(objectToDelete);
 
-			return this.client.delete(ignoreGeneration(), data.getKey());
+			return this.client.delete(ignoreGenerationDeletePolicy(), data.getKey());
 		} catch (AerospikeException e) {
 			throw translateError(e);
 		}
@@ -547,47 +559,46 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 		}
 	}
 
-	// instead use other doPersist method
-	@Deprecated
-	private void doPersist(Object document, WritePolicyBuilder policyBuilder) {
+	private void doPersistAndHandleError(AerospikeWriteData data, WritePolicy policy) {
 		try {
-			AerospikeWriteData data = writeData(document);
-
-			Key key = data.getKey();
-			Bin[] bins = data.getBinsAsArray();
-			WritePolicy policy = policyBuilder.expiration(data.getExpiration())
-					.build();
-
-			client.put(policy, key, bins);
+			put(data, policy);
 		} catch (AerospikeException e) {
 			throw translateError(e);
 		}
 	}
 
-	private void doPersist(AerospikeWriteData data, WritePolicy policy) {
+	private <T> void doPersistWithVersionAndHandleCasError(T document, AerospikeWriteData data, WritePolicy policy) {
 		try {
-			Key key = data.getKey();
-			Bin[] bins = data.getBinsAsArray();
-
-			client.put(policy, key, bins);
-		} catch (AerospikeException e) {
-			throw translateError(e);
-		}
-	}
-
-	private <T> void doPersistWithCas(T document, AerospikeWriteData data, WritePolicy policy) {
-		try {
-			Key key = data.getKey();
-			Bin[] bins = data.getBinsAsArray();
-
-			Operation[] operations = operations(bins, Operation::put, Operation.getHeader());
-
-			Record newRecord = client.operate(policy, key, operations);
-
+			Record newRecord = putAndGetHeader(data, policy);
 			updateVersion(document, newRecord);
 		} catch (AerospikeException e) {
 			throw translateCasError(e);
 		}
+	}
+
+	private <T> void doPersistWithVersionAndHandleError(T document, AerospikeWriteData data, WritePolicy policy) {
+		try {
+			Record newRecord = putAndGetHeader(data, policy);
+			updateVersion(document, newRecord);
+		} catch (AerospikeException e) {
+			throw translateError(e);
+		}
+	}
+
+	private void put(AerospikeWriteData data, WritePolicy policy) {
+		Key key = data.getKey();
+		Bin[] bins = data.getBinsAsArray();
+
+		client.put(policy, key, bins);
+	}
+
+	private Record putAndGetHeader(AerospikeWriteData data, WritePolicy policy) {
+		Key key = data.getKey();
+		Bin[] bins = data.getBinsAsArray();
+
+		Operation[] operations = operations(bins, Operation::put, Operation.getHeader());
+
+		return client.operate(policy, key, operations);
 	}
 
 	private <T> void updateVersion(T document, Record newRecord) {

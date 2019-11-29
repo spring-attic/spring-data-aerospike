@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Please do not add tests here. Instead add tests to AerospikeTemplateTests.
+ * Please do not add tests here. Instead add tests to AerospikeTemplate{NameOfTheMethod}Tests.
  * @author Oliver Gierke
  *
  */
@@ -61,26 +61,6 @@ public class AerospikeTemplateIntegrationTests extends BaseIntegrationTests {
 		scanPolicy.includeBinData = false;
 		client.scanAll(	scanPolicy, getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON,
 				(key, record) -> client.delete(null, key), new String[] {});
-	}
-
-	@Test
-	public void testUpdate(){
-		Person customer = new Person("dave-001", "Dave", "Matthews");
-		template.insert(customer);
-		String newLastName = customer.getLastname() + "xx";
-		customer.setLastname(newLastName);
-		template.update(customer);
-		customer = template.findById("dave-001", Person.class);
-		Assert.assertEquals("Matthewsxx", customer.getLastname());
-	}
-
-	@Test
-	public void testInsert(){
-		Person customer = new Person("dave-002", "Dave", "Matthews");
-		template.insert(customer);
-		Record result = client.get(null, new Key(getNameSpace(), AerospikeTemplateIntegrationTests.SET_NAME_PERSON, "dave-002"));
-		Assert.assertEquals("Dave", result.getString("firstname"));
-		Assert.assertEquals("Matthews", result.getString("lastname"));
 	}
 
 	@Test

@@ -49,7 +49,9 @@ public interface AerospikeOperations {
 	<T> String getSetName(Class<T> entityClass);
 	
 	/**
-	 * Insert operation using the WritePolicy.recordExisits policy of CREATE_ONLY 
+	 * Insert operation using {@link com.aerospike.client.policy.RecordExistsAction#CREATE_ONLY} policy.
+	 *
+	 * If document has version property it will be updated with the server's version after successful operation.
 	 * @param document
 	 */
 	<T> void insert(T document);
@@ -65,10 +67,11 @@ public interface AerospikeOperations {
 	 * If document has version property - CAS algorithm is used for updating record.
 	 * Version property is used for deciding whether to create new record or update existing.
 	 * If version is set to zero - new record will be created, creation will fail is such record already exists.
-	 * If version is greater than zero - existing record will be updated with RecordExistsAction.REPLACE_ONLY policy
+	 * If version is greater than zero - existing record will be updated with {@link com.aerospike.client.policy.RecordExistsAction#REPLACE_ONLY} policy
 	 * taking into consideration the version property of the document.
+	 * Version property will be updated with the server's version after successful operation.
 	 *
-	 * If document does not have version property - record is updated with RecordExistsAction.REPLACE policy.
+	 * If document does not have version property - record is updated with {@link com.aerospike.client.policy.RecordExistsAction#REPLACE} policy.
 	 * This means that when such record does not exist it will be created, otherwise updated.
 	 * @param document
 	 */
@@ -82,7 +85,10 @@ public interface AerospikeOperations {
 	<T> void persist(T document, WritePolicy writePolicy);
 
 	/**
-	 * Update operation using the WritePolicy.recordExisits policy of UPDATE_ONLY
+	 * Update operation using {@link com.aerospike.client.policy.RecordExistsAction#REPLACE_ONLY} policy
+	 * taking into consideration the version property of the document if it is present.
+	 *
+	 * If document has version property it will be updated with the server's version after successful operation.
 	 * @param objectToUpdate
 	 */
 	<T> void update(T objectToUpdate);
