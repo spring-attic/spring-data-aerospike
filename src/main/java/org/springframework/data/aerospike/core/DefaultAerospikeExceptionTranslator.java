@@ -20,10 +20,11 @@ import com.aerospike.client.ResultCode;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.dao.TransientDataAccessResourceException;
+import org.springframework.data.aerospike.IndexAlreadyExistsException;
+import org.springframework.data.aerospike.IndexNotFoundException;
 
 /**
  * @author Peter Milne
@@ -59,8 +60,9 @@ public class DefaultAerospikeExceptionTranslator implements AerospikeExceptionTr
 				case ResultCode.KEY_NOT_FOUND_ERROR:
 					return new DataRetrievalFailureException(msg, cause);
 				case ResultCode.INDEX_NOTFOUND:
+					return new IndexNotFoundException(msg, cause);
 				case ResultCode.INDEX_ALREADY_EXISTS:
-					return new InvalidDataAccessResourceUsageException(msg, cause);
+					return new IndexAlreadyExistsException(msg, cause);
 				case ResultCode.TIMEOUT:
 				case ResultCode.QUERY_TIMEOUT:
 					return new QueryTimeoutException(msg, cause);

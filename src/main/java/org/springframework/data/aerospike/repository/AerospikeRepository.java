@@ -16,6 +16,7 @@
 package org.springframework.data.aerospike.repository;
 
 import com.aerospike.client.query.IndexType;
+import org.springframework.data.aerospike.IndexAlreadyExistsException;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.Repository;
@@ -34,6 +35,15 @@ public interface AerospikeRepository<T, ID> extends PagingAndSortingRepository<T
 
 	<T> void deleteIndex(Class<T> domainType, String indexName);
 
+	/**
+	 * Checks whether index by specified name exists in Aerospike.
+	 * @param indexName
+	 * @return true if exists
+	 * @deprecated This operation is deprecated due to complications that are required for guaranteed index existence response.
+	 * <p>If you need to conditionally create index \u2014 replace {@link #indexExists} with {@link #createIndex} and catch {@link IndexAlreadyExistsException}.
+	 * <p>More information can be found at: <a href="https://github.com/aerospike/aerospike-client-java/pull/149">https://github.com/aerospike/aerospike-client-java/pull/149</a>
+	 */
+	@Deprecated
 	boolean indexExists(String indexName);
 
 }

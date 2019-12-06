@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.springframework.data.aerospike.IndexAlreadyExistsException;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.context.MappingContext;
@@ -181,7 +182,11 @@ public interface AerospikeOperations {
 	 * Checks whether index by specified name exists in Aerospike.
 	 * @param indexName
 	 * @return true if exists
+	 * @deprecated This operation is deprecated due to complications that are required for guaranteed index existence response.
+	 * <p>If you need to conditionally create index \u2014 replace {@link #indexExists} with {@link #createIndex} and catch {@link IndexAlreadyExistsException}.
+	 * <p>More information can be found at: <a href="https://github.com/aerospike/aerospike-client-java/pull/149">https://github.com/aerospike/aerospike-client-java/pull/149</a>
 	 */
+	@Deprecated
 	boolean indexExists(String indexName);
 
 	/**

@@ -136,14 +136,13 @@ public class AerospikeTemplate extends BaseAerospikeTemplate implements Aerospik
 	@Override
 	public boolean indexExists(String indexName) {
 		Assert.notNull(indexName, "Index name must not be null!");
+		log.warn("`indexExists` operation is deprecated. Please stop using it as it will be removed in next major release.");
 
-		//TODO: should be moved to aerospike-client (https://github.com/aerospike/aerospike-client-java/pull/149)
 		try {
 			Node[] nodes = client.getNodes();
 			if (nodes.length == 0) {
 				throw new AerospikeException(ResultCode.SERVER_NOT_AVAILABLE, "Command failed because cluster is empty.");
 			}
-			//TODO: get random node
 			Node node = nodes[0];
 			String response = Info.request(node, "sindex/" + namespace + '/' + indexName);
 			return !response.startsWith("FAIL:201");

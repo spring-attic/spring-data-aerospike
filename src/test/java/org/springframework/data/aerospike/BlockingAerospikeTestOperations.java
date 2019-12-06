@@ -1,19 +1,21 @@
 package org.springframework.data.aerospike;
 
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
 import com.aerospike.client.IAerospikeClient;
 import com.aerospike.client.Info;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
+import com.aerospike.client.ResultCode;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.RecordExistsAction;
 import com.aerospike.client.policy.WritePolicy;
 import com.aerospike.client.query.IndexType;
+import com.aerospike.client.task.IndexTask;
 import lombok.RequiredArgsConstructor;
 import org.awaitility.Awaitility;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.aerospike.core.AerospikeTemplate;
 
 import java.time.Duration;
@@ -46,12 +48,27 @@ public class BlockingAerospikeTestOperations {
                 || Stream.of(answer.split(";")).allMatch(s -> s.contains("objects=0"));
     }
 
-    public <T> void createIndexIfNotExists(Class<T> domainType, String indexName, String binName, IndexType indexType) {
-        try {
-            template.createIndex(domainType, indexName, binName, indexType);
-        } catch (InvalidDataAccessResourceUsageException e) {
-            // ignore: index already exists
+    public <T> void createIndexIfNotExists(Class<T> entityClass, String indexName, String binName, IndexType indexType) {
+        ignoreError(ResultCode.INDEX_ALREADY_EXISTS,
+                () -> wait(client.createIndex(null, template.getNamespace(), template.getSetName(entityClass), indexName, binName, indexType)));
+    }
+
+    public <T> void dropIndexIfExists(Class<T> entityClass, String indexName) {
+        ignoreError(ResultCode.INDEX_NOTFOUND,
+                () -> wait(client.dropIndex(null, template.getNamespace(), template.getSetName(entityClass), indexName)));
+    }
+
+    // Do not use this code in production!
+    // This will not guarantee the correct answer from Aerospike Server for all cases.
+    // Also it requests index status only from one Aerospike node, which is OK for tests, and NOT OK for Production cluster.
+    public boolean indexExists(String indexName) {
+        Node[] nodes = client.getNodes();
+        if (nodes.length == 0) {
+            throw new AerospikeException(ResultCode.SERVER_NOT_AVAILABLE, "Command failed because cluster is empty.");
         }
+        Node node = nodes[0];
+        String response = Info.request(node, "sindex/" + template.getNamespace() + '/' + indexName);
+        return !response.startsWith("FAIL:201");
     }
 
     public void addNewFieldToSavedDataInAerospike(Key key) {
@@ -66,6 +83,23 @@ public class BlockingAerospikeTestOperations {
 
         Record updated = client.get(new Policy(), key);
         assertThat(updated.bins.get("notPresent")).isEqualTo("cats");
+    }
+
+    private static void wait(IndexTask task) {
+        if (task == null) {
+            throw new IllegalStateException("task can not be null");
+        }
+        task.waitTillComplete();
+    }
+
+    private void ignoreError(int errorCodeToSkip, Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (AerospikeException e) {
+            if (e.getResultCode() != errorCodeToSkip) {
+                throw e;
+            }
+        }
     }
 
 }
