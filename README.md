@@ -28,7 +28,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>com.aerospike</groupId>
   <artifactId>spring-data-aerospike</artifactId>
-  <version>2.2.0.RELEASE</version>
+  <version>2.3.0.RELEASE</version>
 </dependency>
 ```
 
@@ -49,7 +49,7 @@ Both dependencies will be provided for you by `spring-data-aerospike`, so no nee
  
 ### AerospikeTemplate
 
-AerospikeTemplate is the central support class for Aerospike database operations. It provides:
+`AerospikeTemplate` is the central support class for Aerospike database operations. It provides:
 
 * Basic POJO mapping support to and from Bins
 * Convenience methods to interact with the store (insert object, update objects) and Aerospike specific ones.

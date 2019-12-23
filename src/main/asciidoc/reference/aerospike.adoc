@@ -22,7 +22,7 @@ First you need to set up a running Aerospike server.
 
 To create a Spring project in STS go to File -> New -> Spring Template Project -> Simple Spring Utility Project -> press Yes when prompted. Then enter a project and a package name such as org.spring.aerospike.example.
 
-Then add the following to pom.xml dependencies section.
+Then add the following to `pom.xml` dependencies section.
 
 [source,xml]
 ----
@@ -33,13 +33,27 @@ Then add the following to pom.xml dependencies section.
   <dependency>
     <groupId>com.aerospike</groupId>
     <artifactId>spring-data-aerospike</artifactId>
-    <version>2.2.0.RELEASE</version>
+    <version>2.3.0.RELEASE</version>
   </dependency>
 
 </dependencies>
 ----
 
 You can either setup Spring Boot or Spring application. Basic setup of Spring Boot application is described under the following link: https://projects.spring.io/spring-boot.
+
+.Spring Boot compatibility
+|===
+|Spring-data-aerospike Version |Spring Boot Version
+
+|2.3.0.RELEASE
+|2.2.x
+
+|2.1.1.RELEASE
+|2.1.x, 2.0.x
+
+|1.2.1.RELEASE
+|1.5.x
+|===
 
 In case you do no want to use Spring Boot, the best way to manage Spring dependencies is declaring `spring-framework-bom` of needed version in `dependencyManagement` section of your `pom.xml`:
 
