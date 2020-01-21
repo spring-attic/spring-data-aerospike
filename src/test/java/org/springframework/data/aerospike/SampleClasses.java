@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 import org.joda.time.DateTime;
@@ -543,5 +544,55 @@ public class SampleClasses {
 		@Field
 		private byte[] array;
 
+	}
+
+	@Data
+	@Document
+	public static class DocumentWithCompositeKey {
+
+		@Id
+		private CompositeKey id;
+
+		@Field
+		private String data;
+
+		public DocumentWithCompositeKey(CompositeKey id) {
+			this.id = id;
+			this.data = "some-initial-data";
+		}
+
+		@PersistenceConstructor
+		public DocumentWithCompositeKey(CompositeKey id, String data) {
+			this.id = id;
+			this.data = data;
+		}
+	}
+
+	@Value
+	public static class CompositeKey {
+
+		String firstPart;
+		long secondPart;
+
+		@WritingConverter
+		public enum CompositeKeyToStringConverter implements Converter<CompositeKey, String> {
+			INSTANCE;
+
+			@Override
+			public String convert(CompositeKey source) {
+				return source.firstPart + "::" + source.secondPart;
+			}
+		}
+
+		@ReadingConverter
+		public enum StringToCompositeKeyConverter implements Converter<String, CompositeKey> {
+			INSTANCE;
+
+			@Override
+			public CompositeKey convert(String source) {
+				String[] split = source.split("::");
+				return new CompositeKey(split[0], Long.parseLong(split[1]));
+			}
+		}
 	}
 }

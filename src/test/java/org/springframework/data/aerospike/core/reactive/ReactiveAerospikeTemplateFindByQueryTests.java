@@ -7,6 +7,7 @@ import org.springframework.data.aerospike.BaseReactiveIntegrationTests;
 import org.springframework.data.aerospike.repository.query.Query;
 import org.springframework.data.aerospike.sample.Person;
 import org.springframework.data.domain.Sort;
+import reactor.test.StepVerifier;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,9 +44,9 @@ public class ReactiveAerospikeTemplateFindByQueryTests extends BaseReactiveInteg
 
     @Test
     public void findAll_findsNothing() {
-        List<Person> result = reactiveTemplate.findAll(Person.class).collectList().block();
-
-        assertThat(result).isEmpty();
+        StepVerifier.create(reactiveTemplate.findAll(Person.class))
+                .expectNextCount(0)
+                .verifyComplete();
     }
 
     @Test

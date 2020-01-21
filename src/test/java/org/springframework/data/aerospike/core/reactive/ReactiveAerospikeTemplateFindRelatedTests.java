@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.data.aerospike.SampleClasses.EXPIRATION_ONE_MINUTE;
 
 /**
@@ -55,17 +56,21 @@ public class ReactiveAerospikeTemplateFindRelatedTests extends BaseReactiveInteg
         }).verifyComplete();
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void findById_shouldFailOnTouchOnReadWithExpirationProperty() {
         DocumentWithTouchOnReadAndExpirationProperty document = new DocumentWithTouchOnReadAndExpirationProperty(id, EXPIRATION_ONE_MINUTE);
         reactiveTemplate.insert(document).block();
-        reactiveTemplate.findById(document.getId(), DocumentWithTouchOnReadAndExpirationProperty.class);
+
+        assertThatThrownBy(() -> reactiveTemplate.findById(document.getId(), DocumentWithTouchOnReadAndExpirationProperty.class))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Touch on read is not supported for entity without expiration property");
     }
 
     @Test
     public void findByIds_shouldReturnEmptyList() {
-        Long userCount = reactiveTemplate.findByIds(Collections.emptyList(), Person.class).count().block();
-        assertThat(userCount).isEqualTo(0);
+        StepVerifier.create(reactiveTemplate.findByIds(Collections.emptyList(), Person.class))
+                .expectNextCount(0)
+                .verifyComplete();
     }
 
     @Test

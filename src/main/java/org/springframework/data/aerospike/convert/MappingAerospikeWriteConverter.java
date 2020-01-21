@@ -70,7 +70,7 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 
 		TypeInformation<?> type = ClassTypeInformation.from(source.getClass());
 		AerospikePersistentEntity<?> entity = mappingContext.getPersistentEntity(source.getClass());
-		ConvertingPropertyAccessor<?> accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(source), conversionService);
+		ConvertingPropertyAccessor<?> accessor = new ConvertingPropertyAccessor<>(entity.getPropertyAccessor(source), conversionService);
 
 		AerospikePersistentProperty idProperty = entity.getIdProperty();
 		if (idProperty != null) {
@@ -90,7 +90,7 @@ public class MappingAerospikeWriteConverter implements EntityWriter<Object, Aero
 		data.setExpiration(getExpiration(entity, accessor));
 
 		Map<String, Object> convertedProperties = convertProperties(type, entity, accessor);
-		convertedProperties.entrySet().forEach(e -> data.addBin(e.getKey(), e.getValue()));
+		convertedProperties.forEach((key, value) -> data.addBin(key, value));
 	}
 
 	private void convertToAerospikeWriteData(Object source, AerospikeWriteData data) {

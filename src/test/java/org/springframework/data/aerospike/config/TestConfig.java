@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.aerospike.BlockingAerospikeTestOperations;
+import org.springframework.data.aerospike.SampleClasses;
 import org.springframework.data.aerospike.cache.AerospikeCacheManager;
 import org.springframework.data.aerospike.cache.AerospikeCacheManagerIntegrationTests.CachingComponent;
 import org.springframework.data.aerospike.convert.MappingAerospikeConverter;
@@ -21,8 +22,11 @@ import org.springframework.data.aerospike.sample.ContactRepository;
 import org.springframework.data.aerospike.sample.CustomerRepository;
 import org.springframework.data.aerospike.sample.ReactiveCustomerRepository;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+
 /**
  *
  *
@@ -43,6 +47,14 @@ public class TestConfig extends AbstractReactiveAerospikeDataConfiguration  {
 	protected String host;
 	@Value("${embedded.aerospike.port}")
 	protected int port;
+
+	@Override
+	protected List<?> customConverters() {
+		return Arrays.asList(
+				SampleClasses.CompositeKey.CompositeKeyToStringConverter.INSTANCE,
+				SampleClasses.CompositeKey.StringToCompositeKeyConverter.INSTANCE
+		);
+	}
 
 	@Bean
 	public CacheManager cacheManager(AerospikeClient aerospikeClient, MappingAerospikeConverter aerospikeConverter) {

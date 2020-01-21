@@ -217,7 +217,13 @@ abstract class BaseAerospikeTemplate {
 
     Key getKey(Object id, AerospikePersistentEntity<?> entity) {
         Assert.notNull(id, "Id must not be null!");
-        return new Key(this.namespace, entity.getSetName(), id.toString());
+        String userKey = convertIfNecessary(id, String.class);
+        return new Key(this.namespace, entity.getSetName(), userKey);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <S> S convertIfNecessary(Object source, Class<S> type) {
+        return type.isAssignableFrom(source.getClass()) ? (S) source : converter.getConversionService().convert(source, type);
     }
 
 }
