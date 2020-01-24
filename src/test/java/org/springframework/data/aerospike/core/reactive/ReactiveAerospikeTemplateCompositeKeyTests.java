@@ -7,7 +7,10 @@ import org.springframework.data.aerospike.SampleClasses.CompositeKey;
 import org.springframework.data.aerospike.SampleClasses.DocumentWithCompositeKey;
 import reactor.test.StepVerifier;
 
+import java.util.List;
+
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ReactiveAerospikeTemplateCompositeKeyTests extends BaseReactiveIntegrationTests {
 
@@ -33,9 +36,10 @@ public class ReactiveAerospikeTemplateCompositeKeyTests extends BaseReactiveInte
         DocumentWithCompositeKey document2 = new DocumentWithCompositeKey(new CompositeKey(nextId(), 999));
         reactiveTemplate.save(document2).block();
 
-        StepVerifier.create(reactiveTemplate.findByIds(asList(document.getId(), document2.getId()), DocumentWithCompositeKey.class))
-                .expectNext(document, document2)
-                .verifyComplete();
+        List<DocumentWithCompositeKey> actual = reactiveTemplate.findByIds(asList(document.getId(), document2.getId()), DocumentWithCompositeKey.class)
+                .collectList().block();
+
+        assertThat(actual).containsOnly(document, document2);
     }
 
     @Test
